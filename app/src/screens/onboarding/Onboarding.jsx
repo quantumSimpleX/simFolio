@@ -6,14 +6,6 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { matchHeroes } from '../../data/heroes';
 
-// capital choice → numeric value
-const CAPITAL_MAP = {
-  'Under $1,000':     500,
-  '$1,000 – $5,000':  2500,
-  '$5,000 – $20,000': 10000,
-  'Over $20,000':     25000,
-  "I'm not sure yet": 5000,
-};
 
 // Q1 is always first; Q2–Q8 are randomized each session
 const BASE_QUESTIONS = [
@@ -29,8 +21,7 @@ const RANDOM_QUESTIONS = [
   {
     key: 'capital',
     q: "How much are you thinking of putting in to start? There's no wrong answer — just helps me understand.",
-    type: 'choice',
-    choices: ['Under $1,000', '$1,000 – $5,000', '$5,000 – $20,000', 'Over $20,000', "I'm not sure yet"],
+    type: 'number',
   },
   {
     key: 'horizon',
@@ -90,16 +81,24 @@ export default function Onboarding() {
 
   const current = QUESTIONS[step];
 
-  function handleContinue() {
-    const newAnswers = { ...answers, [current.key]: selected };
+  function advance(value) {
+    const newAnswers = { ...answers, [current.key]: value };
     setAnswers(newAnswers);
-
     if (step < QUESTIONS.length - 1) {
       setStep(s => s + 1);
       setSelected(null);
     } else {
       setShowStock(true);
     }
+  }
+
+  function handleSelect(choice) {
+    setSelected(choice);
+    setTimeout(() => advance(choice), 180);
+  }
+
+  function handleContinue() {
+    advance(selected);
   }
 
   async function handleFinish(stockList) {
@@ -112,7 +111,7 @@ export default function Onboarding() {
     if (saving) return;
     setSaving(true);
 
-    const capital = CAPITAL_MAP[answers.capital] ?? 5000;
+    const capital = parseInt(answers.capital) || 5000;
     const lang = answers.language?.includes('中文') ? 'zh-TW' : 'en';
     const heroIds = matchHeroes(answers);
 
@@ -170,15 +169,38 @@ export default function Onboarding() {
             <div style={{ fontFamily:SANS, fontSize:15, color:C.ink600, lineHeight:1.55 }}>{current.q}</div>
           </div>
         </div>
-        <div style={{ paddingLeft:46, display:'flex', flexDirection:'column', gap:8 }}>
-          {current.choices.map(choice => (
-            <GoalCard key={choice} label={choice} selected={selected===choice} onClick={() => setSelected(choice)}/>
-          ))}
+
+        {current.type === 'number' ? (
+          <div style={{ paddingLeft:46 }}>
+            <div style={{ display:'flex', alignItems:'center', height:52, border:`1.5px solid ${selected ? C.ink900 : C.ink200}`, borderRadius:4, background:C.white, overflow:'hidden' }}>
+              <div style={{ padding:'0 14px', fontFamily:SANS, fontSize:18, color:C.ink400, flexShrink:0 }}>$</div>
+              <input
+                type="number"
+                min="0"
+                value={selected || ''}
+                onChange={e => setSelected(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && selected && handleContinue()}
+                placeholder="5000"
+                autoFocus
+                style={{ flex:1, border:'none', outline:'none', fontFamily:SANS, fontSize:20, fontWeight:600, color:C.ink900, background:'transparent', padding:'0 14px 0 0' }}
+              />
+            </div>
+            <div style={{ fontFamily:SANS, fontSize:12, color:C.ink400, marginTop:8 }}>Amount in USD · press Enter or tap Continue</div>
+          </div>
+        ) : (
+          <div style={{ paddingLeft:46, display:'flex', flexDirection:'column', gap:8 }}>
+            {current.choices.map(choice => (
+              <GoalCard key={choice} label={choice} selected={selected===choice} onClick={() => handleSelect(choice)}/>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {current.type !== 'choice' && (
+        <div style={{ padding:'16px 24px 32px', borderTop:`1px solid ${C.ink100}`, flexShrink:0 }}>
+          <CTA label="Continue  →" full disabled={!selected} onClick={handleContinue}/>
         </div>
-      </div>
-      <div style={{ padding:'16px 24px 32px', borderTop:`1px solid ${C.ink100}`, flexShrink:0 }}>
-        <CTA label="Continue  →" full disabled={!selected} onClick={handleContinue}/>
-      </div>
+      )}
     </div>
   );
 }

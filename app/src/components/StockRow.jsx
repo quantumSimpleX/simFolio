@@ -32,23 +32,23 @@ export function StockRow({
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div style={{ fontFamily: SANS, fontWeight: name ? 600 : 400, fontSize: 14, color: name ? C.ink900 : C.ink400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ fontFamily: SANS, fontWeight: name ? 600 : 400, fontSize: 16, color: name ? C.ink900 : C.ink400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {name || ticker}
           </div>
           {badge}
         </div>
         {subtitle && (
-          <div style={{ fontFamily: SANS, fontSize: 11, color: C.ink600, marginTop: 1 }}>{subtitle}</div>
+          <div style={{ fontFamily: SANS, fontSize: 16, color: C.ink600, marginTop: 2 }}>{subtitle}</div>
         )}
       </div>
 
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
         {rightTop && (
-          <div style={{ fontFamily: SANS, fontWeight: 600, fontSize: 14, color: C.ink900 }}>{rightTop}</div>
+          <div style={{ fontFamily: SANS, fontWeight: 600, fontSize: 16, color: C.ink900 }}>{rightTop}</div>
         )}
         {rightBottom && (
           <div style={{
-            fontFamily: SANS, fontSize: 12, marginTop: 1,
+            fontFamily: SANS, fontSize: 16, marginTop: 2,
             color: rightBottomPos === true ? C.aqua600 : rightBottomPos === false ? C.red : C.ink400,
           }}>{rightBottom}</div>
         )}
