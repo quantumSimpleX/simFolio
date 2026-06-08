@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>simFolio — Wireframes 05: Achievement System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    .wf-img { background-color:rgba(0,0,0,0.07); background-image:repeating-linear-gradient(45deg,transparent,transparent 5px,rgba(0,0,0,0.05) 5px,rgba(0,0,0,0.06) 6px); }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+  const { DesignCanvas, DCSection, DCArtboard } = window;
+  const AME  = '#8A60EB';
+  const AQUA = '#1FC3A4';
+  const GOLD = '#C99A2E';
+  const f    = 'Caveat';
+  const WB   = { init:'WB', name:'Warren Buffett', short:'Warren', color:AME };
+
+  /* ── primitives ── */
+  function Av({ size=36, init='WB', color=AME, style={} }) {
+    return <div style={{ width:size, height:size, borderRadius:'50%', background:'rgba(0,0,0,0.08)', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:f, fontWeight:600, fontSize:Math.round(size*0.34), color, flexShrink:0, ...style }}>{init}</div>;
+  }
+  function Btn({ label, style={}, ghost=false }) {
+    return <div style={{ background:ghost?'transparent':AME, color:ghost?AME:'white', border:ghost?`1.5px solid ${AME}`:'none', borderRadius:6, padding:'11px 22px', fontFamily:f, fontSize:14, fontWeight:600, display:'inline-flex', alignItems:'center', justifyContent:'center', cursor:'default', flexShrink:0, ...style }}>{label}</div>;
+  }
+  function StatusBar() {
+    return <div style={{ height:44, background:'rgba(0,0,0,0.05)', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 20px', fontFamily:f, fontSize:12, color:'#999', flexShrink:0 }}><span>9:41</span><span>●●● ▌ 100%</span></div>;
+  }
+  function HeroMsg({ hero, text }) {
+    return (
+      <div style={{ display:'flex', gap:8 }}>
+        <Av size={26} init={hero.init} color={hero.color} />
+        <div>
+          <div style={{ fontFamily:f, fontSize:11, color:hero.color, fontWeight:600, marginBottom:3 }}>{hero.short}</div>
+          <div style={{ background:'rgba(0,0,0,0.04)', borderLeft:`3px solid ${hero.color}`, borderRadius:'0 10px 10px 0', padding:'10px 14px', fontFamily:f, fontSize:13, lineHeight:1.4, color:'#222', maxWidth:262 }}>{text}</div>
+        </div>
+      </div>
+    );
+  }
+  function Annot({ children, style={} }) {
+    return <div style={{ fontFamily:f, fontSize:11, color:AME, fontStyle:'italic', lineHeight:1.3, ...style }}>{children}</div>;
+  }
+
+  /* ── Badge component ──
+     shape: 'hex' | 'circle' | 'shield'
+     state: 'earned' | 'locked'                     */
+  function Badge({ icon, label, sub, color=AME, state='earned', size='md' }) {
+    const dim = size==='lg' ? 80 : size==='sm' ? 44 : 60;
+    const locked = state==='locked';
+    return (
+      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, opacity: locked ? 0.38 : 1 }}>
+        {/* Hexagonal badge shape via clip-path */}
+        <div style={{
+          width: dim, height: dim,
+          background: locked ? 'rgba(0,0,0,0.08)' : `${color}18`,
+          border: `2px solid ${locked ? 'rgba(0,0,0,0.15)' : color}`,
+          borderRadius: 12,
+          display:'flex', alignItems:'center', justifyContent:'center',
+          fontSize: Math.round(dim*0.4),
+          position:'relative',
+        }}>
+          <span>{locked ? '◻' : icon}</span>
+          {state==='earned' && (
+            <div style={{ position:'absolute', top:-5, right:-5, width:16, height:16, borderRadius:'50%', background:AQUA, border:'2px solid #F5F5EF', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, color:'white', fontFamily:f, fontWeight:600 }}>✓</div>
+          )}
+        </div>
+        {label && <div style={{ fontFamily:f, fontSize:11, fontWeight:600, color: locked?'#aaa':'#222', textAlign:'center', maxWidth:72, lineHeight:1.2 }}>{label}</div>}
+        {sub && <div style={{ fontFamily:f, fontSize:10, color:'#aaa', textAlign:'center', maxWidth:72 }}>{sub}</div>}
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     01 — First trade: badge earned moment
+  ══════════════════════════════════════════════════════════ */
+
+  /* 1A: The badge appears right after order confirmation — mobile */
+  function FirstTradeBadgeMobile() {
+    return (
+      <div style={{ width:375, height:820, background:'#F5F5EF', display:'flex', flexDirection:'column', border:'2.5px solid #2A2A2A', borderRadius:40, overflow:'hidden', position:'relative' }}>
+        <StatusBar />
+        <div style={{ height:52, display:'flex', alignItems:'center', justifyContent:'center', borderBottom:'1px solid rgba(0,0,0,0.06)', flexShrink:0 }}>
+          <div style={{ fontFamily:f, fontWeight:600, fontSize:16 }}>Order executed</div>
+        </div>
+
+        {/* Confirmation */}
+        <div style={{ flex:1, padding:'20px 20px 12px', display:'flex', flexDirection:'column', gap:16 }}>
+          <div style={{ textAlign:'center' }}>
+            <div style={{ fontFamily:f, fontWeight:600, fontSize:22 }}>5 shares of AAPL</div>
+            <div style={{ fontFamily:f, fontSize:13, color:'#888' }}>purchased at $189.52</div>
+          </div>
+
+          {/* Achievement moment — appears immediately after confirmation */}
+          <div style={{ background:'white', border:`2px solid ${GOLD}`, borderRadius:12, padding:20, display:'flex', flexDirection:'column', alignItems:'center', gap:12, boxShadow:`0 4px 24px ${GOLD}22`, position:'relative' }}>
+            <div style={{ position:'absolute', top:-12, left:'50%', transform:'translateX(-50%)', background:GOLD, color:'white', borderRadius:999, padding:'3px 14px', fontFamily:f, fontSize:11, fontWeight:600, letterSpacing:'0.08em', whiteSpace:'nowrap' }}>ACHIEVEMENT UNLOCKED</div>
+            <Badge icon="◈" label="First Trade" sub="Investor" color={GOLD} state="earned" size="lg" />
+            <div style={{ textAlign:'center' }}>
+              <div style={{ fontFamily:f, fontWeight:600, fontSize:18 }}>First Trade</div>
+              <div style={{ fontFamily:f, fontSize:13, color:'#888', marginTop:4, lineHeight:1.4 }}>You placed your first simulated trade. Every great investor started exactly here.</div>
+            </div>
+          </div>
+
+          {/* Hero reacts to the milestone */}
+          <HeroMsg hero={WB} text="The first trade is always the hardest. You did it. Now let's make sure it's the beginning of something you understand — not just something you did." />
+
+          <Btn label="Continue to portfolio →" style={{ width:'100%', padding:14, borderRadius:8 }} />
+          <div style={{ textAlign:'center', fontFamily:f, fontSize:12, color:AME, cursor:'default' }}>View all achievements</div>
+        </div>
+      </div>
+    );
+  }
+
+  /* 1B: Desktop — badge reveal as a non-blocking toast + sidebar moment */
+  function FirstTradeBadgeDesktop() {
+    return (
+      <div style={{ width:1440, height:900, background:'#F5F5EF', display:'flex', flexDirection:'column', position:'relative' }}>
+        {/* Nav */}
+        <div style={{ height:64, borderBottom:'1.5px solid rgba(0,0,0,0.09)', display:'flex', alignItems:'center', padding:'0 40px', gap:32, flexShrink:0 }}>
+          <div style={{ fontFamily:f, fontWeight:600, fontSize:20 }}>simFolio</div>
+          <div style={{ flex:1 }} />
+          <Av size={34} init="J" />
+        </div>
+
+        {/* Main content — order confirmed */}
+        <div style={{ flex:1, display:'flex', minHeight:0 }}>
+          <div style={{ flex:1, padding:'40px 80px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:20 }}>
+            <div style={{ textAlign:'center' }}>
+              <div style={{ fontFamily:f, fontWeight:600, fontSize:32 }}>Order confirmed</div>
+              <div style={{ fontFamily:f, fontSize:16, color:'#888', marginTop:6 }}>5 shares of Apple Inc. at $189.52 · Total $947.61</div>
+            </div>
+            <div style={{ width:480, background:'white', border:'1px solid rgba(0,0,0,0.1)', borderRadius:8, padding:'0 20px' }}>
+              {[['Shares','5 × AAPL'],['Price','$189.52 / share'],['Regulatory fee','$0.01'],['Total deducted','$947.61'],['Cash remaining','$9,052.39']].map(([k,v]) => (
+                <div key={k} style={{ display:'flex', justifyContent:'space-between', padding:'10px 0', borderBottom:'1px solid rgba(0,0,0,0.06)', fontFamily:f, fontSize:14 }}>
+                  <span style={{ color:'#666' }}>{k}</span><span style={{ fontWeight:600 }}>{v}</span>
+                </div>
+              ))}
+            </div>
+            <Btn label="Back to portfolio →" style={{ borderRadius:8, padding:'12px 32px' }} />
+          </div>
+
+          {/* Hero sidebar — Warren reacts */}
+          <div style={{ width:360, borderLeft:'1.5px solid rgba(0,0,0,0.09)', display:'flex', flexDirection:'column' }}>
+            <div style={{ padding:'16px 22px', borderBottom:'1px solid rgba(0,0,0,0.08)', display:'flex', gap:12, alignItems:'center', flexShrink:0 }}>
+              <Av size={40} init="WB" color={AME} />
+              <div>
+                <div style={{ fontFamily:f, fontWeight:600, fontSize:16 }}>Warren Buffett</div>
+                <div style={{ fontFamily:f, fontSize:12, color:AME }}>Your advisor</div>
+              </div>
+            </div>
+            <div style={{ flex:1, padding:'16px 22px', display:'flex', flexDirection:'column', gap:12 }}>
+              <HeroMsg hero={WB} text="Good. Apple was a sound first choice. Now let's talk about what you actually bought — not just the ticker symbol." />
+              <div style={{ fontFamily:f, fontSize:12, color:'#aaa', fontStyle:'italic' }}>Ask Warren what Apple actually does, or continue to portfolio…</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Non-blocking toast — top right */}
+        <div style={{ position:'absolute', top:80, right:32, width:320, background:'white', border:`2px solid ${GOLD}`, borderRadius:10, padding:16, boxShadow:`0 6px 28px ${GOLD}22`, display:'flex', gap:14, alignItems:'center' }}>
+          <Badge icon="◈" label="" color={GOLD} state="earned" size="sm" />
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.12em', color:GOLD, marginBottom:3 }}>Achievement unlocked</div>
+            <div style={{ fontFamily:f, fontWeight:600, fontSize:15 }}>First Trade</div>
+            <div style={{ fontFamily:f, fontSize:12, color:'#888' }}>You placed your first simulated trade.</div>
+          </div>
+          <div style={{ fontFamily:f, fontSize:12, color:'#bbb', cursor:'default', flexShrink:0 }}>×</div>
+        </div>
+        <Annot style={{ position:'absolute', top:158, right:36 }}>non-blocking toast — doesn't interrupt the flow ↗</Annot>
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     02 — Achievement badge design language
+  ══════════════════════════════════════════════════════════ */
+  function BadgeLanguage() {
+    const badges = [
+      { icon:'◈', label:'First Trade',      sub:'Do',      color:GOLD,  state:'earned', note:'Earned on first confirmed buy or sell' },
+      { icon:'◇', label:'First Sale',       sub:'Do',      color:GOLD,  state:'earned', note:'Earned on first confirmed sell' },
+      { icon:'▲', label:'Up 10%',           sub:'Do',      color:AQUA,  state:'earned', note:'Portfolio value grows 10% from starting point' },
+      { icon:'◎', label:'Ask the Hero',     sub:'Learn',   color:AME,   state:'earned', note:'First free-form question to a hero' },
+      { icon:'⬡', label:'Full Council',     sub:'Learn',   color:AME,   state:'earned', note:'3 heroes in the council' },
+      { icon:'✦', label:'Market Hours',     sub:'Know',    color:'#666', state:'earned', note:'First order queued for market open' },
+      { icon:'◻', label:'First Loss',       sub:'Resilience', color:'#C04A4A', state:'earned', note:'Held a losing position without panic-selling' },
+      { icon:'○', label:'Limit Master',     sub:'Know',    color:'#888', state:'locked', note:'Locked — not yet earned' },
+      { icon:'○', label:'Portfolio Review', sub:'Reflect', color:'#888', state:'locked', note:'Locked — not yet earned' },
+    ];
+    return (
+      <div style={{ width:960, height:600, background:'#F5F5EF', borderRadius:8, border:'1.5px solid rgba(0,0,0,0.1)', padding:32, display:'flex', flexDirection:'column', gap:24 }}>
+        <div>
+          <div style={{ fontFamily:f, fontWeight:600, fontSize:20, marginBottom:4 }}>Achievement badge system</div>
+          <div style={{ fontFamily:f, fontSize:13, color:'#888', lineHeight:1.5 }}>Badges fall into four categories: Do (actions taken), Learn (concepts understood), Know (market mechanics), Reflect (portfolio review moments). Locked badges are visible but greyed — they show what's possible without pressure.</div>
+        </div>
+        <div style={{ display:'flex', gap:16, alignItems:'flex-start', flexWrap:'wrap' }}>
+          {badges.map(b => (
+            <div key={b.label} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4, width:90 }}>
+              <Badge icon={b.icon} label={b.label} color={b.color} state={b.state} size="md" />
+              <div style={{ fontFamily:f, fontSize:10, color: b.state==='locked'?'#bbb':b.color, textTransform:'uppercase', letterSpacing:'0.1em' }}>{b.sub}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ display:'flex', gap:20 }}>
+          {[['Do','Actions — placing trades, selling, queuing orders',GOLD],['Learn','Understanding a concept through hero interaction',AME],['Know','Market mechanics — hours, order types, fees',AQUA],['Reflect','Reviewing and discussing past decisions','#888']].map(([cat,desc,color]) => (
+            <div key={cat} style={{ flex:1, border:`1.5px dashed ${color}44`, borderRadius:6, padding:10 }}>
+              <div style={{ fontFamily:f, fontSize:11, color, fontWeight:600, marginBottom:4 }}>{cat}</div>
+              <div style={{ fontFamily:f, fontSize:11, color:'#666', lineHeight:1.4 }}>{desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     03 — Achievements gallery screen
+  ══════════════════════════════════════════════════════════ */
+  function AchievementsGalleryMobile() {
+    const earned = [
+      { icon:'◈', label:'First Trade',   color:GOLD, cat:'Do',    when:'Today' },
+      { icon:'◎', label:'Ask the Hero',  color:AME,  cat:'Learn', when:'Today' },
+      { icon:'✦', label:'Market Hours',  color:'#888',cat:'Know', when:'Day 1' },
+    ];
+    const locked = [
+      { icon:'○', label:'First Sale',       cat:'Do' },
+      { icon:'○', label:'Up 10%',           cat:'Do' },
+      { icon:'○', label:'Full Council',     cat:'Learn' },
+      { icon:'○', label:'First Loss',       cat:'Resilience' },
+      { icon:'○', label:'Limit Master',     cat:'Know' },
+      { icon:'○', label:'Portfolio Review', cat:'Reflect' },
+    ];
+    return (
+      <div style={{ width:375, height:920, background:'#F5F5EF', display:'flex', flexDirection:'column', border:'2.5px solid #2A2A2A', borderRadius:40, overflow:'hidden' }}>
+        <StatusBar />
+        <div style={{ height:52, display:'flex', alignItems:'center', padding:'0 20px', borderBottom:'1px solid rgba(0,0,0,0.06)', flexShrink:0 }}>
+          <div style={{ fontFamily:f, fontSize:13, color:AME }}>← Portfolio</div>
+          <div style={{ flex:1, textAlign:'center', fontFamily:f, fontWeight:600, fontSize:17 }}>Achievements</div>
+        </div>
+
+        <div style={{ flex:1, padding:'16px 20px', display:'flex', flexDirection:'column', gap:20, overflow:'hidden' }}>
+          {/* Progress summary */}
+          <div style={{ background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, padding:'14px 16px', display:'flex', gap:16 }}>
+            <div style={{ textAlign:'center', flex:1 }}>
+              <div style={{ fontFamily:f, fontWeight:600, fontSize:28, color:GOLD }}>3</div>
+              <div style={{ fontFamily:f, fontSize:11, color:'#888' }}>Earned</div>
+            </div>
+            <div style={{ width:1, background:'rgba(0,0,0,0.08)' }} />
+            <div style={{ textAlign:'center', flex:1 }}>
+              <div style={{ fontFamily:f, fontWeight:600, fontSize:28, color:'#aaa' }}>6</div>
+              <div style={{ fontFamily:f, fontSize:11, color:'#888' }}>Remaining</div>
+            </div>
+            <div style={{ width:1, background:'rgba(0,0,0,0.08)' }} />
+            <div style={{ textAlign:'center', flex:1 }}>
+              <div style={{ fontFamily:f, fontWeight:600, fontSize:28 }}>9</div>
+              <div style={{ fontFamily:f, fontSize:11, color:'#888' }}>Total</div>
+            </div>
+          </div>
+
+          {/* Earned */}
+          <div>
+            <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.13em', color:'#888', marginBottom:12 }}>Earned · 3</div>
+            <div style={{ display:'flex', gap:16, flexWrap:'wrap' }}>
+              {earned.map(b => (
+                <div key={b.label} style={{ display:'flex', gap:10, alignItems:'center', background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, padding:'10px 12px', flex:'1 1 calc(50% - 8px)' }}>
+                  <Badge icon={b.icon} color={b.color} state="earned" size="sm" />
+                  <div>
+                    <div style={{ fontFamily:f, fontWeight:600, fontSize:13 }}>{b.label}</div>
+                    <div style={{ fontFamily:f, fontSize:11, color:b.color }}>{b.cat} · {b.when}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Locked */}
+          <div>
+            <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.13em', color:'#888', marginBottom:12 }}>What's next</div>
+            <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+              {locked.map(b => (
+                <div key={b.label} style={{ display:'flex', gap:8, alignItems:'center', border:'1.5px dashed rgba(0,0,0,0.12)', borderRadius:8, padding:'9px 12px', flex:'1 1 calc(50% - 6px)', opacity:0.5 }}>
+                  <Badge icon="○" color="#aaa" state="locked" size="sm" />
+                  <div>
+                    <div style={{ fontFamily:f, fontSize:12, color:'#555' }}>{b.label}</div>
+                    <div style={{ fontFamily:f, fontSize:10, color:'#aaa' }}>{b.cat}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* Desktop gallery */
+  function AchievementsGalleryDesktop() {
+    return (
+      <div style={{ width:1280, height:800, background:'#F5F5EF', display:'flex', flexDirection:'column', borderRadius:8, border:'1.5px solid rgba(0,0,0,0.1)', overflow:'hidden' }}>
+        <div style={{ height:64, borderBottom:'1.5px solid rgba(0,0,0,0.09)', display:'flex', alignItems:'center', padding:'0 48px', gap:32, flexShrink:0 }}>
+          <div style={{ fontFamily:f, fontWeight:600, fontSize:20 }}>simFolio</div>
+          <div style={{ flex:1, display:'flex', gap:24, fontFamily:f, fontSize:15, color:'#888' }}>
+            <span style={{ color:AME, fontWeight:600 }}>Portfolio</span><span>Markets</span><span style={{ color:'#222', fontWeight:600 }}>Achievements</span>
+          </div>
+          <Av size={34} init="J" />
+        </div>
+        <div style={{ flex:1, display:'flex', minHeight:0 }}>
+          {/* Left: summary */}
+          <div style={{ width:280, borderRight:'1.5px solid rgba(0,0,0,0.09)', padding:'32px 28px', display:'flex', flexDirection:'column', gap:20 }}>
+            <div>
+              <div style={{ fontFamily:f, fontWeight:600, fontSize:24, marginBottom:4 }}>Your progress</div>
+              <div style={{ fontFamily:f, fontSize:13, color:'#888' }}>3 of 9 badges earned</div>
+            </div>
+            <div style={{ height:6, background:'rgba(0,0,0,0.08)', borderRadius:3, overflow:'hidden' }}>
+              <div style={{ width:'33%', height:'100%', background:GOLD, borderRadius:3 }} />
+            </div>
+            {[['Do','1 of 2',GOLD],['Learn','1 of 2',AME],['Know','1 of 2',AQUA],['Reflect','0 of 1','#888'],['Resilience','0 of 1','#C04A4A']].map(([cat,prog,color]) => (
+              <div key={cat} style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <div style={{ fontFamily:f, fontSize:13, color }}>{cat}</div>
+                <div style={{ fontFamily:f, fontSize:12, color:'#aaa' }}>{prog}</div>
+              </div>
+            ))}
+            <div style={{ marginTop:'auto', border:`1.5px dashed ${AME}33`, borderRadius:8, padding:14 }}>
+              <div style={{ fontFamily:f, fontSize:11, color:AME, fontWeight:600, marginBottom:6 }}>NEXT LIKELY</div>
+              <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                <Badge icon="◇" color={GOLD} state="locked" size="sm" />
+                <div>
+                  <div style={{ fontFamily:f, fontWeight:600, fontSize:13 }}>First Sale</div>
+                  <div style={{ fontFamily:f, fontSize:11, color:'#888' }}>Sell any position to earn this</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: badge grid */}
+          <div style={{ flex:1, padding:'32px 40px', overflow:'hidden' }}>
+            <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.13em', color:'#888', marginBottom:20 }}>All achievements</div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:24 }}>
+              {[
+                { icon:'◈', label:'First Trade',      sub:'Do',          color:GOLD,    state:'earned', when:'Today' },
+                { icon:'◎', label:'Ask the Hero',     sub:'Learn',       color:AME,     state:'earned', when:'Today' },
+                { icon:'✦', label:'Market Hours',     sub:'Know',        color:'#666',  state:'earned', when:'Day 1' },
+                { icon:'◇', label:'First Sale',       sub:'Do',          color:GOLD,    state:'locked' },
+                { icon:'▲', label:'Up 10%',           sub:'Do',          color:AQUA,    state:'locked' },
+                { icon:'⬡', label:'Full Council',     sub:'Learn',       color:AME,     state:'locked' },
+                { icon:'◻', label:'First Loss',       sub:'Resilience',  color:'#C04A4A',state:'locked'},
+                { icon:'○', label:'Limit Master',     sub:'Know',        color:'#888',  state:'locked' },
+                { icon:'↺', label:'Portfolio Review', sub:'Reflect',     color:'#888',  state:'locked' },
+              ].map(b => (
+                <div key={b.label} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8, padding:16, background:'white', border:`1px solid ${b.state==='earned'?b.color+'33':'rgba(0,0,0,0.07)'}`, borderRadius:8 }}>
+                  <Badge icon={b.icon} color={b.color} state={b.state} size="md" />
+                  <div style={{ textAlign:'center' }}>
+                    <div style={{ fontFamily:f, fontWeight:600, fontSize:13, color:b.state==='locked'?'#aaa':'#222' }}>{b.label}</div>
+                    <div style={{ fontFamily:f, fontSize:11, color:b.state==='locked'?'#ccc':b.color }}>{b.sub}{b.when ? ` · ${b.when}` : ''}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     04 — Badge detail: tap to learn what it means
+  ══════════════════════════════════════════════════════════ */
+  function BadgeDetail() {
+    return (
+      <div style={{ width:375, height:680, background:'#F5F5EF', display:'flex', flexDirection:'column', border:'2.5px solid #2A2A2A', borderRadius:40, overflow:'hidden' }}>
+        <StatusBar />
+        <div style={{ height:52, display:'flex', alignItems:'center', padding:'0 20px', borderBottom:'1px solid rgba(0,0,0,0.06)', flexShrink:0 }}>
+          <div style={{ fontFamily:f, fontSize:13, color:AME }}>← Achievements</div>
+        </div>
+        <div style={{ flex:1, padding:'24px 24px', display:'flex', flexDirection:'column', gap:16, alignItems:'center' }}>
+          <Badge icon="◈" label="" color={GOLD} state="earned" size="lg" />
+          <div style={{ textAlign:'center' }}>
+            <div style={{ fontFamily:f, fontWeight:600, fontSize:24 }}>First Trade</div>
+            <div style={{ fontFamily:f, fontSize:12, color:GOLD, textTransform:'uppercase', letterSpacing:'0.1em', marginTop:2 }}>Do · Earned today</div>
+          </div>
+          <div style={{ fontFamily:f, fontSize:14, color:'#555', textAlign:'center', lineHeight:1.6, maxWidth:300 }}>
+            You placed your first simulated buy order. This is the hardest step — deciding to begin. Every investor you admire started here.
+          </div>
+          <div style={{ width:'100%', background:'rgba(138,96,235,0.05)', border:`1.5px dashed ${AME}33`, borderRadius:8, padding:14 }}>
+            <div style={{ fontFamily:f, fontSize:11, color:AME, fontWeight:600, marginBottom:6 }}>WHAT WARREN SAID WHEN YOU EARNED THIS</div>
+            <div style={{ fontFamily:f, fontSize:13, color:'#333', lineHeight:1.5, fontStyle:'italic' }}>"The first trade is always the hardest. You did it. Now let's make sure it's the beginning of something you understand."</div>
+          </div>
+          <div style={{ fontFamily:f, fontSize:13, color:AME, cursor:'default' }}>Share this achievement →</div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     05 — Hierarchy: Badge → Medal → Trophy
+  ══════════════════════════════════════════════════════════ */
+
+  /* Visual design language for the three tiers */
+  function HierarchyOverview() {
+    return (
+      <div style={{ width:1100, height:560, background:'#F5F5EF', borderRadius:8, border:'1.5px solid rgba(0,0,0,0.1)', padding:'32px 40px', display:'flex', flexDirection:'column', gap:28 }}>
+        <div>
+          <div style={{ fontFamily:f, fontWeight:600, fontSize:22, marginBottom:4 }}>Three-tier progression: Badge → Medal → Trophy</div>
+          <div style={{ fontFamily:f, fontSize:13, color:'#888', lineHeight:1.5 }}>Badges are earned by trying something new. Medals are earned by collecting a thematic set of badges. Trophies are earned by collecting medals — they mark a genuine investor arc.</div>
+        </div>
+        <div style={{ display:'flex', gap:0, flex:1 }}>
+
+          {/* Tier 1: Badge */}
+          <div style={{ flex:1, borderRight:'1.5px dashed rgba(0,0,0,0.1)', paddingRight:32, display:'flex', flexDirection:'column', gap:16 }}>
+            <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.14em', color:GOLD }}>Tier 1 · Badge</div>
+            <div style={{ fontFamily:f, fontWeight:600, fontSize:17 }}>One new thing tried</div>
+            <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+              {[['◈','First Trade',GOLD],['⬡','ETF Trade',AQUA],['◻','Bond Buy','#888'],['△','Call Option','#C04A4A'],['▽','Put Option','#5A8FD4'],['◎','Limit Order',AME]].map(([icon,label,color]) => (
+                <div key={label} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
+                  <div style={{ width:44, height:44, borderRadius:8, background:`${color}14`, border:`1.5px solid ${color}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18 }}>{icon}</div>
+                  <div style={{ fontFamily:f, fontSize:10, color:'#666', textAlign:'center', maxWidth:52, lineHeight:1.2 }}>{label}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontFamily:f, fontSize:12, color:'#aaa', lineHeight:1.5 }}>Each badge = first time with that instrument or order type. Can't be repeated — it's about discovery, not grinding.</div>
+          </div>
+
+          {/* Arrow */}
+          <div style={{ width:48, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+            <div style={{ fontFamily:f, fontSize:24, color:'#ccc' }}>→</div>
+          </div>
+
+          {/* Tier 2: Medal */}
+          <div style={{ flex:1, borderRight:'1.5px dashed rgba(0,0,0,0.1)', padding:'0 32px', display:'flex', flexDirection:'column', gap:16 }}>
+            <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.14em', color:AME }}>Tier 2 · Medal</div>
+            <div style={{ fontFamily:f, fontWeight:600, fontSize:17 }}>A theme fully explored</div>
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              {[
+                { label:'Market Explorer', color:GOLD,  desc:'Traded stocks + ETF + 1 more asset class', badges:['◈','⬡','◻'] },
+                { label:'Order Master',    color:AME,   desc:'Used market + limit + 1 more order type',  badges:['◎','◈','△'] },
+                { label:'Options Trader',  color:'#C04A4A', desc:'Placed a call AND a put',              badges:['△','▽','◎'] },
+              ].map(({ label, color, desc, badges }) => (
+                <div key={label} style={{ display:'flex', gap:10, alignItems:'center', padding:'10px 12px', border:`1.5px solid ${color}33`, borderRadius:8, background:`${color}06` }}>
+                  {/* Medal shape — circular with inner ring */}
+                  <div style={{ width:44, height:44, borderRadius:'50%', border:`3px solid ${color}`, background:`${color}14`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                    <div style={{ width:28, height:28, borderRadius:'50%', border:`1.5px solid ${color}88`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13 }}>
+                      {badges[0]}
+                    </div>
+                  </div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontFamily:f, fontWeight:600, fontSize:13, color }}>{label}</div>
+                    <div style={{ fontFamily:f, fontSize:11, color:'#888', lineHeight:1.3 }}>{desc}</div>
+                    <div style={{ display:'flex', gap:4, marginTop:4 }}>
+                      {badges.map((b,i) => <div key={i} style={{ width:18, height:18, borderRadius:3, background:`${color}18`, border:`1px solid ${color}44`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:10 }}>{b}</div>)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Arrow */}
+          <div style={{ width:48, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+            <div style={{ fontFamily:f, fontSize:24, color:'#ccc' }}>→</div>
+          </div>
+
+          {/* Tier 3: Trophy */}
+          <div style={{ flex:1, paddingLeft:32, display:'flex', flexDirection:'column', gap:16 }}>
+            <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.14em', color:AQUA }}>Tier 3 · Trophy</div>
+            <div style={{ fontFamily:f, fontWeight:600, fontSize:17 }}>A genuine investor arc</div>
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              {[
+                { label:'Well-Rounded Investor', medals:['Market Explorer','Order Master','Diversifier'],     color:AQUA },
+                { label:'Risk Manager',           medals:['Options Trader','Order Master','First Loss held'], color:'#C04A4A' },
+              ].map(({ label, medals, color }) => (
+                <div key={label} style={{ padding:'12px 14px', border:`2px solid ${color}44`, borderRadius:10, background:`${color}06`, position:'relative' }}>
+                  {/* Trophy shape — pentagon star vibe using nested divs */}
+                  <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:8 }}>
+                    <div style={{ width:48, height:48, borderRadius:'50%', border:`3px double ${color}`, background:`${color}14`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, flexShrink:0 }}>★</div>
+                    <div>
+                      <div style={{ fontFamily:f, fontWeight:600, fontSize:14, color }}>{label}</div>
+                      <div style={{ fontFamily:f, fontSize:11, color:'#888' }}>Trophy · {medals.length} medals</div>
+                    </div>
+                  </div>
+                  <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                    {medals.map(m => <div key={m} style={{ padding:'3px 8px', border:`1px solid ${color}33`, borderRadius:999, fontFamily:f, fontSize:10, color, background:`${color}08` }}>{m}</div>)}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontFamily:f, fontSize:12, color:'#aaa', lineHeight:1.5 }}>Trophies mark a meaningful arc — not grinding, but genuine breadth of experience.</div>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+
+  /* Instrument badge map — full catalogue */
+  function InstrumentBadgeMap() {
+    const groups = [
+      { cat:'Asset classes', color:GOLD, items:[
+        { icon:'◈', label:'Stock trade', trigger:'Buy or sell any individual stock' },
+        { icon:'⬡', label:'ETF trade', trigger:'Buy or sell any ETF (e.g. VTI, SPY)' },
+        { icon:'◻', label:'Index fund', trigger:'Buy an index fund (e.g. Fidelity Zero)' },
+        { icon:'▣', label:'REIT', trigger:'Buy any real estate investment trust' },
+        { icon:'◎', label:'Bond', trigger:'Buy a US Treasury or corporate bond' },
+        { icon:'◈', label:'Crypto', trigger:'Buy BTC, ETH, or any digital asset' },
+      ]},
+      { cat:'Order types', color:AME, items:[
+        { icon:'◈', label:'Market order', trigger:'First buy using a market order' },
+        { icon:'◎', label:'Limit order', trigger:'First limit order placed' },
+        { icon:'▲', label:'Stop order', trigger:'First stop-loss order set' },
+        { icon:'◇', label:'Stop-limit', trigger:'First stop-limit order placed' },
+        { icon:'✦', label:'After-hours', trigger:'Order queued outside market hours' },
+        { icon:'↺', label:'GTC order', trigger:'Good-till-cancelled order placed' },
+      ]},
+      { cat:'Options', color:'#C04A4A', items:[
+        { icon:'△', label:'Call option', trigger:'Buy a call — right to buy at strike price' },
+        { icon:'▽', label:'Put option', trigger:'Buy a put — right to sell at strike price' },
+        { icon:'◇', label:'Covered call', trigger:'Sell a call against a position you hold' },
+        { icon:'⬡', label:'Protective put', trigger:'Buy a put to hedge a long position' },
+      ]},
+    ];
+    return (
+      <div style={{ width:1100, height:620, background:'#F5F5EF', borderRadius:8, border:'1.5px solid rgba(0,0,0,0.1)', padding:'28px 36px', display:'flex', flexDirection:'column', gap:20 }}>
+        <div>
+          <div style={{ fontFamily:f, fontWeight:600, fontSize:20, marginBottom:4 }}>Instrument + order type badge catalogue</div>
+          <div style={{ fontFamily:f, fontSize:13, color:'#888' }}>Each badge fires exactly once — the first time a user touches that instrument or order type. Educational concept is explained inline when the badge is earned.</div>
+        </div>
+        <div style={{ display:'flex', gap:24, flex:1 }}>
+          {groups.map(({ cat, color, items }) => (
+            <div key={cat} style={{ flex:1, display:'flex', flexDirection:'column', gap:10 }}>
+              <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.14em', color, marginBottom:4 }}>{cat}</div>
+              {items.map(({ icon, label, trigger }) => (
+                <div key={label} style={{ display:'flex', gap:10, alignItems:'flex-start', padding:'9px 10px', background:'white', border:`1px solid ${color}22`, borderRadius:6 }}>
+                  <div style={{ width:30, height:30, borderRadius:6, background:`${color}12`, border:`1.5px solid ${color}55`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, flexShrink:0 }}>{icon}</div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontFamily:f, fontWeight:600, fontSize:12 }}>{label}</div>
+                    <div style={{ fontFamily:f, fontSize:11, color:'#888', lineHeight:1.3 }}>{trigger}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  /* Medal earned moment — mobile */
+  function MedalEarnedMobile() {
+    return (
+      <div style={{ width:375, height:820, background:'#F5F5EF', display:'flex', flexDirection:'column', border:'2.5px solid #2A2A2A', borderRadius:40, overflow:'hidden' }}>
+        <div style={{ height:44, background:'rgba(0,0,0,0.05)', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 20px', fontFamily:f, fontSize:12, color:'#999', flexShrink:0 }}><span>9:41</span><span>●●● ▌</span></div>
+        <div style={{ height:52, display:'flex', alignItems:'center', justifyContent:'center', borderBottom:'1px solid rgba(0,0,0,0.06)', flexShrink:0 }}>
+          <div style={{ fontFamily:f, fontWeight:600, fontSize:16 }}>Order executed</div>
+        </div>
+        <div style={{ flex:1, padding:'20px 20px 12px', display:'flex', flexDirection:'column', gap:16, alignItems:'center' }}>
+          <div style={{ textAlign:'center' }}>
+            <div style={{ fontFamily:f, fontWeight:600, fontSize:20 }}>ETF trade confirmed</div>
+            <div style={{ fontFamily:f, fontSize:13, color:'#888' }}>10 shares of VTI at $237.40</div>
+          </div>
+
+          {/* Badge earned first */}
+          <div style={{ width:'100%', background:'white', border:`1.5px solid ${AQUA}55`, borderRadius:10, padding:14, display:'flex', gap:12, alignItems:'center' }}>
+            <div style={{ width:40, height:40, borderRadius:8, background:`${AQUA}14`, border:`1.5px solid ${AQUA}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>⬡</div>
+            <div>
+              <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.1em', color:AQUA, marginBottom:2 }}>Badge earned</div>
+              <div style={{ fontFamily:f, fontWeight:600, fontSize:15 }}>ETF Trade</div>
+            </div>
+          </div>
+
+          {/* Then — medal unlocked */}
+          <div style={{ width:'100%', background:'white', border:`2px solid ${GOLD}`, borderRadius:12, padding:20, display:'flex', flexDirection:'column', alignItems:'center', gap:12, boxShadow:`0 4px 28px ${GOLD}22`, position:'relative' }}>
+            <div style={{ position:'absolute', top:-12, left:'50%', transform:'translateX(-50%)', background:GOLD, color:'white', borderRadius:999, padding:'3px 16px', fontFamily:f, fontSize:11, fontWeight:600, letterSpacing:'0.08em', whiteSpace:'nowrap' }}>MEDAL UNLOCKED</div>
+            {/* Medal shape */}
+            <div style={{ width:72, height:72, borderRadius:'50%', border:`4px solid ${GOLD}`, background:`${GOLD}14`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <div style={{ width:46, height:46, borderRadius:'50%', border:`2px solid ${GOLD}88`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:24 }}>◈</div>
+            </div>
+            <div style={{ textAlign:'center' }}>
+              <div style={{ fontFamily:f, fontWeight:600, fontSize:20 }}>Market Explorer</div>
+              <div style={{ fontFamily:f, fontSize:13, color:'#888', marginTop:4, lineHeight:1.4 }}>You've traded stocks, an ETF, and a bond. You're no longer a one-instrument investor.</div>
+            </div>
+            {/* Badges that made it */}
+            <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+              {[['◈','Stock',GOLD],['⬡','ETF',AQUA],['◻','Bond','#888']].map(([icon,label,color]) => (
+                <div key={label} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
+                  <div style={{ width:32, height:32, borderRadius:6, background:`${color}14`, border:`1.5px solid ${color}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>{icon}</div>
+                  <div style={{ fontFamily:f, fontSize:10, color:'#888' }}>{label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <HeroMsg hero={WB} text="Exploring different instruments is how you learn what fits your style. Most investors find their groove by touching a few different things first." />
+          <Btn label="Continue to portfolio →" style={{ width:'100%', padding:13, borderRadius:8 }} />
+        </div>
+      </div>
+    );
+  }
+
+  /* Trophy earned — mobile */
+  function TrophyEarnedMobile() {
+    return (
+      <div style={{ width:375, height:820, background:'#13131F', display:'flex', flexDirection:'column', border:'2.5px solid #2A2A2A', borderRadius:40, overflow:'hidden' }}>
+        <div style={{ height:44, background:'rgba(255,255,255,0.03)', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 20px', fontFamily:f, fontSize:12, color:'#555', flexShrink:0 }}><span>9:41</span><span>●●● ▌</span></div>
+        <div style={{ flex:1, padding:'32px 24px', display:'flex', flexDirection:'column', gap:20, alignItems:'center', justifyContent:'center' }}>
+          {/* Trophy — most prominent moment in the app */}
+          <div style={{ textAlign:'center', marginBottom:4 }}>
+            <div style={{ fontFamily:f, fontSize:13, color:AQUA, textTransform:'uppercase', letterSpacing:'0.14em', marginBottom:8 }}>Trophy earned</div>
+            <div style={{ width:100, height:100, borderRadius:'50%', border:`4px double ${AQUA}`, background:`${AQUA}10`, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px', boxShadow:`0 0 40px ${AQUA}33` }}>
+              <div style={{ width:64, height:64, borderRadius:'50%', border:`2px solid ${AQUA}66`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:36, color:AQUA }}>★</div>
+            </div>
+            <div style={{ fontFamily:f, fontWeight:600, fontSize:26, color:'#DDDDF0' }}>Well-Rounded Investor</div>
+            <div style={{ fontFamily:f, fontSize:14, color:'#5A5A78', marginTop:4, lineHeight:1.5 }}>You've explored diverse asset classes, mastered multiple order types, and built a genuinely diversified portfolio.</div>
+          </div>
+
+          {/* Medals that built this trophy */}
+          <div style={{ width:'100%', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:10, padding:14 }}>
+            <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.12em', color:'#5A5A78', marginBottom:12 }}>Built from 3 medals</div>
+            {['Market Explorer','Order Master','Diversifier'].map((m,i) => (
+              <div key={m} style={{ display:'flex', gap:10, alignItems:'center', padding:'8px 0', borderBottom:i<2?'1px solid rgba(255,255,255,0.05)':'none' }}>
+                <div style={{ width:28, height:28, borderRadius:'50%', border:`2px solid ${GOLD}`, background:`${GOLD}14`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, flexShrink:0 }}>◈</div>
+                <div style={{ fontFamily:f, fontSize:13, color:'#DDDDF0' }}>{m}</div>
+                <div style={{ marginLeft:'auto', fontFamily:f, fontSize:11, color:AQUA }}>✓</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ fontFamily:f, fontSize:13, color:'#5A5A78', textAlign:'center', lineHeight:1.5 }}>
+            This trophy will be recorded in your achievement history alongside what your council said.
+          </div>
+          <Btn label="See all achievements →" style={{ width:'100%', padding:13, borderRadius:8 }} />
+        </div>
+      </div>
+    );
+  }
+
+  /* Full gallery with medals + trophies section */
+  function FullProgressionGallery() {
+    return (
+      <div style={{ width:1280, height:820, background:'#F5F5EF', borderRadius:8, border:'1.5px solid rgba(0,0,0,0.1)', display:'flex', flexDirection:'column', overflow:'hidden' }}>
+        <div style={{ height:64, borderBottom:'1.5px solid rgba(0,0,0,0.09)', display:'flex', alignItems:'center', padding:'0 48px', gap:32, flexShrink:0 }}>
+          <div style={{ fontFamily:f, fontWeight:600, fontSize:20 }}>simFolio</div>
+          <div style={{ flex:1, display:'flex', gap:24, fontFamily:f, fontSize:15, color:'#888' }}>
+            <span>Portfolio</span><span>Markets</span><span style={{ color:AME, fontWeight:600 }}>Achievements</span>
+          </div>
+          <Av size={34} init="J" />
+        </div>
+        <div style={{ flex:1, display:'flex', minHeight:0 }}>
+          {/* Left sidebar */}
+          <div style={{ width:240, borderRight:'1.5px solid rgba(0,0,0,0.09)', padding:'24px 22px', display:'flex', flexDirection:'column', gap:16 }}>
+            <div style={{ fontFamily:f, fontWeight:600, fontSize:18 }}>Your journey</div>
+            {[['Badges','12 / 24',GOLD],['Medals','2 / 8',AME],['Trophies','1 / 4',AQUA]].map(([tier,prog,color]) => (
+              <div key={tier}>
+                <div style={{ display:'flex', justifyContent:'space-between', fontFamily:f, fontSize:13, marginBottom:5 }}>
+                  <span style={{ color }}>{tier}</span><span style={{ color:'#888' }}>{prog}</span>
+                </div>
+                <div style={{ height:5, background:'rgba(0,0,0,0.07)', borderRadius:3, overflow:'hidden' }}>
+                  <div style={{ width:`${parseInt(prog)*100/parseInt(prog.split('/')[1])}%`, height:'100%', background:color, borderRadius:3 }} />
+                </div>
+              </div>
+            ))}
+            <div style={{ height:1, background:'rgba(0,0,0,0.08)', margin:'4px 0' }} />
+            {['All','Badges','Medals','Trophies','Do','Learn','Know','Reflect'].map((f2,i) => (
+              <div key={f2} style={{ fontFamily:f, fontSize:13, color:i===0?AME:'#888', fontWeight:i===0?600:400, cursor:'default' }}>{f2}</div>
+            ))}
+          </div>
+
+          {/* Main content */}
+          <div style={{ flex:1, padding:'24px 36px', overflow:'hidden', display:'flex', flexDirection:'column', gap:24 }}>
+            {/* Trophies row */}
+            <div>
+              <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.13em', color:AQUA, marginBottom:14 }}>Trophies · 1 earned</div>
+              <div style={{ display:'flex', gap:16 }}>
+                {[{ label:'Well-Rounded Investor', earned:true },{ label:'Risk Manager', earned:false },{ label:'Income Builder', earned:false },{ label:'Long-Term Thinker', earned:false }].map(({ label, earned }) => (
+                  <div key={label} style={{ flex:1, border:`2px solid ${earned?AQUA:'rgba(0,0,0,0.08)'}`, borderRadius:10, padding:16, display:'flex', flexDirection:'column', alignItems:'center', gap:8, opacity:earned?1:0.4 }}>
+                    <div style={{ width:52, height:52, borderRadius:'50%', border:`3px double ${earned?AQUA:'#aaa'}`, background:earned?`${AQUA}10`:'rgba(0,0,0,0.03)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, color:earned?AQUA:'#aaa' }}>★</div>
+                    <div style={{ fontFamily:f, fontWeight:600, fontSize:13, textAlign:'center', color:earned?'#222':'#aaa' }}>{label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Medals row */}
+            <div>
+              <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.13em', color:AME, marginBottom:14 }}>Medals · 2 earned</div>
+              <div style={{ display:'flex', gap:14 }}>
+                {[{ label:'Market Explorer', earned:true, color:GOLD },{ label:'Order Master', earned:true, color:AME },{ label:'Options Trader', earned:false, color:'#C04A4A' },{ label:'Diversifier', earned:false, color:AQUA },{ label:'Income Investor', earned:false, color:'#888' }].map(({ label, earned, color }) => (
+                  <div key={label} style={{ flex:1, border:`1.5px solid ${earned?color+'55':'rgba(0,0,0,0.08)'}`, borderRadius:8, padding:14, display:'flex', flexDirection:'column', alignItems:'center', gap:8, opacity:earned?1:0.4 }}>
+                    <div style={{ width:44, height:44, borderRadius:'50%', border:`3px solid ${earned?color:'#aaa'}`, background:earned?`${color}14`:'rgba(0,0,0,0.03)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18 }}>◈</div>
+                    <div style={{ fontFamily:f, fontWeight:600, fontSize:12, textAlign:'center', color:earned?'#222':'#aaa' }}>{label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Badges row — compact */}
+            <div>
+              <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.13em', color:GOLD, marginBottom:14 }}>Recent badges</div>
+              <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
+                {[['◈','First Trade',GOLD,true],['⬡','ETF',AQUA,true],['◻','Bond','#888',true],['◎','Limit Order',AME,true],['△','Call Option','#C04A4A',false],['▽','Put Option','#5A8FD4',false],['▣','REIT',GOLD,false],['↺','GTC Order','#888',false]].map(([icon,label,color,earned]) => (
+                  <div key={label} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4, opacity:earned?1:0.38 }}>
+                    <div style={{ width:40, height:40, borderRadius:8, background:`${color}12`, border:`1.5px solid ${earned?color:'rgba(0,0,0,0.12)'}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18 }}>{icon}</div>
+                    <div style={{ fontFamily:f, fontSize:10, color:earned?'#555':'#aaa', textAlign:'center' }}>{label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     MASTERY STATE — all 4 trophies earned
+     Trophy design ensures full transaction curriculum coverage:
+       Trophy 1 · Well-Rounded Investor  → stocks, ETF, index, REIT
+       Trophy 2 · Risk Manager           → options (call + put), stop orders
+       Trophy 3 · Income Builder         → bonds, dividends, REITs, GTC orders
+       Trophy 4 · Long-Term Thinker      → limit orders, portfolio reviews, held through loss
+     Earning all 4 = every transaction type on the platform touched.
+  ══════════════════════════════════════════════════════════ */
+  function MasteryState() {
+    const trophies = [
+      { label:'Well-Rounded Investor', color:AQUA,       covers:'Stocks · ETF · Index · REIT' },
+      { label:'Risk Manager',          color:'#C04A4A',  covers:'Options (call + put) · Stop orders' },
+      { label:'Income Builder',        color:GOLD,       covers:'Bonds · Dividends · REITs · GTC orders' },
+      { label:'Long-Term Thinker',     color:AME,        covers:'Limit orders · Portfolio reviews · Held through a loss' },
+    ];
+    return (
+      <div style={{ width:1280, height:820, background:'#0E0E1A', borderRadius:8, border:'1px solid rgba(255,255,255,0.06)', display:'flex', flexDirection:'column', overflow:'hidden' }}>
+        <div style={{ height:64, borderBottom:'1px solid rgba(255,255,255,0.06)', display:'flex', alignItems:'center', padding:'0 48px', gap:32, flexShrink:0 }}>
+          <div style={{ fontFamily:f, fontWeight:600, fontSize:20, color:'#DDDDF0' }}>simFolio</div>
+          <div style={{ flex:1, display:'flex', gap:24, fontFamily:f, fontSize:15, color:'#3A3A5A' }}>
+            <span>Portfolio</span><span>Markets</span><span style={{ color:AQUA, fontWeight:600 }}>Achievements</span>
+          </div>
+          <Av size={34} init="J" style={{ background:'rgba(255,255,255,0.07)' }} />
+        </div>
+
+        <div style={{ flex:1, display:'flex', minHeight:0 }}>
+          {/* Left — what mastery means */}
+          <div style={{ width:380, borderRight:'1px solid rgba(255,255,255,0.06)', padding:'40px 36px', display:'flex', flexDirection:'column', gap:20 }}>
+            {/* The mastery mark */}
+            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:14, padding:'24px 0' }}>
+              <div style={{ width:96, height:96, borderRadius:'50%', border:`3px double ${AQUA}`, background:`${AQUA}0D`, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:`0 0 48px ${AQUA}22` }}>
+                <div style={{ width:60, height:60, borderRadius:'50%', border:`2px solid ${AQUA}55`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:32, color:AQUA }}>★</div>
+              </div>
+              <div style={{ textAlign:'center' }}>
+                <div style={{ fontFamily:f, fontWeight:600, fontSize:26, color:'#DDDDF0' }}>Complete Investor</div>
+                <div style={{ fontFamily:f, fontSize:13, color:'#5A5A78', marginTop:4 }}>All 4 trophies · Every transaction mastered</div>
+              </div>
+            </div>
+
+            <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:8, padding:16 }}>
+              <div style={{ fontFamily:f, fontSize:11, color:'#5A5A78', textTransform:'uppercase', letterSpacing:'0.13em', marginBottom:10 }}>What this means</div>
+              <div style={{ fontFamily:f, fontSize:13, color:'#AAAACC', lineHeight:1.6 }}>
+                You have now performed every category of transaction this platform supports — from a basic market order to a covered call. Not by following a curriculum, but by exploring on your own terms.
+              </div>
+            </div>
+
+            <div style={{ background:'rgba(138,96,235,0.08)', border:`1px solid ${AME}22`, borderRadius:8, padding:14 }}>
+              <div style={{ fontFamily:f, fontSize:11, color:AME, fontWeight:600, marginBottom:8 }}>WARREN SAYS</div>
+              <div style={{ fontFamily:f, fontSize:13, color:'#AAAACC', lineHeight:1.5, fontStyle:'italic' }}>
+                "You've done what most investors never do — you've tried everything and formed your own opinions. That's not a small thing."
+              </div>
+            </div>
+
+            <div style={{ fontFamily:f, fontSize:12, color:'#3A3A5A', textAlign:'center', lineHeight:1.5, marginTop:'auto' }}>
+              The platform has nothing left to introduce. What you do next is entirely your own.
+            </div>
+          </div>
+
+          {/* Right — the 4 trophies + what each covers */}
+          <div style={{ flex:1, padding:'40px 40px', display:'flex', flexDirection:'column', gap:24 }}>
+            <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.14em', color:'#3A3A5A' }}>4 trophies · designed to cover every transaction</div>
+            <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+              {trophies.map(({ label, color, covers }) => (
+                <div key={label} style={{ display:'flex', gap:16, alignItems:'center', padding:'16px 20px', border:`1.5px solid ${color}33`, borderRadius:10, background:`${color}08` }}>
+                  <div style={{ width:56, height:56, borderRadius:'50%', border:`3px double ${color}`, background:`${color}12`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, color, flexShrink:0, boxShadow:`0 0 20px ${color}22` }}>★</div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontFamily:f, fontWeight:600, fontSize:17, color:'#DDDDF0', marginBottom:4 }}>{label}</div>
+                    <div style={{ fontFamily:f, fontSize:12, color:'#5A5A78' }}>Covers: {covers}</div>
+                  </div>
+                  <div style={{ width:24, height:24, borderRadius:'50%', background:AQUA, display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontSize:12, flexShrink:0 }}>✓</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Transaction coverage map */}
+            <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:8, padding:16 }}>
+              <div style={{ fontFamily:f, fontSize:11, color:'#5A5A78', textTransform:'uppercase', letterSpacing:'0.13em', marginBottom:12 }}>Full transaction coverage</div>
+              <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                {['Market order','Limit order','Stop order','Stop-limit','GTC order','After-hours queue','Stock buy/sell','ETF','Index fund','REIT','Bond','Call option','Put option','Covered call','Protective put','Dividend stock','Portfolio review','Held through a loss'].map(item => (
+                  <div key={item} style={{ padding:'4px 10px', border:`1px solid ${AQUA}33`, borderRadius:999, fontFamily:f, fontSize:11, color:AQUA, background:`${AQUA}08` }}>{item} ✓</div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     APP
+  ══════════════════════════════════════════════════════════ */
+  function App() {
+    return (
+      <DesignCanvas title="simFolio — Wireframes 05: Achievement System">
+
+        <DCSection id="first-trade-badge" title="01 — First trade: badge earned moment" subtitle="Triggered immediately after any confirmed buy or sell. Mobile: full interstitial. Desktop: non-blocking toast top-right. Hero always reacts — the achievement is a learning moment, not just a reward.">
+          <DCArtboard id="ftb-mob" label="Mobile — full badge reveal" width={375} height={820}><FirstTradeBadgeMobile /></DCArtboard>
+          <DCArtboard id="ftb-desk" label="Desktop — non-blocking toast" width={1440} height={900}><FirstTradeBadgeDesktop /></DCArtboard>
+        </DCSection>
+
+        <DCSection id="badge-lang" title="02 — Badge design language" subtitle="Four categories: Do (actions), Learn (concepts understood), Know (market mechanics), Reflect (reviews). Locked badges always visible — they show the path ahead without creating pressure.">
+          <DCArtboard id="bl-1" label="Badge system overview" width={960} height={600}><BadgeLanguage /></DCArtboard>
+        </DCSection>
+
+        <DCSection id="gallery" title="03 — Achievements gallery" subtitle="Accessible via Achievements nav item. Shows earned + locked. Progress summary by category. 'Next likely' card suggests what's closest.">
+          <DCArtboard id="gal-mob" label="Mobile gallery" width={375} height={920}><AchievementsGalleryMobile /></DCArtboard>
+          <DCArtboard id="gal-desk" label="Desktop gallery" width={1280} height={800}><AchievementsGalleryDesktop /></DCArtboard>
+        </DCSection>
+
+        <DCSection id="badge-detail" title="04 — Badge detail: tap to see meaning + hero quote" subtitle="Every badge has a story — what triggered it, what it means, and what the hero said when it happened. Achievements become a log of the user's learning journey.">
+          <DCArtboard id="bd-1" label="Badge detail — First Trade" width={375} height={680}><BadgeDetail /></DCArtboard>
+        </DCSection>
+
+        <DCSection id="hierarchy" title="05 — Three-tier hierarchy: Badge → Medal → Trophy" subtitle="Badges = first time with an instrument or order type. Medals = a thematic set of badges (e.g. all order types). Trophies = a set of medals marking a full investor arc. Collecting all 4 trophies = every transaction type mastered.">
+          <DCArtboard id="h-overview" label="Hierarchy overview" width={1100} height={560}><HierarchyOverview /></DCArtboard>
+          <DCArtboard id="h-catalogue" label="Instrument + order type badge catalogue" width={1100} height={620}><InstrumentBadgeMap /></DCArtboard>
+        </DCSection>
+
+        <DCSection id="earn-moments" title="06 — Medal and Trophy earned moments" subtitle="Medal: appears after the badge that completes the set — stacked reveal (badge first, then medal). Trophy: full-screen dark moment — the most significant recognition in the app.">
+          <DCArtboard id="em-medal" label="Medal earned — Market Explorer (mobile)" width={375} height={820}><MedalEarnedMobile /></DCArtboard>
+          <DCArtboard id="em-trophy" label="Trophy earned — Well-Rounded Investor (mobile, dark)" width={375} height={820}><TrophyEarnedMobile /></DCArtboard>
+        </DCSection>
+
+        <DCSection id="full-gallery" title="07 — Full progression gallery + Mastery state" subtitle="Gallery shows all three tiers at once. Trophies are designed so collectively they require every transaction type the platform supports — earning all 4 means the user has genuinely done everything.">
+          <DCArtboard id="fg-gallery" label="Full progression gallery (desktop)" width={1280} height={820}><FullProgressionGallery /></DCArtboard>
+          <DCArtboard id="fg-mastery" label="Mastery state — all 4 trophies earned" width={1280} height={820}><MasteryState /></DCArtboard>
+        </DCSection>
+
+      </DesignCanvas>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

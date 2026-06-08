@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>simFolio — Wireframes 03: Trading Reality + Education</title>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    .wf-img {
+      background-color: rgba(0,0,0,0.07);
+      background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.05) 5px, rgba(0,0,0,0.05) 6px);
+    }
+    /* Hoverable term cue — dotted amethyst underline */
+    .term {
+      border-bottom: 1.5px dotted #8A60EB;
+      cursor: pointer;
+      color: inherit;
+    }
+    /* Long-press hint badge on mobile */
+    .term-mobile::after {
+      content: '·';
+      color: #8A60EB;
+      font-size: 18px;
+      line-height: 0;
+      vertical-align: -4px;
+      margin-left: 1px;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { DesignCanvas, DCSection, DCArtboard } = window;
+    const AME = '#8A60EB';
+    const AQUA = '#1FC3A4';
+    const WARN = '#D97A10';
+    const ERR = '#C0392B';
+    const f = 'Caveat';
+
+    /* ── Wireframe primitives ─────────────────────────────────────── */
+    function Av({ size = 40, init = 'WB', color = AME, style = {} }) {
+      return <div style={{ width: size, height: size, borderRadius: '50%', background: 'rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: f, fontWeight: 600, fontSize: Math.round(size * 0.34), color, flexShrink: 0, ...style }}>{init}</div>;
+    }
+    function Box({ w, h, label, style = {} }) {
+      return <div style={{ width: w, height: h, background: 'rgba(0,0,0,0.05)', border: '1.5px dashed rgba(0,0,0,0.15)', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: f, fontSize: 11, color: '#888', textAlign: 'center', padding: 4, ...style }}>{label}</div>;
+    }
+    function Btn({ label, style = {}, ghost = false }) {
+      return <div style={{ background: ghost ? 'transparent' : AME, color: ghost ? AME : 'white', border: ghost ? `1.5px solid ${AME}` : 'none', borderRadius: 6, padding: '11px 22px', fontFamily: f, fontSize: 14, fontWeight: 600, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'default', flexShrink: 0, ...style }}>{label}</div>;
+    }
+    function WFInput({ placeholder, style = {}, highlight = false }) {
+      return <div style={{ background: highlight ? 'rgba(138,96,235,0.06)' : 'rgba(0,0,0,0.04)', border: `1.5px solid ${highlight ? AME : 'rgba(0,0,0,0.13)'}`, borderRadius: 6, padding: '10px 14px', fontFamily: f, fontSize: 13, color: '#666', ...style }}>{placeholder}</div>;
+    }
+    function StatusBar() {
+      return <div style={{ height: 44, background: 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', fontFamily: f, fontSize: 12, color: '#999', flexShrink: 0 }}><span>9:41</span><span>●●● ▌ 100%</span></div>;
+    }
+    function UserBubble({ text }) {
+      return <div style={{ background: 'rgba(31,195,164,0.1)', border: '1.5px solid rgba(31,195,164,0.2)', borderRadius: '12px 0 12px 12px', padding: '10px 14px', fontFamily: f, fontSize: 13, lineHeight: 1.4, color: '#222', maxWidth: 260, alignSelf: 'flex-end' }}>{text}</div>;
+    }
+    function HeroMsg({ init, name, text, color = AME }) {
+      return (
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Av size={28} init={init} color={color} />
+          <div>
+            <div style={{ fontFamily: f, fontSize: 11, color, fontWeight: 600, marginBottom: 3 }}>{name}</div>
+            <div style={{ background: 'rgba(0,0,0,0.04)', borderLeft: `3px solid ${color}`, borderRadius: '0 10px 10px 0', padding: '10px 14px', fontFamily: f, fontSize: 13, lineHeight: 1.4, color: '#222', maxWidth: 260 }}>{text}</div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ── Key new components ───────────────────────────────────────── */
+
+    /* A hoverable term — dotted amethyst underline is the cue */
+    function Term({ label, mobile = false }) {
+      return <span className={mobile ? 'term term-mobile' : 'term'}>{label}</span>;
+    }
+
+    /* Market status pill */
+    function MarketBadge({ status = 'open', detail = '' }) {
+      const configs = {
+        open:    { dot: AQUA,  label: 'Markets open', bg: 'rgba(31,195,164,0.08)',  border: 'rgba(31,195,164,0.25)' },
+        closing: { dot: WARN,  label: 'Closes soon',  bg: 'rgba(217,122,16,0.08)', border: 'rgba(217,122,16,0.3)'  },
+        closed:  { dot: '#bbb',label: 'Markets closed', bg: 'rgba(0,0,0,0.04)',    border: 'rgba(0,0,0,0.15)'       },
+      };
+      const c = configs[status];
+      return (
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: c.bg, border: `1px solid ${c.border}`, borderRadius: 999, padding: '4px 10px' }}>
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: c.dot }} />
+          <span style={{ fontFamily: f, fontSize: 12, color: '#333' }}>{c.label}</span>
+          {detail && <span style={{ fontFamily: f, fontSize: 11, color: '#888' }}>{detail}</span>}
+        </div>
+      );
+    }
+
+    /* Tooltip card — bilingual, with EN/中 tabs */
+    function TooltipCard({ term, enDef, zhTerm, zhDef, lang = 'en', showLangTabs = true }) {
+      return (
+        <div style={{ background: 'white', border: '1px solid rgba(0,0,0,0.12)', borderRadius: 8, padding: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.12)', maxWidth: 268, position: 'relative' }}>
+          {/* Lang tabs */}
+          {showLangTabs && (
+            <div style={{ display: 'flex', gap: 2, marginBottom: 12 }}>
+              {['EN', '中'].map(l => (
+                <div key={l} style={{ padding: '3px 10px', borderRadius: 4, fontFamily: f, fontSize: 12, background: (l === 'EN' ? lang === 'en' : lang === 'zh') ? AME : 'rgba(0,0,0,0.06)', color: (l === 'EN' ? lang === 'en' : lang === 'zh') ? 'white' : '#888', cursor: 'default' }}>{l}</div>
+              ))}
+              <div style={{ flex: 1 }} />
+              <div style={{ fontFamily: f, fontSize: 12, color: '#bbb', cursor: 'default' }}>×</div>
+            </div>
+          )}
+          {lang === 'en' ? (
+            <>
+              <div style={{ fontFamily: f, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.14em', color: AME, marginBottom: 6 }}>{term}</div>
+              <div style={{ fontFamily: f, fontSize: 13, color: '#222', lineHeight: 1.5 }}>{enDef}</div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontFamily: f, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.14em', color: AME, marginBottom: 6 }}>{zhTerm}</div>
+              <div style={{ fontFamily: f, fontSize: 13, color: '#222', lineHeight: 1.5 }}>{zhDef}</div>
+              <div style={{ fontFamily: f, fontSize: 11, color: '#aaa', marginTop: 6 }}>{term} · English</div>
+            </>
+          )}
+          {/* Pointer arrow */}
+          <div style={{ position: 'absolute', bottom: -7, left: 24, width: 12, height: 12, background: 'white', border: '1px solid rgba(0,0,0,0.12)', transform: 'rotate(45deg)', borderTop: 'none', borderLeft: 'none' }} />
+        </div>
+      );
+    }
+
+    /* Fee breakdown row */
+    function FeeRow({ label, amount, explain = false }) {
+      return (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+          <div style={{ fontFamily: f, fontSize: 13, color: '#555' }}>
+            {explain ? <Term label={label} /> : label}
+          </div>
+          <div style={{ fontFamily: f, fontSize: 13, color: '#222', fontWeight: 600 }}>{amount}</div>
+        </div>
+      );
+    }
+
+    /* Unexpected event explanation card */
+    function ExplainCard({ title, body, children, style = {} }) {
+      return (
+        <div style={{ background: 'rgba(138,96,235,0.04)', border: `1.5px solid ${AME}22`, borderRadius: 8, padding: 14, ...style }}>
+          <div style={{ fontFamily: f, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.14em', color: AME, marginBottom: 6 }}>{title}</div>
+          <div style={{ fontFamily: f, fontSize: 13, color: '#333', lineHeight: 1.5 }}>{body}</div>
+          {children}
+        </div>
+      );
+    }
+
+    /* ─────────────────────────────────────────────────────────────────
+       SECTION 1 · Realistic trade flow
+    ───────────────────────────────────────────────────────────────── */
+
+    /* 1A — Trade form, market open, educational cues visible */
+    function TradeFormOpen() {
+      return (
+        <div style={{ width: 375, height: 940, background: '#F5F5EF', display: 'flex', flexDirection: 'column', border: '2.5px solid #2A2A2A', borderRadius: 40, overflow: 'hidden' }}>
+          <StatusBar />
+          <div style={{ height: 52, display: 'flex', alignItems: 'center', padding: '0 20px', borderBottom: '1px solid rgba(0,0,0,0.06)', gap: 12, flexShrink: 0 }}>
+            <div style={{ fontFamily: f, fontSize: 13, color: AME }}>←</div>
+            <div style={{ flex: 1, fontFamily: f, fontWeight: 600, fontSize: 16, textAlign: 'center' }}>Buy AAPL</div>
+            <MarketBadge status="open" detail="· 2h 14m left" />
+          </div>
+          <div style={{ flex: 1, padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 14, overflow: 'hidden' }}>
+            {/* Price */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <div style={{ fontFamily: f, fontWeight: 600, fontSize: 28 }}>$189.45</div>
+              <div style={{ fontFamily: f, fontSize: 13, color: AQUA }}>+$4.27 today (+2.3%)</div>
+            </div>
+            <div className="wf-img" style={{ height: 64, borderRadius: 6 }} />
+            {/* Order type */}
+            <div>
+              <div style={{ fontFamily: f, fontSize: 12, color: '#888', marginBottom: 6 }}>
+                <Term label="Order type" mobile /> — tap a term to learn what it means
+              </div>
+              <div style={{ display: 'flex', gap: 0, background: 'rgba(0,0,0,0.04)', borderRadius: 6, overflow: 'hidden' }}>
+                {[['Market order', true], ['Limit order', false]].map(([label, active]) => (
+                  <div key={label} style={{ flex: 1, padding: '10px', textAlign: 'center', fontFamily: f, fontSize: 13, background: active ? AME : 'transparent', color: active ? 'white' : '#888', borderRadius: active ? 6 : 0 }}>
+                    <Term label={label} mobile />
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Quantity */}
+            <div>
+              <div style={{ fontFamily: f, fontSize: 12, color: '#888', marginBottom: 6 }}>Quantity</div>
+              <div style={{ display: 'flex', background: 'rgba(0,0,0,0.04)', borderRadius: 6, overflow: 'hidden', marginBottom: 4 }}>
+                {['Shares', 'Dollar amount'].map((tab, i) => (
+                  <div key={tab} style={{ flex: 1, padding: 9, textAlign: 'center', fontFamily: f, fontSize: 13, background: i === 0 ? AME : 'transparent', color: i === 0 ? 'white' : '#888', borderRadius: i === 0 ? 6 : 0 }}>{tab}</div>
+                ))}
+              </div>
+              <WFInput placeholder="5" style={{ textAlign: 'center', fontSize: 22, fontWeight: 600 }} />
+            </div>
+            {/* Fee breakdown */}
+            <div style={{ background: 'white', borderRadius: 8, padding: '0 12px', border: '1px solid rgba(0,0,0,0.08)' }}>
+              <FeeRow label="5 shares × $189.45" amount="$947.25" />
+              <FeeRow label="Regulatory fee" amount="$0.01" explain />
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0' }}>
+                <div style={{ fontFamily: f, fontSize: 14, fontWeight: 600 }}>Total</div>
+                <div style={{ fontFamily: f, fontSize: 14, fontWeight: 600 }}>$947.26</div>
+              </div>
+            </div>
+            <div style={{ fontFamily: f, fontSize: 11, color: '#aaa', textAlign: 'center' }}>Cash available: $9,052.74 after this trade</div>
+            <Btn label="Buy AAPL" style={{ width: '100%', padding: 14, borderRadius: 8 }} />
+            <div style={{ fontFamily: f, fontSize: 11, color: '#aaa', textAlign: 'center', lineHeight: 1.4 }}>
+              Underlined terms like <Term label="regulatory fee" mobile /> can be pressed to learn what they mean
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* 1B — Limit order mode with limit price field */
+    function TradeFormLimit() {
+      return (
+        <div style={{ width: 375, height: 900, background: '#F5F5EF', display: 'flex', flexDirection: 'column', border: '2.5px solid #2A2A2A', borderRadius: 40, overflow: 'hidden' }}>
+          <StatusBar />
+          <div style={{ height: 52, display: 'flex', alignItems: 'center', padding: '0 20px', borderBottom: '1px solid rgba(0,0,0,0.06)', gap: 12, flexShrink: 0 }}>
+            <div style={{ fontFamily: f, fontSize: 13, color: AME }}>←</div>
+            <div style={{ flex: 1, fontFamily: f, fontWeight: 600, fontSize: 16, textAlign: 'center' }}>Buy AAPL</div>
+            <MarketBadge status="open" detail="· 2h 14m left" />
+          </div>
+          <div style={{ flex: 1, padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 14, overflow: 'hidden' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <div style={{ fontFamily: f, fontWeight: 600, fontSize: 28 }}>$189.45</div>
+              <div style={{ fontFamily: f, fontSize: 13, color: AQUA }}>+$4.27 today</div>
+            </div>
+            {/* Order type — Limit selected */}
+            <div>
+              <div style={{ fontFamily: f, fontSize: 12, color: '#888', marginBottom: 6 }}><Term label="Order type" mobile /></div>
+              <div style={{ display: 'flex', gap: 0, background: 'rgba(0,0,0,0.04)', borderRadius: 6, overflow: 'hidden' }}>
+                {[['Market order', false], ['Limit order', true]].map(([label, active]) => (
+                  <div key={label} style={{ flex: 1, padding: '10px', textAlign: 'center', fontFamily: f, fontSize: 13, background: active ? AME : 'transparent', color: active ? 'white' : '#888', borderRadius: active ? 6 : 0 }}>
+                    <Term label={label} mobile />
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Limit price — only shown for limit orders */}
+            <div style={{ background: 'rgba(138,96,235,0.04)', border: `1.5px solid ${AME}33`, borderRadius: 8, padding: 12 }}>
+              <div style={{ fontFamily: f, fontSize: 12, color: AME, marginBottom: 6 }}>Your maximum price per share</div>
+              <WFInput placeholder="$187.00" highlight style={{ fontWeight: 600, fontSize: 16 }} />
+              <div style={{ fontFamily: f, fontSize: 11, color: '#888', marginTop: 6, lineHeight: 1.4 }}>
+                This order will only execute if AAPL drops to $187.00 or below.
+              </div>
+            </div>
+            {/* Qty */}
+            <div>
+              <div style={{ fontFamily: f, fontSize: 12, color: '#888', marginBottom: 6 }}>Quantity (shares)</div>
+              <WFInput placeholder="5" style={{ textAlign: 'center', fontSize: 20, fontWeight: 600 }} />
+            </div>
+            {/* Expiry */}
+            <div>
+              <div style={{ fontFamily: f, fontSize: 12, color: '#888', marginBottom: 6 }}><Term label="Order expires" mobile /></div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {['Good for today', 'Good till cancelled'].map((label, i) => (
+                  <div key={label} style={{ flex: 1, border: `1.5px solid ${i === 0 ? AME : 'rgba(0,0,0,0.13)'}`, borderRadius: 6, padding: '9px', textAlign: 'center', fontFamily: f, fontSize: 12, background: i === 0 ? 'rgba(138,96,235,0.07)' : 'transparent', color: i === 0 ? AME : '#888' }}>{label}</div>
+                ))}
+              </div>
+            </div>
+            <div style={{ background: 'white', borderRadius: 8, padding: '0 12px', border: '1px solid rgba(0,0,0,0.08)' }}>
+              <FeeRow label="5 shares × $187.00 (limit)" amount="$935.00" />
+              <FeeRow label="Regulatory fee" amount="$0.01" explain />
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0' }}>
+                <div style={{ fontFamily: f, fontSize: 14, fontWeight: 600 }}>Max cost</div>
+                <div style={{ fontFamily: f, fontSize: 14, fontWeight: 600 }}>$935.01</div>
+              </div>
+            </div>
+            <Btn label="Place limit order" style={{ width: '100%', padding: 14, borderRadius: 8 }} />
+          </div>
+        </div>
+      );
+    }
+
+    /* 1C — Market closed: order queued */
+    function MarketClosed() {
+      return (
+        <div style={{ width: 375, height: 920, background: '#F5F5EF', display: 'flex', flexDirection: 'column', border: '2.5px solid #2A2A2A', borderRadius: 40, overflow: 'hidden' }}>
+          <StatusBar />
+          <div style={{ height: 52, display: 'flex', alignItems: 'center', padding: '0 20px', borderBottom: '1px solid rgba(0,0,0,0.06)', gap: 12, flexShrink: 0 }}>
+            <div style={{ fontFamily: f, fontSize: 13, color: AME }}>←</div>
+            <div style={{ flex: 1, fontFamily: f, fontWeight: 600, fontSize: 16, textAlign: 'center' }}>Buy AAPL</div>
+            <MarketBadge status="closed" />
+          </div>
+          {/* Closed market banner */}
+          <div style={{ background: 'rgba(0,0,0,0.04)', borderBottom: '1px solid rgba(0,0,0,0.08)', padding: '10px 20px', flexShrink: 0 }}>
+            <div style={{ fontFamily: f, fontSize: 13, color: '#555', lineHeight: 1.4 }}>
+              US markets are closed. It's Saturday — <Term label="next market open" mobile /> is Monday, 9:30 AM EST.
+            </div>
+            <div style={{ fontFamily: f, fontSize: 11, color: '#888', marginTop: 4 }}>
+              Your order will be queued and execute when markets open.
+            </div>
+          </div>
+          <div style={{ flex: 1, padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 14, overflow: 'hidden' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <div style={{ fontFamily: f, fontWeight: 600, fontSize: 28 }}>$189.45</div>
+              <div style={{ fontFamily: f, fontSize: 11, color: '#aaa' }}>Last close price</div>
+            </div>
+            {/* Order form - grayed, market order only */}
+            <div style={{ opacity: 0.6 }}>
+              <div style={{ fontFamily: f, fontSize: 12, color: '#888', marginBottom: 6 }}>Order type</div>
+              <div style={{ display: 'flex', gap: 0, background: 'rgba(0,0,0,0.04)', borderRadius: 6, overflow: 'hidden' }}>
+                <div style={{ flex: 1, padding: 10, textAlign: 'center', fontFamily: f, fontSize: 13, background: AME, color: 'white', borderRadius: 6 }}>Market order</div>
+                <div style={{ flex: 1, padding: 10, textAlign: 'center', fontFamily: f, fontSize: 13, color: '#aaa' }}>Limit order</div>
+              </div>
+            </div>
+            <WFInput placeholder="5 shares" style={{ opacity: 0.6 }} />
+            {/* Queued order preview card */}
+            <div style={{ background: 'white', border: '1.5px solid rgba(0,0,0,0.1)', borderRadius: 8, padding: 14 }}>
+              <div style={{ fontFamily: f, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#888', marginBottom: 8 }}>Order to be queued</div>
+              {[['Symbol','AAPL'],['Quantity','5 shares'],['Type','Market order'],['Estimated price','~$189.45 (will vary)'],['Executes','Monday, 9:30 AM EST']].map(([k,v]) => (
+                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+                  <div style={{ fontFamily: f, fontSize: 12, color: '#888' }}>{k}</div>
+                  <div style={{ fontFamily: f, fontSize: 12, fontWeight: k === 'Executes' ? 600 : 400, color: k === 'Executes' ? AME : '#222' }}>{v}</div>
+                </div>
+              ))}
+            </div>
+            <ExplainCard
+              title="Why does the price say 'will vary'?"
+              body="Market orders execute at whatever the price is when markets open. Prices can move significantly over a weekend — for better or worse. A limit order protects you from surprises."
+            />
+            <HeroMsg init="WB" name="Warren" text="I'd take this as a useful pause. Make sure you still want this trade on Monday morning, not just because of tonight's excitement." />
+            <Btn label="Queue for Monday open →" style={{ width: '100%', padding: 14, borderRadius: 8 }} />
+            <Btn label="Cancel" ghost style={{ width: '100%', padding: 12, borderRadius: 8 }} />
+          </div>
+        </div>
+      );
+    }
+
+    /* 1D — Order confirmation with slippage */
+    function OrderConfirmation() {
+      return (
+        <div style={{ width: 375, height: 900, background: '#F5F5EF', display: 'flex', flexDirection: 'column', border: '2.5px solid #2A2A2A', borderRadius: 40, overflow: 'hidden' }}>
+          <StatusBar />
+          <div style={{ height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid rgba(0,0,0,0.06)', flexShrink: 0 }}>
+            <div style={{ fontFamily: f, fontWeight: 600, fontSize: 16 }}>Order executed</div>
+          </div>
+          <div style={{ flex: 1, padding: '20px 20px 12px', display: 'flex', flexDirection: 'column', gap: 14, overflow: 'hidden' }}>
+            {/* Success moment */}
+            <div style={{ textAlign: 'center', padding: '8px 0' }}>
+              <div style={{ fontFamily: f, fontWeight: 600, fontSize: 22 }}>5 shares of AAPL</div>
+              <div style={{ fontFamily: f, fontSize: 14, color: '#888', marginTop: 4 }}>purchased at $189.52 per share</div>
+            </div>
+            {/* Receipt */}
+            <div style={{ background: 'white', borderRadius: 8, padding: '0 14px', border: '1px solid rgba(0,0,0,0.08)' }}>
+              <div style={{ fontFamily: f, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#888', padding: '10px 0 6px' }}>Transaction summary</div>
+              <FeeRow label="Requested price" amount="$189.45 / sh" />
+              <FeeRow label="Executed at" amount="$189.52 / sh" />
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+                <div style={{ fontFamily: f, fontSize: 13, color: '#888' }}>
+                  <Term label="Slippage" /> +$0.07/sh (+0.04%)
+                </div>
+                <div style={{ fontFamily: f, fontSize: 12, color: '#888' }}>Explains below</div>
+              </div>
+              <FeeRow label="5 shares × $189.52" amount="$947.60" />
+              <FeeRow label="Regulatory fee" amount="$0.01" explain />
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0' }}>
+                <div style={{ fontFamily: f, fontSize: 14, fontWeight: 600 }}>Total deducted</div>
+                <div style={{ fontFamily: f, fontSize: 14, fontWeight: 600 }}>$947.61</div>
+              </div>
+            </div>
+            {/* Slippage explanation — auto-shown because it's unexpected */}
+            <ExplainCard
+              title="What is slippage? Why did I pay more?"
+              body="You requested $189.45, but by the time your order executed, the price had moved to $189.52. This 7-cent difference is called slippage — it's normal in fast markets."
+            >
+              <div style={{ marginTop: 8, fontFamily: f, fontSize: 12, color: AME, cursor: 'default' }}>
+                <Term label="Learn more about slippage" /> →
+              </div>
+            </ExplainCard>
+            <HeroMsg init="WB" name="Warren" text="Four cents of slippage on a $947 trade is negligible. Over time, a good business at a fair price matters far more than execution precision." />
+            <Btn label="Back to portfolio →" style={{ width: '100%', padding: 14, borderRadius: 8 }} />
+          </div>
+        </div>
+      );
+    }
+
+    /* ─────────────────────────────────────────────────────────────────
+       SECTION 2 · Educational tooltip system
+    ───────────────────────────────────────────────────────────────── */
+
+    /* 2A — Tooltip design language overview */
+    function TooltipOverview() {
+      return (
+        <div style={{ width: 800, height: 640, background: '#F5F5EF', display: 'flex', flexDirection: 'column', borderRadius: 8, overflow: 'hidden', border: '1.5px solid rgba(0,0,0,0.1)' }}>
+          <div style={{ padding: '20px 32px 16px', borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
+            <div style={{ fontFamily: f, fontWeight: 600, fontSize: 20, marginBottom: 4 }}>Educational tooltip system</div>
+            <div style={{ fontFamily: f, fontSize: 14, color: '#888' }}>Any term the user might not know carries a visual cue. The cue differs by platform.</div>
+          </div>
+          <div style={{ flex: 1, padding: '24px 32px', display: 'flex', gap: 40 }}>
+            {/* Mobile */}
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: f, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.14em', color: AME, marginBottom: 16 }}>Mobile — long press</div>
+              <div style={{ fontFamily: f, fontSize: 14, color: '#333', lineHeight: 2, marginBottom: 16 }}>
+                Your order was placed as a <span className="term term-mobile">market order</span>. It will execute during <span className="term term-mobile">market hours</span> at whatever price the stock is trading at. A small <span className="term term-mobile">regulatory fee</span> will be deducted.
+              </div>
+              <div style={{ background: 'rgba(138,96,235,0.06)', border: '1.5px dashed rgba(138,96,235,0.2)', borderRadius: 6, padding: 12, fontFamily: f, fontSize: 12, color: '#555', lineHeight: 1.5 }}>
+                Dotted amethyst underline = "I can explain this." Long-press any underlined term to get a plain-English definition — in English or Traditional Chinese.
+              </div>
+            </div>
+            {/* Desktop */}
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: f, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.14em', color: AME, marginBottom: 16 }}>Desktop — hover</div>
+              <div style={{ fontFamily: f, fontSize: 14, color: '#333', lineHeight: 2, marginBottom: 16 }}>
+                Your order was placed as a <Term label="market order" />. It will execute during <Term label="market hours" /> at the current price. A <Term label="regulatory fee" /> will apply.
+              </div>
+              <div style={{ position: 'relative', display: 'inline-block' }}>
+                <TooltipCard
+                  term="Market order"
+                  enDef="Buy or sell right now at the current market price. Executes immediately. The price you pay may differ slightly from what you see — that's called slippage."
+                  zhTerm="市價單"
+                  zhDef="立即進行買進或賣出。您願意接受市場上目前的任何報價。"
+                  lang="en"
+                  showLangTabs={true}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* 2B — Tooltip expanded, English */
+    function TooltipEnglish() {
+      return (
+        <div style={{ width: 600, height: 540, background: '#F5F5EF', padding: 40, borderRadius: 8, border: '1.5px solid rgba(0,0,0,0.1)' }}>
+          <div style={{ fontFamily: f, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#888', marginBottom: 20 }}>Tooltip examples — English</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+            {[
+              { term: 'Limit order', enDef: 'You set the price you\'re willing to pay. The trade only executes if the stock hits your price or better. You won\'t pay more than you said — but the order might never fill.', zhTerm: '限價單', zhDef: '由您決定價格。只有當股票達到您設定的精確價格時，交易才會執行。' },
+              { term: 'Slippage', enDef: 'The difference between the price you expected and the price you actually got. Fast markets move while your order processes — a few cents is normal and expected.', zhTerm: '滑點', zhDef: '您預期的價格與實際成交價格之間的差異。價格在委託單處理過程中移動所導致。' },
+              { term: 'Regulatory fee', enDef: 'A very small government fee on every trade, set by the SEC and FINRA. On a $1,000 trade it\'s roughly $0.01. Required for all brokerages.', zhTerm: '監管費用', zhDef: '每筆交易均需繳納的政府規費，由美國證管會（SEC）及金融業監管局（FINRA）收取。' },
+            ].map(t => (
+              <div key={t.term} style={{ position: 'relative', paddingBottom: 8 }}>
+                <div style={{ fontFamily: f, fontSize: 14, color: '#333', marginBottom: 10 }}>
+                  …your <Term label={t.term} /> will execute at market open…
+                </div>
+                <TooltipCard {...t} lang="en" showLangTabs={true} />
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    /* 2C — Tooltip in Traditional Chinese */
+    function TooltipChinese() {
+      return (
+        <div style={{ width: 600, height: 560, background: '#F5F5EF', padding: 40, borderRadius: 8, border: '1.5px solid rgba(0,0,0,0.1)' }}>
+          <div style={{ fontFamily: f, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#888', marginBottom: 8 }}>Tooltip examples — Traditional Chinese (中文)</div>
+          <div style={{ fontFamily: f, fontSize: 13, color: '#888', marginBottom: 24, lineHeight: 1.5 }}>The main UI stays in English — users need to learn the English terms used in real brokerages. The tooltip explains in their native language so they understand what the term means.</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+            {[
+              { term: 'Market order', enDef: 'Buy or sell right now at the current market price.', zhTerm: '市價單 (Market Order)', zhDef: '立即進行買進或賣出。您願意立刻接受市場上目前的任何報價。成交價格可能與您看到的報價略有不同，這是正常現象。' },
+              { term: 'Market hours', enDef: 'US markets trade Mon–Fri, 9:30 AM–4:00 PM EST.', zhTerm: '交易時間 (Market Hours)', zhDef: '美國股市的交易時間為週一至週五，東部標準時間上午9:30至下午4:00。台灣時間為週一至週五，晚上10:30至凌晨5:00（夏令時間提早一小時）。' },
+              { term: 'Slippage', enDef: 'The small price difference between what you expected and what you got.', zhTerm: '滑點 (Slippage)', zhDef: '您預期的價格與實際成交價格之間的微小差異。市場移動非常快速，即使是幾分錢的差距也屬正常，無需擔心。' },
+            ].map(t => (
+              <div key={t.term} style={{ position: 'relative' }}>
+                <div style={{ fontFamily: f, fontSize: 14, color: '#333', marginBottom: 10 }}>
+                  …your <Term label={t.term} /> order…
+                </div>
+                <TooltipCard {...t} lang="zh" showLangTabs={true} />
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    /* 2D — Unexpected event: education card system */
+    function UnexpectedEvents() {
+      return (
+        <div style={{ width: 800, height: 660, background: '#F5F5EF', padding: '32px 40px', borderRadius: 8, border: '1.5px solid rgba(0,0,0,0.1)' }}>
+          <div style={{ fontFamily: f, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.14em', color: AME, marginBottom: 6 }}>Unexpected events — auto-education system</div>
+          <div style={{ fontFamily: f, fontSize: 14, color: '#888', marginBottom: 28, lineHeight: 1.5 }}>When something happens that the user didn't ask for or didn't expect, the app explains it automatically. No hunting through a FAQ.</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+            {[
+              { trigger: 'Order filled at different price', title: 'What is slippage?', body: 'You asked for $189.45 but paid $189.52. The price moved 7 cents while your order processed — completely normal in active markets.' },
+              { trigger: 'Market closed during trade attempt', title: 'Why can\'t I trade right now?', body: 'US stock markets are only open Monday–Friday, 9:30 AM–4:00 PM Eastern Time. Your order has been queued for the next market open.' },
+              { trigger: 'Order not filled (limit order)', title: 'Why hasn\'t my order executed?', body: 'You placed a limit order at $187.00, but AAPL is trading at $189.45. Your order waits until the stock reaches your price — or you cancel it.' },
+              { trigger: 'Large position concentration detected', title: 'You\'re heavily concentrated in one stock.', body: '78% of your portfolio is in AAPL. Diversification means spreading risk — if Apple has a bad quarter, your whole portfolio feels it.' },
+            ].map(({ trigger, title, body }) => (
+              <div key={trigger} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ fontFamily: f, fontSize: 11, color: '#bbb', fontStyle: 'italic' }}>Trigger: {trigger}</div>
+                <ExplainCard title={title} body={body} />
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: 20, fontFamily: f, fontSize: 12, color: '#888', lineHeight: 1.5 }}>
+            All explanations appear inline — never in a separate help screen. Hero may add context if the moment warrants it.
+          </div>
+        </div>
+      );
+    }
+
+    /* ── Interaction system spec components ───────────────────────── */
+
+    /* Full system overview — 3 cues, 2 platforms */
+    function InteractionSystemSpec() {
+      return (
+        <div style={{ width:1100, height:640, background:'#F5F5EF', borderRadius:8, border:'1.5px solid rgba(0,0,0,0.1)', padding:'32px 40px', display:'flex', flexDirection:'column', gap:24 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
+            <div>
+              <div style={{ fontFamily:f, fontWeight:600, fontSize:22, marginBottom:4 }}>Educational interaction system — complete spec</div>
+              <div style={{ fontFamily:f, fontSize:13, color:'#888', lineHeight:1.5 }}>Three consistent cues signal that a term has an explanation. Two interaction modes depending on platform. One bilingual bottom-sheet on mobile — never a tiny tooltip.</div>
+            </div>
+          </div>
+          <div style={{ display:'flex', gap:24, flex:1 }}>
+
+            {/* Cue 1: Dotted underline */}
+            <div style={{ flex:1, display:'flex', flexDirection:'column', gap:12 }}>
+              <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.14em', color:AME }}>Cue 1 — Dotted underline</div>
+              <div style={{ fontFamily:f, fontSize:13, color:'#555', lineHeight:1.5 }}>Any term with an underlying explanation gets a subtle dotted underline in amethyst. Used in running text, form labels, stat cards, and receipts.</div>
+              <div style={{ background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, padding:16, display:'flex', flexDirection:'column', gap:10 }}>
+                <div style={{ fontFamily:f, fontSize:14, lineHeight:2 }}>
+                  Your <span style={{ borderBottom:'1.5px dotted #8A60EB' }}>market order</span> will execute during <span style={{ borderBottom:'1.5px dotted #8A60EB' }}>market hours</span>. A small <span style={{ borderBottom:'1.5px dotted #8A60EB' }}>regulatory fee</span> applies.
+                </div>
+                <div style={{ display:'flex', gap:16 }}>
+                  {[['Regulatory fee','$0.01'],['Slippage','+$0.07'],['Realised gain','+$127']].map(([l,v]) => (
+                    <div key={l} style={{ flex:1, background:'rgba(0,0,0,0.03)', borderRadius:6, padding:'8px 10px' }}>
+                      <div style={{ fontFamily:f, fontSize:11, borderBottom:'1.5px dotted #8A60EB', display:'inline' }}>{l}</div>
+                      <div style={{ fontFamily:f, fontWeight:600, fontSize:14, marginTop:3 }}>{v}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div style={{ fontFamily:f, fontSize:11, color:'#aaa', lineHeight:1.5 }}>Color: <span style={{ color:AME }}>--qs-amethyst-400 (#8A60EB)</span> at 100% opacity. Dash: 2px dot, 3px gap. Does not compete with hyperlink blue.</div>
+            </div>
+
+            {/* Cue 2: ⓘ micro-icon */}
+            <div style={{ flex:1, display:'flex', flexDirection:'column', gap:12 }}>
+              <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.14em', color:AME }}>Cue 2 — ⓘ micro-icon</div>
+              <div style={{ fontFamily:f, fontSize:13, color:'#555', lineHeight:1.5 }}>Used in compact dashboard headers, stat chips, and table column headers — where dotted underlines would clutter layout.</div>
+              <div style={{ background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, padding:16, display:'flex', flexDirection:'column', gap:12 }}>
+                {/* Stat grid example */}
+                <div style={{ display:'flex', gap:10 }}>
+                  {[['Portfolio value','$28,340'],['P/E ratio','28.4'],['Market cap','$2.9T']].map(([label,val]) => (
+                    <div key={label} style={{ flex:1, border:'1px solid rgba(0,0,0,0.09)', borderRadius:6, padding:'10px 10px' }}>
+                      <div style={{ display:'flex', alignItems:'center', gap:4, marginBottom:4 }}>
+                        <div style={{ fontFamily:f, fontSize:11, color:'#888' }}>{label}</div>
+                        <div style={{ width:13, height:13, borderRadius:'50%', border:'1.5px solid #8A60EB', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, color:'#8A60EB', fontFamily:f, flexShrink:0, cursor:'pointer' }}>i</div>
+                      </div>
+                      <div style={{ fontFamily:f, fontWeight:600, fontSize:16 }}>{val}</div>
+                    </div>
+                  ))}
+                </div>
+                {/* Table header example */}
+                <div style={{ background:'rgba(0,0,0,0.03)', borderRadius:6, padding:'8px 12px' }}>
+                  <div style={{ display:'flex', gap:16 }}>
+                    {['Symbol','Last price',['Unrealised P&L', true],'Volume'].map((col,i) => (
+                      <div key={i} style={{ flex:i===0?0.8:1, display:'flex', alignItems:'center', gap:4 }}>
+                        <div style={{ fontFamily:f, fontSize:11, color:'#888', textTransform:'uppercase', letterSpacing:'0.1em' }}>{Array.isArray(col)?col[0]:col}</div>
+                        {Array.isArray(col) && col[1] && <div style={{ width:12, height:12, borderRadius:'50%', border:'1.5px solid #8A60EB', display:'flex', alignItems:'center', justifyContent:'center', fontSize:8, color:'#8A60EB', flexShrink:0 }}>i</div>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div style={{ fontFamily:f, fontSize:11, color:'#aaa', lineHeight:1.5 }}>Size: 13px circle, 1.5px amethyst stroke. Sits 4px right of label baseline. Never used on body copy — that uses the dotted underline.</div>
+            </div>
+
+            {/* Cue 3: Mobile micro-dot */}
+            <div style={{ flex:1, display:'flex', flexDirection:'column', gap:12 }}>
+              <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.14em', color:AME }}>Cue 3 — Mobile tap hint</div>
+              <div style={{ fontFamily:f, fontSize:13, color:'#555', lineHeight:1.5 }}>On mobile, dotted underlines are harder to see. An amethyst dot (·) follows any explainable term — a consistent tap affordance that works at small sizes.</div>
+              <div style={{ background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, padding:16, display:'flex', flexDirection:'column', gap:10 }}>
+                <div style={{ fontFamily:f, fontSize:14, lineHeight:2.2 }}>
+                  Your <span style={{ borderBottom:'1.5px dotted #8A60EB' }}>market order</span><span style={{ color:'#8A60EB', fontSize:20, lineHeight:0, verticalAlign:'-4px', marginLeft:1 }}>·</span> will execute at open. A <span style={{ borderBottom:'1.5px dotted #8A60EB' }}>regulatory fee</span><span style={{ color:'#8A60EB', fontSize:20, lineHeight:0, verticalAlign:'-4px', marginLeft:1 }}>·</span> applies.
+                </div>
+                <div style={{ fontFamily:f, fontSize:11, color:'#aaa', fontStyle:'italic' }}>Tap or long-press the term → bottom-sheet modal opens</div>
+                <div style={{ fontFamily:f, fontSize:11, color:'#aaa' }}>The · is unicode middle dot (U+00B7), color #8A60EB, font-size 1.4× surrounding text.</div>
+              </div>
+              <div style={{ fontFamily:f, fontSize:11, color:'#aaa', lineHeight:1.5 }}>Both the dotted underline AND the dot are shown on mobile — belt and suspenders. Users will learn the pattern quickly.</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* Mobile bottom-sheet modal */
+    function MobileBottomSheet() {
+      return (
+        <div style={{ width:375, height:760, background:'#F5F5EF', display:'flex', flexDirection:'column', border:'2.5px solid #2A2A2A', borderRadius:40, overflow:'hidden', position:'relative' }}>
+          <div style={{ height:44, background:'rgba(0,0,0,0.05)', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 20px', fontFamily:f, fontSize:12, color:'#999', flexShrink:0 }}><span>9:41</span><span>●●● ▌ 100%</span></div>
+
+          {/* Dimmed background content */}
+          <div style={{ flex:1, padding:'16px 20px', opacity:0.25 }}>
+            <div style={{ fontFamily:f, fontWeight:600, fontSize:20, marginBottom:8 }}>Buy AAPL</div>
+            <div style={{ fontFamily:f, fontSize:14, lineHeight:2 }}>
+              Your <span style={{ borderBottom:'1.5px dotted #8A60EB' }}>market order</span><span style={{ color:'#8A60EB', fontSize:18, lineHeight:0, verticalAlign:'-3px' }}>·</span> for 5 shares will execute at the current price.
+            </div>
+            <div style={{ marginTop:12, background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, padding:14 }}>
+              <div style={{ fontFamily:f, fontSize:12, color:'#888' }}>5 shares × $189.45</div>
+              <div style={{ fontFamily:f, fontWeight:600, fontSize:20 }}>$947.25</div>
+            </div>
+          </div>
+
+          {/* Bottom sheet — slides up from bottom */}
+          <div style={{ position:'absolute', bottom:0, left:0, right:0, background:'white', borderRadius:'20px 20px 0 0', boxShadow:'0 -8px 40px rgba(0,0,0,0.18)', padding:'0 0 32px' }}>
+            {/* Handle */}
+            <div style={{ display:'flex', justifyContent:'center', padding:'12px 0 4px' }}>
+              <div style={{ width:36, height:4, borderRadius:2, background:'rgba(0,0,0,0.12)' }} />
+            </div>
+            {/* Lang tabs */}
+            <div style={{ display:'flex', gap:4, padding:'8px 20px 0' }}>
+              {['EN','中'].map((l,i) => <div key={l} style={{ padding:'5px 14px', borderRadius:6, fontFamily:f, fontSize:13, background:i===0?AME:'rgba(0,0,0,0.06)', color:i===0?'white':'#888', cursor:'default' }}>{l}</div>)}
+              <div style={{ flex:1 }} />
+              <div style={{ fontFamily:f, fontSize:18, color:'#aaa', cursor:'default', lineHeight:1 }}>×</div>
+            </div>
+            {/* Content */}
+            <div style={{ padding:'16px 24px' }}>
+              <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.14em', color:AME, marginBottom:8 }}>MARKET ORDER</div>
+              <div style={{ fontFamily:f, fontSize:17, fontWeight:600, marginBottom:10 }}>Buy or sell right now</div>
+              <div style={{ fontFamily:f, fontSize:15, color:'#333', lineHeight:1.6, marginBottom:14 }}>
+                A market order executes immediately at whatever price the stock is currently trading at. You get filled right away — but the exact price may differ slightly from what you see. That small difference is called <span style={{ borderBottom:'1.5px dotted #8A60EB' }}>slippage</span><span style={{ color:'#8A60EB', fontSize:18, lineHeight:0, verticalAlign:'-3px' }}>·</span>.
+              </div>
+              {/* Quick vs limit comparison */}
+              <div style={{ display:'flex', gap:10 }}>              
+                <div style={{ flex:1, background:'rgba(138,96,235,0.06)', border:`1.5px solid ${AME}33`, borderRadius:8, padding:12 }}>
+                  <div style={{ fontFamily:f, fontWeight:600, fontSize:13, color:AME, marginBottom:4 }}>Market order</div>
+                  <div style={{ fontFamily:f, fontSize:12, color:'#555', lineHeight:1.4 }}>Execute now · price may vary slightly</div>
+                </div>
+                <div style={{ flex:1, background:'rgba(0,0,0,0.03)', border:'1.5px solid rgba(0,0,0,0.1)', borderRadius:8, padding:12 }}>
+                  <div style={{ fontFamily:f, fontWeight:600, fontSize:13, color:'#888', marginBottom:4 }}>Limit order</div>
+                  <div style={{ fontFamily:f, fontSize:12, color:'#888', lineHeight:1.4 }}>Set max price · may not execute</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* Same sheet in Chinese */
+    function MobileBottomSheetZH() {
+      return (
+        <div style={{ width:375, height:760, background:'#F5F5EF', display:'flex', flexDirection:'column', border:'2.5px solid #2A2A2A', borderRadius:40, overflow:'hidden', position:'relative' }}>
+          <div style={{ height:44, background:'rgba(0,0,0,0.05)', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 20px', fontFamily:f, fontSize:12, color:'#999', flexShrink:0 }}><span>9:41</span><span>●●● ▌ 100%</span></div>
+          <div style={{ flex:1, padding:'16px 20px', opacity:0.25 }}>
+            <div style={{ fontFamily:f, fontWeight:600, fontSize:20, marginBottom:8 }}>Buy AAPL</div>
+            <div style={{ fontFamily:f, fontSize:14, lineHeight:2 }}>Your <span style={{ borderBottom:'1.5px dotted #8A60EB' }}>market order</span><span style={{ color:'#8A60EB', fontSize:18, lineHeight:0, verticalAlign:'-3px' }}>·</span> for 5 shares…</div>
+          </div>
+          <div style={{ position:'absolute', bottom:0, left:0, right:0, background:'white', borderRadius:'20px 20px 0 0', boxShadow:'0 -8px 40px rgba(0,0,0,0.18)', padding:'0 0 32px' }}>
+            <div style={{ display:'flex', justifyContent:'center', padding:'12px 0 4px' }}><div style={{ width:36, height:4, borderRadius:2, background:'rgba(0,0,0,0.12)' }} /></div>
+            <div style={{ display:'flex', gap:4, padding:'8px 20px 0' }}>
+              {['EN','中'].map((l,i) => <div key={l} style={{ padding:'5px 14px', borderRadius:6, fontFamily:f, fontSize:13, background:i===1?AQUA:'rgba(0,0,0,0.06)', color:i===1?'white':'#888', cursor:'default' }}>{l}</div>)}
+              <div style={{ flex:1 }} />
+              <div style={{ fontFamily:f, fontSize:18, color:'#aaa', cursor:'default', lineHeight:1 }}>×</div>
+            </div>
+            <div style={{ padding:'16px 24px' }}>
+              <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.14em', color:AQUA, marginBottom:8 }}>市價單 · MARKET ORDER</div>
+              <div style={{ fontFamily:f, fontSize:17, fontWeight:600, marginBottom:10 }}>立即買進或賣出</div>
+              <div style={{ fontFamily:f, fontSize:15, color:'#333', lineHeight:1.7, marginBottom:14 }}>
+                市價單會立即以市場現行價格執行。您的委託單會馬上成交，但實際成交價格可能與您所看到的報價略有不同。這微小的差異稱為<span style={{ borderBottom:'1.5px dotted #1FC3A4' }}>滑點</span><span style={{ color:AQUA, fontSize:18, lineHeight:0, verticalAlign:'-3px' }}>·</span>。
+              </div>
+              <div style={{ fontFamily:f, fontSize:11, color:'#aaa', marginBottom:12 }}>Market order · English term shown below</div>
+              <div style={{ display:'flex', gap:10 }}>
+                <div style={{ flex:1, background:'rgba(31,195,164,0.06)', border:`1.5px solid ${AQUA}33`, borderRadius:8, padding:12 }}>
+                  <div style={{ fontFamily:f, fontWeight:600, fontSize:13, color:AQUA, marginBottom:4 }}>市價單</div>
+                  <div style={{ fontFamily:f, fontSize:12, color:'#555', lineHeight:1.4 }}>立即成交 · 價格可能略有不同</div>
+                </div>
+                <div style={{ flex:1, background:'rgba(0,0,0,0.03)', border:'1.5px solid rgba(0,0,0,0.1)', borderRadius:8, padding:12 }}>
+                  <div style={{ fontFamily:f, fontWeight:600, fontSize:13, color:'#888', marginBottom:4 }}>限價單</div>
+                  <div style={{ fontFamily:f, fontSize:12, color:'#888', lineHeight:1.4 }}>設定最高價 · 可能不成交</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* Desktop hover tooltip — refined */
+    function DesktopHoverTooltip() {
+      return (
+        <div style={{ width:900, height:500, background:'#F5F5EF', borderRadius:8, border:'1.5px solid rgba(0,0,0,0.1)', padding:'40px 48px', display:'flex', flexDirection:'column', gap:24 }}>
+          <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.14em', color:'#888' }}>Desktop — hover interaction</div>
+          <div style={{ display:'flex', gap:40, flex:1 }}>
+            {/* In-text hover */}
+            <div style={{ flex:1, display:'flex', flexDirection:'column', gap:16 }}>
+              <div style={{ fontFamily:f, fontSize:13, fontWeight:600, color:'#555' }}>In running text</div>
+              <div style={{ background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, padding:20 }}>
+                <div style={{ fontFamily:f, fontSize:14, lineHeight:2.2, marginBottom:16 }}>
+                  Your <span style={{ borderBottom:'1.5px dotted #8A60EB', cursor:'pointer', color:'#222' }}>market order</span> executes at whatever price AAPL is currently trading. A small <span style={{ borderBottom:'1.5px dotted #8A60EB', cursor:'pointer', color:'#222', background:'rgba(138,96,235,0.07)', padding:'1px 3px', borderRadius:3 }}>regulatory fee</span> will be deducted.
+                </div>
+                {/* Tooltip shown */}
+                <div style={{ background:'white', border:'1px solid rgba(0,0,0,0.12)', borderRadius:8, padding:16, boxShadow:'0 4px 20px rgba(0,0,0,0.12)', maxWidth:280, position:'relative' }}>
+                  <div style={{ display:'flex', gap:4, marginBottom:10 }}>
+                    {['EN','中'].map((l,i) => <div key={l} style={{ padding:'3px 10px', borderRadius:4, fontFamily:f, fontSize:12, background:i===0?AME:'rgba(0,0,0,0.06)', color:i===0?'white':'#888', cursor:'default' }}>{l}</div>)}
+                    <div style={{ flex:1 }} />
+                    <div style={{ fontFamily:f, fontSize:12, color:'#bbb' }}>×</div>
+                  </div>
+                  <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.14em', color:AME, marginBottom:6 }}>REGULATORY FEE</div>
+                  <div style={{ fontFamily:f, fontSize:13, color:'#222', lineHeight:1.5 }}>A tiny government fee on every trade — set by the SEC and FINRA. On a $1,000 trade it's roughly $0.01. Required of all brokerages.</div>
+                  <div style={{ position:'absolute', top:-7, left:24, width:12, height:12, background:'white', border:'1px solid rgba(0,0,0,0.12)', transform:'rotate(45deg)', borderTop:'none', borderLeft:'none' }} />
+                </div>
+              </div>
+            </div>
+            {/* Stat card hover */}
+            <div style={{ flex:1, display:'flex', flexDirection:'column', gap:16 }}>
+              <div style={{ fontFamily:f, fontSize:13, fontWeight:600, color:'#555' }}>Stat card with ⓘ icon</div>
+              <div style={{ background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, padding:20 }}>
+                <div style={{ display:'flex', gap:10, marginBottom:16 }}>
+                  {[['P/E ratio','28.4',true],['Market cap','$2.9T',false],['Div yield','0.5%',false]].map(([label,val,active]) => (
+                    <div key={label} style={{ flex:1, border:`1.5px solid ${active?AME:'rgba(0,0,0,0.09)'}`, borderRadius:6, padding:'10px', background:active?'rgba(138,96,235,0.04)':'white' }}>
+                      <div style={{ display:'flex', gap:4, alignItems:'center', marginBottom:4 }}>
+                        <div style={{ fontFamily:f, fontSize:11, color:active?AME:'#888' }}>{label}</div>
+                        <div style={{ width:13, height:13, borderRadius:'50%', border:`1.5px solid ${active?AME:'#ccc'}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, color:active?AME:'#ccc', cursor:'pointer', flexShrink:0 }}>i</div>
+                      </div>
+                      <div style={{ fontFamily:f, fontWeight:600, fontSize:16 }}>{val}</div>
+                    </div>
+                  ))}
+                </div>
+                {/* Tooltip on P/E — hovered */}
+                <div style={{ background:'white', border:`1.5px solid ${AME}`, borderRadius:8, padding:16, boxShadow:`0 4px 20px rgba(138,96,235,0.15)`, maxWidth:300 }}>
+                  <div style={{ display:'flex', gap:4, marginBottom:10 }}>
+                    {['EN','中'].map((l,i) => <div key={l} style={{ padding:'3px 10px', borderRadius:4, fontFamily:f, fontSize:12, background:i===0?AME:'rgba(0,0,0,0.06)', color:i===0?'white':'#888', cursor:'default' }}>{l}</div>)}
+                  </div>
+                  <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.14em', color:AME, marginBottom:6 }}>P/E RATIO — PRICE TO EARNINGS</div>
+                  <div style={{ fontFamily:f, fontSize:13, color:'#222', lineHeight:1.5 }}>How much investors pay per $1 of profit. Apple's 28.4 means investors pay $28.40 per $1 of annual earnings. Higher = more expectations baked in.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ─────────────────────────────────────────────────────────────────
+       APP
+    ───────────────────────────────────────────────────────────────── */
+    function App() {
+      return (
+        <DesignCanvas title="simFolio — Wireframes 03: Trading Reality + Education">
+
+          <DCSection id="trade-real" title="01 — Realistic trade flow" subtitle="Market hours surface proactively. Fees shown before and after. Slippage explained automatically. Every unfamiliar term carries a visual cue. Heroes comment on moments that matter.">
+            <DCArtboard id="t1a" label="1A — Market open: trade form with educational cues" width={375} height={940}><TradeFormOpen /></DCArtboard>
+            <DCArtboard id="t1b" label="1B — Limit order mode (price field + expiry)" width={375} height={900}><TradeFormLimit /></DCArtboard>
+            <DCArtboard id="t1c" label="1C — Market closed: order queued for Monday" width={375} height={920}><MarketClosed /></DCArtboard>
+            <DCArtboard id="t1d" label="1D — Order confirmation with slippage explanation" width={375} height={900}><OrderConfirmation /></DCArtboard>
+          </DCSection>
+
+          <DCSection id="tooltip-system" title="02 — Educational tooltip system" subtitle="Dotted amethyst underline = explainable term. Hover (desktop) or long-press (mobile). Bilingual EN/中. Unexpected events trigger automatic explanations — no FAQ needed.">
+            <DCArtboard id="t2a" label="2A — Tooltip design language (mobile vs desktop)" width={800} height={640}><TooltipOverview /></DCArtboard>
+            <DCArtboard id="t2b" label="2B — Tooltips expanded, English" width={600} height={540}><TooltipEnglish /></DCArtboard>
+            <DCArtboard id="t2c" label="2C — Tooltips in Traditional Chinese" width={600} height={560}><TooltipChinese /></DCArtboard>
+            <DCArtboard id="t2d" label="2D — Unexpected event auto-education cards" width={800} height={660}><UnexpectedEvents /></DCArtboard>
+          </DCSection>
+
+          <DCSection id="interaction-spec" title="03 — Interaction system: complete spec" subtitle="Three cues: dotted underline (body text), ⓘ micro-icon (compact headers), amethyst dot · (mobile tap affordance). Desktop = instant hover tooltip. Mobile = bottom-sheet modal — never a tiny tooltip. Both modes are bilingual EN/中.">
+            <DCArtboard id="i3a" label="3A — Full system spec: 3 cues across contexts" width={1100} height={640}><InteractionSystemSpec /></DCArtboard>
+            <DCArtboard id="i3b" label="3B — Mobile bottom-sheet: English" width={375} height={760}><MobileBottomSheet /></DCArtboard>
+            <DCArtboard id="i3c" label="3C — Mobile bottom-sheet: Traditional Chinese" width={375} height={760}><MobileBottomSheetZH /></DCArtboard>
+            <DCArtboard id="i3d" label="3D — Desktop hover tooltip: in-text + stat card ⓘ" width={900} height={500}><DesktopHoverTooltip /></DCArtboard>
+          </DCSection>
+
+        </DesignCanvas>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

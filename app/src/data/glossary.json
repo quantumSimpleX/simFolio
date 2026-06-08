@@ -1,0 +1,58 @@
+{
+  "market_order": {
+    "en":   { "title": "Market Order",      "definition": "Buy or sell right now at the current market price. You accept whatever price the market gives you at this moment." },
+    "zh-TW":{ "title": "市價單 (Market Order)", "definition": "立即進行買進或賣出。您願意立刻接受市場上目前的任何報價。" }
+  },
+  "limit_order": {
+    "en":   { "title": "Limit Order",       "definition": "Set a maximum buy price or minimum sell price. The trade only executes if the stock reaches your exact price." },
+    "zh-TW":{ "title": "限價單 (Limit Order)",  "definition": "由您決定價格。只有當股票達到您設定的精確價格時，交易才會執行。" }
+  },
+  "slippage": {
+    "en":   { "title": "Slippage",          "definition": "The small difference between the price you saw when you placed your order and the price you actually paid. Normal in fast-moving markets." },
+    "zh-TW":{ "title": "滑價 (Slippage)",      "definition": "您下單時看到的價格與實際成交價格之間的小差異。在快速波動的市場中屬正常現象。" }
+  },
+  "cost_basis": {
+    "en":   { "title": "Cost Basis",        "definition": "The average total amount you paid per share, including any fees. Used to calculate your gain or loss when you sell." },
+    "zh-TW":{ "title": "持倉成本 (Cost Basis)",  "definition": "您購買目前持有股數所花費的每股平均總金額（包含手續費）。用於計算您出售時的損益。" }
+  },
+  "regulatory_fee": {
+    "en":   { "title": "Regulatory Fee",    "definition": "A tiny fee collected by the SEC on stock sales, fractions of a cent. Required by law, not charged by the broker." },
+    "zh-TW":{ "title": "監管費 (Regulatory Fee)", "definition": "美國證券交易委員會（SEC）對股票交易徵收的極小費用。這是法律規定，不是券商收費。" }
+  },
+  "pe_ratio": {
+    "en":   { "title": "P/E Ratio",         "definition": "Price-to-Earnings ratio. How much investors pay for each dollar of a company's profit. A high P/E means investors expect strong future growth." },
+    "zh-TW":{ "title": "本益比 (P/E Ratio)",    "definition": "股價與每股盈餘的比值。顯示投資人為公司每一元利潤願意付出多少倍。本益比越高，代表市場對未來成長的期待越高。" }
+  },
+  "market_cap": {
+    "en":   { "title": "Market Cap",        "definition": "The total market value of all a company's shares. Calculated as share price × total shares outstanding." },
+    "zh-TW":{ "title": "市值 (Market Cap)",     "definition": "公司所有股份的市場總價值。計算方式：股價 × 流通在外股數。" }
+  },
+  "etf": {
+    "en":   { "title": "ETF",               "definition": "Exchange-Traded Fund. A basket of many stocks or bonds you can buy as a single share, giving instant diversification at low cost." },
+    "zh-TW":{ "title": "指數股票型基金 (ETF)",     "definition": "可在交易所買賣的基金。一次購入即可擁有數十或數百支股票，以低成本實現分散投資。" }
+  },
+  "realised_pnl": {
+    "en":   { "title": "Realised P&L",      "definition": "Profit or loss that is locked in after you sell. The money actually hits (or leaves) your account." },
+    "zh-TW":{ "title": "已實現損益 (Realised P&L)", "definition": "賣出後確定的獲利或虧損。這筆錢會實際進入或離開您的帳戶。" }
+  },
+  "unrealised_pnl": {
+    "en":   { "title": "Unrealised P&L",    "definition": "The paper profit or loss on positions you still hold. It can change every second and only becomes real when you sell." },
+    "zh-TW":{ "title": "未實現損益 (Unrealised P&L)", "definition": "您持有但尚未賣出倉位的帳面盈虧。每秒都在變動，只有賣出後才會真正實現。" }
+  },
+  "52w_high": {
+    "en":   { "title": "52-Week High",      "definition": "The highest price the stock has traded in the past year. Often used as a reference point for valuation." },
+    "zh-TW":{ "title": "52週高點 (52-Week High)", "definition": "過去一年內該股票的最高成交價格。常作為估值的參考點。" }
+  },
+  "dividend_yield": {
+    "en":   { "title": "Dividend Yield",    "definition": "Annual dividend payments as a percentage of the current share price. A 2% yield means $2 paid per year for every $100 of shares." },
+    "zh-TW":{ "title": "股息殖利率 (Dividend Yield)", "definition": "年度股息占當前股價的百分比。2%殖利率意味著每持有100元股票，每年收到2元股息。" }
+  },
+  "partial_fill": {
+    "en":   { "title": "Partial Fill",      "definition": "When only some of your order is executed because not enough shares were available at your limit price at that moment." },
+    "zh-TW":{ "title": "部分成交 (Partial Fill)", "definition": "因限價時市場上沒有足夠的股票，訂單僅部分成交。" }
+  },
+  "expense_ratio": {
+    "en":   { "title": "Expense Ratio",     "definition": "The annual fee an ETF charges, expressed as a percentage of your investment. A 0.03% expense ratio on $1,000 costs you $0.30 per year." },
+    "zh-TW":{ "title": "費用率 (Expense Ratio)",  "definition": "ETF每年收取的管理費，以投資金額的百分比表示。0.03%的費用率意味著每投資1,000元，每年費用為0.30元。" }
+  }
+}

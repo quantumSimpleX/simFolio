@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>simFolio — Hi-fi Markets & Discovery</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <style>
+    @font-face { font-family:'MOMCAKE'; src:url('fonts/MOMCAKE-Bold.otf') format('opentype'); font-weight:700; font-display:swap; }
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+    .term { border-bottom:1.5px dotted #8A60EB; cursor:pointer; }
+  </style>
+</head>
+<body><div id="root"></div>
+<script type="text/babel">
+  const { DesignCanvas, DCSection, DCArtboard } = window;
+
+  const C = {
+    paper:'#FAFAF7', white:'#FFFFFF',
+    ink900:'#0A0E14', ink700:'#242B35', ink600:'#3A434F',
+    ink500:'#5A6573', ink400:'#7E8794', ink300:'#A6ADB7',
+    ink200:'#CDD2D9', ink100:'#E6E9ED', ink50:'#F4F5F7',
+    ame400:'#8A60EB', ame600:'#582EB3', ame100:'#E2D8FC', ame50:'#F2EEFE',
+    aqua400:'#1FC3A4', aqua600:'#008771', aqua50:'#E6FBF7',
+    red:'#D43A2F',
+    gold:'#B5860A',
+  };
+  const SANS    = "'Barlow Condensed','Helvetica Neue',system-ui,sans-serif";
+  const DISPLAY = "'MOMCAKE','Helvetica Neue',system-ui,sans-serif";
+
+  /* ── primitives ── */
+  function Logo({ size=20 }) {
+    return (
+      <div style={{display:'flex',alignItems:'center',gap:7}}>
+        <div style={{width:size*1.1,height:size*1.1,background:`${C.ame400}12`,border:`1.5px solid ${C.ame400}28`,borderRadius:3,display:'flex',alignItems:'center',justifyContent:'center',color:C.ame400,fontSize:size*0.6}}>◇</div>
+        <div style={{fontFamily:DISPLAY,fontWeight:700,fontSize:size,color:C.ink900,letterSpacing:'-0.02em'}}>simFolio</div>
+      </div>
+    );
+  }
+  function StatusBar() {
+    return <div style={{height:52,display:'flex',alignItems:'flex-end',justifyContent:'space-between',padding:'0 24px 10px',flexShrink:0}}><div style={{fontFamily:SANS,fontSize:15,fontWeight:600,color:C.ink900}}>9:41</div><div style={{width:16,height:10,border:`1.5px solid ${C.ink900}`,borderRadius:2,position:'relative'}}><div style={{position:'absolute',left:1,top:1,bottom:1,right:'30%',background:C.ink900,borderRadius:1}}/></div></div>;
+  }
+  function Eyebrow({ children, color=C.ink400 }) {
+    return <div style={{fontFamily:SANS,fontSize:11,fontWeight:600,color,letterSpacing:'0.14em',textTransform:'uppercase'}}>{children}</div>;
+  }
+  function MktStatus({ open=true }) {
+    return (
+      <div style={{display:'inline-flex',alignItems:'center',gap:6,background:open?C.aqua50:'rgba(0,0,0,0.04)',border:`1px solid ${open?C.aqua400+'40':'rgba(0,0,0,0.1)'}`,borderRadius:999,padding:'4px 10px'}}>
+        <div style={{width:6,height:6,borderRadius:'50%',background:open?C.aqua400:'#888'}}/>
+        <span style={{fontFamily:SANS,fontSize:12,color:open?C.aqua600:'#666',fontWeight:500}}>{open?'Markets open · 2h 44m left':'Markets closed'}</span>
+      </div>
+    );
+  }
+  function Term({ children }) { return <span className="term">{children}</span>; }
+  function HeroAv({ init, color, size=28 }) {
+    return <div style={{width:size,height:size,borderRadius:'50%',background:`${color}12`,border:`1.5px solid ${color}35`,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontWeight:700,fontSize:size*0.3,color,flexShrink:0}}>{init}</div>;
+  }
+  function CTA({ label, full=false, style={} }) {
+    return <div style={{height:48,background:C.ink900,color:C.white,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontSize:15,fontWeight:600,cursor:'default',width:full?'100%':undefined,...style}}>{label}</div>;
+  }
+  function GhostCTA({ label, style={} }) {
+    return <div style={{height:44,border:`1px solid ${C.ink200}`,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontSize:14,color:C.ink600,cursor:'default',...style}}>{label}</div>;
+  }
+
+  function IndexPill({ name, val, pct, pos=true }) {
+    return (
+      <div style={{flex:1,background:C.white,border:`1px solid ${C.ink100}`,borderRadius:8,padding:'12px 14px'}}>
+        <Eyebrow>{name}</Eyebrow>
+        <div style={{fontFamily:SANS,fontWeight:700,fontSize:18,color:C.ink900,marginTop:4}}>{val}</div>
+        <div style={{fontFamily:SANS,fontSize:13,color:pos?C.aqua600:C.red,marginTop:2}}>{pct}</div>
+      </div>
+    );
+  }
+
+  function StockRow({ ticker, name, price, change, pct, pos=true, owned=false, compact=false }) {
+    return (
+      <div style={{display:'flex',alignItems:'center',gap:compact?10:12,padding:`${compact?8:11}px 0`,borderTop:`1px solid ${C.ink100}`}}>
+        <div style={{width:compact?34:38,height:compact?34:38,background:C.ink50,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontWeight:700,fontSize:11,color:C.ink500,flexShrink:0}}>{ticker}</div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{display:'flex',alignItems:'center',gap:6}}>
+            <div style={{fontFamily:SANS,fontWeight:600,fontSize:compact?13:14,color:C.ink900}}>{name}</div>
+            {owned && <div style={{padding:'1px 6px',background:C.ame50,border:`1px solid ${C.ame100}`,borderRadius:3,fontFamily:SANS,fontSize:10,color:C.ame600,fontWeight:600}}>Owned</div>}
+          </div>
+          <div style={{fontFamily:SANS,fontSize:11,color:C.ink400,marginTop:1}}>{ticker}</div>
+        </div>
+        <div style={{textAlign:'right',flexShrink:0}}>
+          <div style={{fontFamily:SANS,fontWeight:600,fontSize:compact?13:14,color:C.ink900}}>{price}</div>
+          <div style={{fontFamily:SANS,fontSize:12,color:pos?C.aqua600:C.red}}>{change} ({pct})</div>
+        </div>
+      </div>
+    );
+  }
+
+  function Sparkline({ width, height, pos=true }) {
+    const pts = pos
+      ? `0,${height} ${width*.15},${height*.78} ${width*.3},${height*.62} ${width*.5},${height*.45} ${width*.7},${height*.32} ${width*.85},${height*.2} ${width},${height*.1}`
+      : `0,${height*.1} ${width*.2},${height*.25} ${width*.4},${height*.45} ${width*.6},${height*.6} ${width*.8},${height*.75} ${width},${height*.88}`;
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+        <polyline points={pts} fill="none" stroke={pos?C.aqua400:C.red} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"/>
+      </svg>
+    );
+  }
+
+  /* ════════════════════════════════════════
+     01 — MARKETS OVERVIEW
+  ════════════════════════════════════════ */
+
+  function MarketsOverviewMobile() {
+    return (
+      <div style={{width:390,height:960,background:C.paper,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        <StatusBar/>
+        <div style={{padding:'0 24px 14px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:`1px solid ${C.ink100}`,flexShrink:0}}>
+          <div style={{fontFamily:SANS,fontWeight:700,fontSize:22,color:C.ink900}}>Markets</div>
+          <MktStatus open/>
+        </div>
+        {/* Search */}
+        <div style={{padding:'12px 24px',borderBottom:`1px solid ${C.ink100}`,flexShrink:0}}>
+          <div style={{height:44,background:C.white,border:`1px solid ${C.ink200}`,borderRadius:4,display:'flex',alignItems:'center',padding:'0 14px',gap:10}}>
+            <div style={{fontFamily:SANS,fontSize:18,color:C.ink300}}>⌕</div>
+            <div style={{fontFamily:SANS,fontSize:15,color:C.ink300}}>Search stocks, ETFs, crypto…</div>
+          </div>
+        </div>
+        <div style={{flex:1,padding:'16px 24px',display:'flex',flexDirection:'column',gap:18,overflow:'hidden'}}>
+          {/* Indices */}
+          <div>
+            <div style={{marginBottom:8}}><Eyebrow>Major indices</Eyebrow></div>
+            <div style={{display:'flex',gap:8}}>
+              <IndexPill name="S&P 500" val="5,241" pct="+0.79%"/>
+              <IndexPill name="NASDAQ" val="16,920" pct="+1.19%"/>
+              <IndexPill name="DOW" val="39,112" pct="+0.30%"/>
+            </div>
+          </div>
+          {/* Category filter */}
+          <div>
+            <div style={{marginBottom:8}}><Eyebrow>Browse by type</Eyebrow></div>
+            <div style={{display:'flex',gap:6,overflowX:'auto',paddingBottom:4}}>
+              {[['Stocks',true],['ETFs',false],['Crypto',false],['Bonds',false],['REITs',false]].map(([l,active])=>(
+                <div key={l} style={{padding:'7px 16px',borderRadius:4,border:`1px solid ${active?C.ink900:C.ink100}`,background:active?C.ink900:'transparent',fontFamily:SANS,fontSize:13,color:active?C.white:C.ink500,cursor:'default',flexShrink:0,fontWeight:active?600:400}}>{l}</div>
+              ))}
+            </div>
+          </div>
+          {/* Watchlist */}
+          <div style={{flex:1}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:0}}>
+              <Eyebrow>Your watchlist</Eyebrow>
+              <div style={{fontFamily:SANS,fontSize:13,color:C.ame400,cursor:'default'}}>+ Add</div>
+            </div>
+            {[['AAPL','Apple Inc.','$196.90','+$7.45','+3.9%',true,true],
+              ['TSLA','Tesla','$172.00','−$5.20','−2.9%',false,true],
+              ['NVDA','Nvidia','$905.00','+$16.20','+1.8%',true,false],
+            ].map(([t,n,p,c,pct,pos,owned])=>(
+              <StockRow key={t} ticker={t} name={n} price={p} change={c} pct={pct} pos={pos} owned={owned}/>
+            ))}
+          </div>
+          {/* Warren lens */}
+          <div style={{background:C.ame50,border:`1px solid ${C.ame100}`,borderRadius:8,padding:'12px 16px',display:'flex',gap:10}}>
+            <HeroAv init="WB" color={C.ame400}/>
+            <div style={{flex:1}}>
+              <div style={{fontFamily:SANS,fontSize:12,fontWeight:600,color:C.ame600,marginBottom:3}}>Warren's lens</div>
+              <div style={{fontFamily:SANS,fontSize:13,color:C.ink600,lineHeight:1.5,fontStyle:'italic'}}>"Markets up broadly today. A daily price move tells you nothing about business value."</div>
+            </div>
+          </div>
+        </div>
+        {/* Bottom nav */}
+        <div style={{height:72,borderTop:`1px solid ${C.ink100}`,background:C.white,display:'flex',alignItems:'center',flexShrink:0}}>
+          {[['Portfolio',false],['Markets',true],['Ask',false],['Achievements',false]].map(([l,active])=>(
+            <div key={l} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
+              <div style={{width:22,height:22,borderRadius:l==='Ask'?'50%':4,background:l==='Ask'?C.ame400:active?C.ink900:C.ink100,display:'flex',alignItems:'center',justifyContent:'center',color:l==='Ask'?C.white:active?C.white:C.ink400,fontSize:l==='Ask'?11:10}}>{l==='Ask'?'◇':''}</div>
+              <div style={{fontFamily:SANS,fontSize:10,fontWeight:500,color:l==='Ask'?C.ame400:active?C.ink900:C.ink400}}>{l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  function MarketsOverviewDesktop() {
+    return (
+      <div style={{width:1440,height:900,background:C.paper,display:'flex',flexDirection:'column'}}>
+        <div style={{height:64,background:C.white,borderBottom:`1px solid ${C.ink100}`,display:'flex',alignItems:'center',padding:'0 40px',gap:40,flexShrink:0}}>
+          <Logo size={21}/>
+          <div style={{flex:1,display:'flex',gap:28}}>
+            {['Portfolio','Markets','Achievements'].map((item,i)=>(
+              <div key={item} style={{fontFamily:SANS,fontSize:15,fontWeight:i===1?600:400,color:i===1?C.ink900:C.ink400,borderBottom:i===1?`2px solid ${C.ink900}`:'none',paddingBottom:i===1?2:0,cursor:'default'}}>{item}</div>
+            ))}
+          </div>
+          <MktStatus open/>
+          <div style={{width:34,height:34,borderRadius:'50%',background:C.ink900,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontWeight:700,fontSize:14,color:C.white}}>J</div>
+        </div>
+        <div style={{flex:1,display:'flex',minHeight:0}}>
+          {/* Left sidebar */}
+          <div style={{width:280,borderRight:`1px solid ${C.ink100}`,padding:'24px 28px',display:'flex',flexDirection:'column',gap:20}}>
+            <div style={{height:40,background:C.white,border:`1px solid ${C.ink200}`,borderRadius:4,display:'flex',alignItems:'center',padding:'0 12px',gap:8}}>
+              <div style={{fontFamily:SANS,fontSize:16,color:C.ink300}}>⌕</div>
+              <div style={{fontFamily:SANS,fontSize:14,color:C.ink300}}>Search…</div>
+            </div>
+            <div>
+              <div style={{marginBottom:8}}><Eyebrow>Browse</Eyebrow></div>
+              {[['Stocks',true],['ETFs',false],['Crypto',false],['Bonds',false],['REITs',false],['Options',false]].map(([l,active])=>(
+                <div key={l} style={{padding:'9px 12px',borderRadius:4,fontFamily:SANS,fontSize:14,background:active?C.ink50:'transparent',color:active?C.ink900:C.ink500,fontWeight:active?600:400,cursor:'default',marginBottom:2}}>{l}</div>
+              ))}
+            </div>
+            <div style={{flex:1}}>
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}>
+                <Eyebrow>Watchlist</Eyebrow>
+                <div style={{fontFamily:SANS,fontSize:12,color:C.ame400,cursor:'default'}}>+ Add</div>
+              </div>
+              {[['AAPL','$196.90','+3.9%',true],['TSLA','$172.00','−2.9%',false],['NVDA','$905.00','+1.8%',true]].map(([t,p,pct,pos])=>(
+                <div key={t} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderTop:`1px solid ${C.ink100}`}}>
+                  <div style={{fontFamily:SANS,fontWeight:600,fontSize:14,color:C.ink900}}>{t}</div>
+                  <div style={{textAlign:'right'}}>
+                    <div style={{fontFamily:SANS,fontSize:13,color:C.ink900}}>{p}</div>
+                    <div style={{fontFamily:SANS,fontSize:11,color:pos?C.aqua600:C.red}}>{pct}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Main */}
+          <div style={{flex:1,padding:'28px 40px',display:'flex',flexDirection:'column',gap:20,overflow:'hidden'}}>
+            {/* Indices row */}
+            <div>
+              <div style={{marginBottom:8}}><Eyebrow>Major indices · live</Eyebrow></div>
+              <div style={{display:'flex',gap:14}}>
+                <IndexPill name="S&P 500" val="5,241.18" pct="+41.2 (+0.79%)"/>
+                <IndexPill name="NASDAQ" val="16,920.44" pct="+198.4 (+1.19%)"/>
+                <IndexPill name="Dow Jones" val="39,112.16" pct="+118.6 (+0.30%)"/>
+                <IndexPill name="Russell 2000" val="2,068.33" pct="−12.1 (−0.58%)" pos={false}/>
+              </div>
+            </div>
+            {/* Stock list + hero panel */}
+            <div style={{flex:1,display:'flex',gap:28,minHeight:0}}>
+              <div style={{flex:1}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:0}}>
+                  <Eyebrow>Stocks</Eyebrow>
+                  <div style={{display:'flex',gap:14}}>
+                    {['All','Gainers','Losers','Volume'].map((f,i)=>(
+                      <div key={f} style={{fontFamily:SANS,fontSize:13,color:i===0?C.ink900:C.ink400,fontWeight:i===0?600:400,cursor:'default'}}>{f}</div>
+                    ))}
+                  </div>
+                </div>
+                {[['AAPL','Apple Inc.','$196.90','+$7.45','+3.9%',true,true],
+                  ['NVDA','Nvidia Corp.','$905.00','+$16.20','+1.8%',true,false],
+                  ['MSFT','Microsoft','$415.22','+$6.80','+1.7%',true,false],
+                  ['TSLA','Tesla','$172.00','−$5.20','−2.9%',false,true],
+                  ['AMZN','Amazon','$185.40','+$2.10','+1.1%',true,false],
+                  ['META','Meta Platforms','$512.30','+$9.40','+1.9%',true,false],
+                ].map(([t,n,p,c,pct,pos,owned])=>(
+                  <StockRow key={t} ticker={t} name={n} price={p} change={c} pct={pct} pos={pos} owned={owned} compact/>
+                ))}
+              </div>
+              {/* Hero perspective panel */}
+              <div style={{width:300,flexShrink:0,display:'flex',flexDirection:'column',gap:14}}>
+                <Eyebrow>Council's perspective</Eyebrow>
+                {[{init:'WB',color:C.ame400,name:'Warren',topic:'On today\'s market',take:'Markets up broadly. This is not a reason to buy or sell anything. A daily move tells you nothing about value.'},
+                  {init:'CW',color:C.aqua400,name:'Cathie',topic:'On tech strength',take:'AI infrastructure is driving real revenue now — NVDA, MSFT. This isn\'t speculation; it\'s adoption in early innings.'},
+                ].map(h=>(
+                  <div key={h.init} style={{background:C.white,border:`1px solid ${C.ink100}`,borderRadius:8,padding:'14px 16px'}}>
+                    <div style={{display:'flex',gap:10,alignItems:'center',marginBottom:10}}>
+                      <HeroAv init={h.init} color={h.color}/>
+                      <div>
+                        <div style={{fontFamily:SANS,fontWeight:600,fontSize:14,color:C.ink900}}>{h.name}</div>
+                        <div style={{fontFamily:SANS,fontSize:12,color:h.color}}>{h.topic}</div>
+                      </div>
+                      <div style={{marginLeft:'auto',fontFamily:SANS,fontSize:11,color:C.ink400,fontStyle:'italic'}}>perspective</div>
+                    </div>
+                    <div style={{fontFamily:SANS,fontSize:13,color:C.ink600,lineHeight:1.55,fontStyle:'italic'}}>"{h.take}"</div>
+                    <div style={{fontFamily:SANS,fontSize:12,color:h.color,marginTop:8,cursor:'default'}}>Ask {h.name} →</div>
+                  </div>
+                ))}
+                <div style={{fontFamily:SANS,fontSize:11,color:C.ink400,lineHeight:1.5,textAlign:'center'}}>Perspectives are educational, not buy/sell signals.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ════════════════════════════════════════
+     02 — SEARCH
+  ════════════════════════════════════════ */
+
+  function SearchResults() {
+    return (
+      <div style={{width:390,height:900,background:C.paper,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        <StatusBar/>
+        <div style={{padding:'0 16px 12px',display:'flex',alignItems:'center',gap:10,borderBottom:`1px solid ${C.ink100}`,flexShrink:0}}>
+          <div style={{fontFamily:SANS,fontSize:14,color:C.ame400,cursor:'default'}}>←</div>
+          <div style={{flex:1,height:44,background:C.white,border:`1.5px solid ${C.ame400}`,borderRadius:4,display:'flex',alignItems:'center',padding:'0 12px',gap:8,boxShadow:`0 0 0 3px ${C.ame400}15`}}>
+            <div style={{fontFamily:SANS,fontSize:18,color:C.ame400}}>⌕</div>
+            <div style={{fontFamily:SANS,fontSize:15,color:C.ink900,flex:1}}>apple</div>
+            <div style={{fontFamily:SANS,fontSize:16,color:C.ink300,cursor:'default'}}>×</div>
+          </div>
+        </div>
+        <div style={{flex:1,padding:'4px 24px',display:'flex',flexDirection:'column',overflow:'hidden'}}>
+          <div style={{padding:'10px 0 4px'}}><Eyebrow>Best match</Eyebrow></div>
+          {/* Top match */}
+          <div style={{display:'flex',alignItems:'center',gap:12,padding:'12px 0',borderTop:`1px solid ${C.ink100}`,background:C.ame50,margin:'0 -24px',padding:'12px 24px',borderLeft:`3px solid ${C.ame400}`}}>
+            <div style={{width:40,height:40,background:C.ink50,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontWeight:700,fontSize:11,color:C.ink500,flexShrink:0}}>AAPL</div>
+            <div style={{flex:1}}>
+              <div style={{fontFamily:SANS,fontWeight:700,fontSize:15,color:C.ink900}}>Apple Inc.</div>
+              <div style={{fontFamily:SANS,fontSize:12,color:C.ink400}}>NASDAQ · Stock</div>
+            </div>
+            <div style={{textAlign:'right'}}>
+              <div style={{fontFamily:SANS,fontWeight:700,fontSize:15,color:C.ink900}}>$196.90</div>
+              <div style={{fontFamily:SANS,fontSize:12,color:C.aqua600}}>+3.9%</div>
+            </div>
+          </div>
+          <div style={{padding:'12px 0 4px'}}><Eyebrow>Other results</Eyebrow></div>
+          {[['APLE','Apple Hospitality REIT','NYSE · REIT','$15.42','+0.4%',true],
+            ['APLD','Applied Digital Corp.','NASDAQ · Stock','$8.20','−1.2%',false],
+          ].map(([t,n,m,p,pct,pos])=>(
+            <div key={t} style={{display:'flex',alignItems:'center',gap:12,padding:'11px 0',borderTop:`1px solid ${C.ink100}`}}>
+              <div style={{width:40,height:40,background:C.ink50,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontWeight:700,fontSize:10,color:C.ink500,flexShrink:0,textAlign:'center',lineHeight:1.2}}>{t}</div>
+              <div style={{flex:1}}>
+                <div style={{fontFamily:SANS,fontWeight:600,fontSize:14,color:C.ink900}}>{n}</div>
+                <div style={{fontFamily:SANS,fontSize:12,color:C.ink400}}>{m}</div>
+              </div>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontFamily:SANS,fontWeight:600,fontSize:14,color:C.ink900}}>{p}</div>
+                <div style={{fontFamily:SANS,fontSize:12,color:pos?C.aqua600:C.red}}>{pct}</div>
+              </div>
+            </div>
+          ))}
+          <div style={{padding:'12px 0 4px'}}><Eyebrow>ETFs containing Apple</Eyebrow></div>
+          {[['QQQ','Invesco NASDAQ-100','ETF · Apple is top holding'],['VOO','Vanguard S&P 500','ETF · Apple ~7% weight']].map(([t,n,d])=>(
+            <div key={t} style={{display:'flex',alignItems:'center',gap:12,padding:'11px 0',borderTop:`1px solid ${C.ink100}`}}>
+              <div style={{width:40,height:40,background:C.aqua50,border:`1px dashed ${C.aqua400}40`,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontWeight:700,fontSize:11,color:C.aqua600,flexShrink:0}}>{t}</div>
+              <div style={{flex:1}}>
+                <div style={{fontFamily:SANS,fontWeight:600,fontSize:14,color:C.ink900}}>{n}</div>
+                <div style={{fontFamily:SANS,fontSize:12,color:C.ink400}}>{d}</div>
+              </div>
+            </div>
+          ))}
+          {/* ETF education nudge */}
+          <div style={{marginTop:12,background:C.paper,border:`1px solid ${C.ink100}`,borderRadius:8,padding:'12px 14px'}}>
+            <div style={{fontFamily:SANS,fontSize:12,fontWeight:600,color:C.ink500,letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:5}}>What is an ETF?</div>
+            <div style={{fontFamily:SANS,fontSize:13,color:C.ink600,lineHeight:1.5}}>An <Term>ETF</Term> holds many stocks in one. Buying QQQ gives you a slice of Apple plus 99 other companies. Instant diversification.</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ════════════════════════════════════════
+     03 — STOCK DETAIL
+  ════════════════════════════════════════ */
+
+  function StockDetail() {
+    return (
+      <div style={{width:390,height:980,background:C.paper,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        <StatusBar/>
+        <div style={{padding:'0 24px 14px',display:'flex',alignItems:'center',gap:14,borderBottom:`1px solid ${C.ink100}`,flexShrink:0}}>
+          <div style={{fontFamily:SANS,fontSize:14,color:C.ame400,cursor:'default'}}>← Markets</div>
+          <div style={{flex:1}}/>
+          <div style={{height:32,padding:'0 14px',border:`1px solid ${C.ink200}`,borderRadius:4,display:'flex',alignItems:'center',fontFamily:SANS,fontSize:13,color:C.ink600,cursor:'default',gap:6}}>
+            <div style={{width:5,height:5,borderRadius:'50%',background:C.aqua400}}/>+ Watchlist
+          </div>
+        </div>
+        <div style={{flex:1,padding:'16px 24px',display:'flex',flexDirection:'column',gap:14,overflow:'hidden'}}>
+          {/* Title + price */}
+          <div>
+            <div style={{fontFamily:SANS,fontSize:13,color:C.ink400,marginBottom:4}}>AAPL · Apple Inc. · NASDAQ</div>
+            <div style={{display:'flex',alignItems:'baseline',gap:14}}>
+              <div style={{fontFamily:DISPLAY,fontWeight:700,fontSize:38,color:C.ink900,letterSpacing:'-0.025em',lineHeight:1}}>$196.90</div>
+              <div style={{fontFamily:SANS,fontSize:15,color:C.aqua600,fontWeight:500}}>+$7.45 (+3.9%) today</div>
+            </div>
+          </div>
+          {/* Mini chart */}
+          <div style={{background:C.white,border:`1px solid ${C.ink100}`,borderRadius:8,padding:'14px 16px'}}>
+            <svg width="100%" height={60} viewBox="0 0 342 60" preserveAspectRatio="none">
+              <polyline points="0,55 50,45 100,38 160,28 220,20 280,14 342,8" fill="none" stroke={C.aqua400} strokeWidth="1.75" strokeLinejoin="round" strokeLinecap="round"/>
+              <circle cx="342" cy="8" r="3" fill={C.aqua400}/>
+            </svg>
+            <div style={{display:'flex',gap:10,marginTop:6}}>
+              {['1D','1W','1M','3M','1Y','All'].map((l,i)=>(
+                <div key={l} style={{fontFamily:SANS,fontSize:12,color:i===5?C.ame400:C.ink400,fontWeight:i===5?600:400,cursor:'default'}}>{l}</div>
+              ))}
+            </div>
+          </div>
+          {/* Stats */}
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+            {[['Market cap','$2.9T'],['P/E ratio','28.4'],['52W high','$199.62'],['Div yield','0.5%']].map(([l,v])=>(
+              <div key={l} style={{background:C.white,border:`1px solid ${C.ink100}`,borderRadius:8,padding:'10px 14px'}}>
+                <div style={{fontFamily:SANS,fontSize:12,color:C.ink400,marginBottom:3}}><Term>{l}</Term></div>
+                <div style={{fontFamily:SANS,fontWeight:700,fontSize:18,color:C.ink900}}>{v}</div>
+              </div>
+            ))}
+          </div>
+          {/* Hero takes */}
+          <div style={{display:'flex',flexDirection:'column',gap:10}}>
+            {[{init:'WB',color:C.ame400,name:'Warren',take:'Apple\'s brand and ecosystem lock-in make it extraordinary. At this price — fairly valued, not cheap.'},
+              {init:'CW',color:C.aqua400,name:'Cathie',take:'Services revenue is the story here. High-margin, recurring — hardware is just the on-ramp.'},
+            ].map(h=>(
+              <div key={h.init} style={{display:'flex',gap:10,alignItems:'flex-start',padding:'12px 14px',background:C.white,border:`1px solid ${C.ink100}`,borderRadius:8}}>
+                <HeroAv init={h.init} color={h.color} size={26}/>
+                <div style={{flex:1}}>
+                  <div style={{fontFamily:SANS,fontSize:12,fontWeight:600,color:h.color,marginBottom:3}}>{h.name}</div>
+                  <div style={{fontFamily:SANS,fontSize:13,color:C.ink600,lineHeight:1.5,fontStyle:'italic'}}>"{h.take}"</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* CTAs */}
+        <div style={{padding:'12px 24px 28px',borderTop:`1px solid ${C.ink100}`,flexShrink:0,display:'flex',gap:10}}>
+          <CTA label="Buy AAPL" style={{flex:1}}/>
+          <div style={{height:48,flex:1,border:`1px solid ${C.ink200}`,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontSize:15,fontWeight:600,color:C.ink700,cursor:'default'}}>Ask council</div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ════════════════════════════════════════
+     APP
+  ════════════════════════════════════════ */
+  function App() {
+    return (
+      <DesignCanvas title="simFolio Hi-fi — Markets & Discovery">
+        <DCSection id="overview" title="01 — Markets overview" subtitle="Market status always prominent. Indices at a glance. Category filter (Stocks, ETFs, Crypto…). Watchlist is personal shortlist. Hero lens surfaces a single educational perspective — never a signal, always framed as a question or framework.">
+          <DCArtboard id="mo-mob" label="Markets overview — mobile" width={390} height={960}><MarketsOverviewMobile/></DCArtboard>
+          <DCArtboard id="mo-desk" label="Markets overview — desktop" width={1440} height={900}><MarketsOverviewDesktop/></DCArtboard>
+        </DCSection>
+        <DCSection id="search" title="02 — Search" subtitle="Active search: primary match gets a left border accent. Related ETFs shown below results with inline explainer. Education nudge appears only when something unfamiliar surfaces (ETF in results for a stock search).">
+          <DCArtboard id="sr" label="Search: 'apple' — results + related ETFs" width={390} height={900}><SearchResults/></DCArtboard>
+        </DCSection>
+        <DCSection id="detail" title="03 — Stock detail" subtitle="Price in MOMCAKE. Chart + range selector. Hoverable dotted-underline stats. Hero council gives their take on this specific stock — different heroes, different lenses. Two CTAs: buy now or ask council first.">
+          <DCArtboard id="sd" label="Stock detail: AAPL (mobile)" width={390} height={980}><StockDetail/></DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>simFolio — Hi-fi Onboarding v1</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <style>
+    @font-face {
+      font-family: 'MOMCAKE';
+      src: url('fonts/MOMCAKE-Bold.otf') format('opentype');
+      font-weight: 700;
+      font-display: swap;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* QSXC tokens */
+    :root {
+      --paper:    #FAFAF7;
+      --white:    #FFFFFF;
+      --ink-900:  #0A0E14;
+      --ink-700:  #242B35;
+      --ink-600:  #3A434F;
+      --ink-500:  #5A6573;
+      --ink-400:  #7E8794;
+      --ink-300:  #A6ADB7;
+      --ink-200:  #CDD2D9;
+      --ink-100:  #E6E9ED;
+      --ink-50:   #F4F5F7;
+      --ame-400:  #8A60EB;
+      --ame-500:  #7042D6;
+      --ame-600:  #582EB3;
+      --ame-200:  #C5B0F8;
+      --ame-100:  #E2D8FC;
+      --ame-50:   #F2EEFE;
+      --aqua-400: #1FC3A4;
+      --aqua-50:  #E6FBF7;
+      --sans:     'Barlow Condensed', 'Helvetica Neue', system-ui, sans-serif;
+      --mono:     'Source Code Pro', ui-monospace, monospace;
+      --display:  'MOMCAKE', 'Helvetica Neue', system-ui, sans-serif;
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+  const { DesignCanvas, DCSection, DCArtboard } = window;
+
+  /* ── Shared tokens ──────────────────────────────────────── */
+  const C = {
+    paper: '#FAFAF7', white: '#FFFFFF',
+    ink900: '#0A0E14', ink700: '#242B35', ink600: '#3A434F',
+    ink500: '#5A6573', ink400: '#7E8794', ink300: '#A6ADB7',
+    ink200: '#CDD2D9', ink100: '#E6E9ED', ink50: '#F4F5F7',
+    ame400: '#8A60EB', ame500: '#7042D6', ame600: '#582EB3',
+    ame200: '#C5B0F8', ame100: '#E2D8FC', ame50: '#F2EEFE',
+    aqua400: '#1FC3A4', aqua50: '#E6FBF7',
+  };
+  const SANS = "'Barlow Condensed', 'Helvetica Neue', system-ui, sans-serif";
+  const DISPLAY = "'MOMCAKE', 'Helvetica Neue', system-ui, sans-serif";
+
+  const GOALS = [
+    'Build long-term wealth',
+    'Save for something specific',
+    'Beat my savings account',
+    'Learn how investing works',
+    'Just exploring for now',
+  ];
+
+  /* ── Shared components ──────────────────────────────────── */
+
+  function Logo({ size = 22, color = C.ink900 }) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{
+          width: size * 1.1, height: size * 1.1,
+          background: `${C.ame400}12`,
+          border: `1.5px solid ${C.ame400}30`,
+          borderRadius: 4,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: C.ame400, fontSize: size * 0.65, lineHeight: 1,
+        }}>◇</div>
+        <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: size, color, letterSpacing: '-0.02em' }}>simFolio</div>
+      </div>
+    );
+  }
+
+  function GuideAv({ size = 36 }) {
+    return (
+      <div style={{
+        width: size, height: size, borderRadius: '50%',
+        background: C.aqua50,
+        border: `1.5px solid ${C.aqua400}40`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: C.aqua400, fontSize: size * 0.44, flexShrink: 0,
+        fontWeight: 400,
+      }}>◇</div>
+    );
+  }
+
+  function GuideMsg({ text, size = 15 }) {
+    return (
+      <div style={{
+        fontFamily: SANS, fontSize: size, fontWeight: 400,
+        color: C.ink600, lineHeight: 1.55, textWrap: 'pretty',
+      }}>{text}</div>
+    );
+  }
+
+  function ProgressDots({ step = 1, total = 8 }) {
+    return (
+      <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+        {Array.from({ length: total }, (_, i) => (
+          <div key={i} style={{
+            width: i < step ? 20 : 5, height: 5, borderRadius: 3,
+            background: i < step ? C.ame400 : C.ink100,
+            transition: 'width 0.3s',
+          }} />
+        ))}
+        <div style={{ fontFamily: SANS, fontSize: 12, color: C.ink400, marginLeft: 4 }}>
+          {step} of {total}
+        </div>
+      </div>
+    );
+  }
+
+  function GoalCard({ label, selected, compact = false }) {
+    return (
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 12,
+        padding: compact ? '10px 14px' : '13px 16px',
+        background: selected ? C.ame50 : C.white,
+        border: `${selected ? 2 : 1}px solid ${selected ? C.ame400 : C.ink100}`,
+        borderRadius: 6, cursor: 'default',
+        transition: 'all 0.15s',
+      }}>
+        <div style={{
+          width: compact ? 16 : 18, height: compact ? 16 : 18,
+          borderRadius: '50%', flexShrink: 0,
+          border: `2px solid ${selected ? C.ame400 : C.ink300}`,
+          background: selected ? C.ame400 : 'transparent',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          {selected && <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.white }} />}
+        </div>
+        <div style={{
+          fontFamily: SANS, fontSize: compact ? 14 : 15.5, fontWeight: selected ? 600 : 400,
+          color: selected ? C.ame600 : C.ink700, letterSpacing: '-0.01em',
+        }}>{label}</div>
+      </div>
+    );
+  }
+
+  function CTA({ label = 'Continue', width = '100%', size = 'md' }) {
+    const h = size === 'lg' ? 52 : size === 'sm' ? 36 : 44;
+    const fs = size === 'lg' ? 16 : size === 'sm' ? 13 : 14;
+    return (
+      <div style={{
+        width, height: h, background: C.ink900, color: C.white,
+        borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontFamily: SANS, fontSize: fs, fontWeight: 600, letterSpacing: '0.01em',
+        cursor: 'default', userSelect: 'none',
+      }}>{label}</div>
+    );
+  }
+
+  function GhostInput({ placeholder = 'Or type your answer…' }) {
+    return (
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 10,
+        border: `1px solid ${C.ink100}`, borderRadius: 4,
+        padding: '0 14px', height: 44,
+        background: C.white,
+      }}>
+        <div style={{ fontFamily: SANS, fontSize: 15, color: C.ink300, flex: 1 }}>{placeholder}</div>
+        <div style={{
+          width: 32, height: 32, borderRadius: 3,
+          background: C.ink900,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: C.white, fontSize: 16, flexShrink: 0,
+        }}>→</div>
+      </div>
+    );
+  }
+
+  function SimBadge() {
+    return (
+      <div style={{
+        display: 'inline-flex', alignItems: 'center', gap: 6,
+        border: `1px solid ${C.ame400}25`,
+        borderRadius: 999, padding: '4px 12px',
+        fontFamily: SANS, fontSize: 12, color: C.ame500, fontWeight: 500,
+        background: C.ame50,
+      }}>
+        <div style={{ width: 5, height: 5, borderRadius: '50%', background: C.ame400 }} />
+        Simulated only — no real money
+      </div>
+    );
+  }
+
+  function MobileChrome({ children, height = 844 }) {
+    return (
+      <div style={{
+        width: 390, height,
+        background: C.paper,
+        display: 'flex', flexDirection: 'column',
+        overflow: 'hidden', position: 'relative',
+        borderRadius: 0,
+      }}>
+        {/* Status bar */}
+        <div style={{
+          height: 52, paddingTop: 12,
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
+          padding: '0 24px 10px', flexShrink: 0,
+        }}>
+          <div style={{ fontFamily: SANS, fontSize: 15, fontWeight: 600, color: C.ink900 }}>9:41</div>
+          <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+            <div style={{ width: 16, height: 10, border: `1.5px solid ${C.ink900}`, borderRadius: 2, position: 'relative' }}>
+              <div style={{ position: 'absolute', left: 1, top: 1, bottom: 1, right: '30%', background: C.ink900, borderRadius: 1 }} />
+            </div>
+          </div>
+        </div>
+        {children}
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     VARIATION A — CHAT-FIRST
+     Hierarchy: conversation is everything.
+     Information lives in the flow, not around it.
+  ══════════════════════════════════════════════════════════ */
+
+  function ChatFirstMobile() {
+    return (
+      <MobileChrome height={844}>
+        {/* Top bar */}
+        <div style={{
+          padding: '0 24px 14px', display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', flexShrink: 0,
+        }}>
+          <Logo size={19} />
+          <SimBadge />
+        </div>
+
+        {/* Progress */}
+        <div style={{ padding: '0 24px 20px', flexShrink: 0 }}>
+          <ProgressDots step={1} />
+        </div>
+
+        {/* Conversation */}
+        <div style={{ flex: 1, padding: '0 24px', display: 'flex', flexDirection: 'column', gap: 20, overflow: 'hidden' }}>
+
+          {/* Guide message */}
+          <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+            <GuideAv size={34} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, color: C.ink400, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>Your guide</div>
+              <GuideMsg text="Good to meet you. One question to start — what's drawing you to investing right now?" />
+            </div>
+          </div>
+
+          {/* Goal options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingLeft: 46 }}>
+            {GOALS.map((label, i) => (
+              <GoalCard key={label} label={label} selected={i === 0} />
+            ))}
+          </div>
+
+        </div>
+
+        {/* Continue CTA */}
+        <div style={{ padding: '16px 24px 32px', borderTop: `1px solid ${C.ink100}`, flexShrink: 0 }}>
+          <div style={{ width: '100%', height: 48, background: C.ink900, color: C.white, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: SANS, fontSize: 15, fontWeight: 600, letterSpacing: '0.01em', cursor: 'default' }}>Continue →</div>
+        </div>
+      </MobileChrome>
+    );
+  }
+
+  function ChatFirstDesktop() {
+    return (
+      <div style={{ width: 1280, height: 800, background: C.paper, display: 'flex', flexDirection: 'column' }}>
+        {/* Nav */}
+        <div style={{
+          height: 64, borderBottom: `1px solid ${C.ink100}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '0 48px', flexShrink: 0, background: C.white,
+        }}>
+          <Logo size={22} />
+          <SimBadge />
+        </div>
+
+        {/* Centered conversation */}
+        <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '56px 48px 0', overflow: 'hidden' }}>
+          <div style={{ width: 620, display: 'flex', flexDirection: 'column', gap: 28 }}>
+
+            {/* Progress */}
+            <ProgressDots step={1} />
+
+            {/* Guide message */}
+            <div style={{ display: 'flex', gap: 18, alignItems: 'flex-start' }}>
+              <GuideAv size={44} />
+              <div style={{ flex: 1, paddingTop: 4 }}>
+                <div style={{ fontFamily: SANS, fontSize: 12, fontWeight: 600, color: C.ink400, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>Your guide</div>
+                <div style={{ fontFamily: SANS, fontSize: 21, fontWeight: 400, color: C.ink700, lineHeight: 1.45, textWrap: 'pretty' }}>
+                  Good to meet you. One question to start — what's drawing you to investing right now?
+                </div>
+              </div>
+            </div>
+
+            {/* Goal options — 2 column grid on desktop */}
+            <div style={{ paddingLeft: 62, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              {GOALS.map((label, i) => (
+                <div key={label} style={{ gridColumn: i === 4 ? '1 / span 2' : undefined }}>
+                  <GoalCard label={label} selected={i === 0} />
+                </div>
+              ))}
+            </div>
+
+            {/* Continue CTA */}
+            <div style={{ paddingLeft: 62 }}>
+              <div style={{ height: 48, background: C.ink900, color: C.white, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: SANS, fontSize: 15, fontWeight: 600, letterSpacing: '0.01em', cursor: 'default' }}>Continue →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     VARIATION B — PORTFOLIO-FIRST
+     Hierarchy: show where you're going before asking the questions.
+     A blurred destination motivates the journey.
+  ══════════════════════════════════════════════════════════ */
+
+  function FoggyPortfolio({ width, height }) {
+    return (
+      <div style={{ width, height, position: 'relative', overflow: 'hidden', background: C.white }}>
+        {/* Blurred portfolio preview */}
+        <div style={{ filter: 'blur(6px)', opacity: 0.55, padding: 24, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {/* Portfolio value */}
+          <div>
+            <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 36, color: C.ink900, letterSpacing: '-0.02em' }}>$——,———</div>
+            <div style={{ fontFamily: SANS, fontSize: 14, color: C.aqua400, marginTop: 4 }}>+——% · Your simulated portfolio</div>
+          </div>
+          {/* Fake chart */}
+          <svg width="100%" height={60} viewBox={`0 0 ${width} 60`} preserveAspectRatio="none">
+            <polyline points={`0,55 ${width*0.1},42 ${width*0.25},38 ${width*0.4},28 ${width*0.55},22 ${width*0.7},15 ${width*0.85},18 ${width},10`}
+              fill="none" stroke={C.aqua400} strokeWidth="1.5" strokeLinejoin="round" />
+          </svg>
+          {/* Fake holdings */}
+          {['AAPL','NVDA','VTI','BTC'].map(t => (
+            <div key={t} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: `1px solid ${C.ink100}` }}>
+              <div style={{ fontFamily: SANS, fontWeight: 600, fontSize: 15, color: C.ink700 }}>{t}</div>
+              <div style={{ fontFamily: SANS, fontSize: 14, color: C.aqua400 }}>+——%</div>
+            </div>
+          ))}
+        </div>
+        {/* Overlay */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(to bottom, rgba(250,250,247,0.1) 0%, rgba(250,250,247,0.6) 100%)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontFamily: SANS, fontSize: 13, color: C.ink400, letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 500 }}>Your portfolio</div>
+            <div style={{ fontFamily: SANS, fontSize: 15, color: C.ink500, marginTop: 4 }}>Revealed as you get started</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function PortfolioFirstMobile() {
+    return (
+      <MobileChrome height={844}>
+        <div style={{ padding: '0 24px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+          <Logo size={19} />
+        </div>
+
+        {/* Portfolio peek */}
+        <div style={{ margin: '0 24px', borderRadius: 8, overflow: 'hidden', border: `1px solid ${C.ink100}`, flexShrink: 0 }}>
+          <FoggyPortfolio width={342} height={160} />
+        </div>
+
+        {/* Question below */}
+        <div style={{ flex: 1, padding: '20px 24px 0', display: 'flex', flexDirection: 'column', gap: 16, overflow: 'hidden' }}>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+            <GuideAv size={32} />
+            <div style={{ flex: 1 }}>
+              <GuideMsg text="Let's build your portfolio. First — what's your main goal?" size={14} />
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7, paddingLeft: 44 }}>
+            {GOALS.map((label, i) => (
+              <GoalCard key={label} label={label} selected={i === 0} compact />
+            ))}
+          </div>
+        </div>
+
+        <div style={{ padding: '14px 24px 30px', flexShrink: 0 }}>
+          <div style={{ width: '100%', height: 48, background: C.ink900, color: C.white, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: SANS, fontSize: 15, fontWeight: 600, letterSpacing: '0.01em', cursor: 'default' }}>Continue →</div>
+        </div>
+      </MobileChrome>
+    );
+  }
+
+  function PortfolioFirstDesktop() {
+    return (
+      <div style={{ width: 1280, height: 800, background: C.paper, display: 'flex', flexDirection: 'column' }}>
+        {/* Nav */}
+        <div style={{
+          height: 64, borderBottom: `1px solid ${C.ink100}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '0 48px', flexShrink: 0, background: C.white,
+        }}>
+          <Logo size={22} />
+          <SimBadge />
+        </div>
+
+        <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
+          {/* Left — conversation */}
+          <div style={{ width: 480, borderRight: `1px solid ${C.ink100}`, padding: '48px 48px', display: 'flex', flexDirection: 'column', gap: 28 }}>
+            <ProgressDots step={1} />
+            <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+              <GuideAv size={44} />
+              <div style={{ flex: 1, paddingTop: 2 }}>
+                <div style={{ fontFamily: SANS, fontSize: 12, fontWeight: 600, color: C.ink400, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>Your guide</div>
+                <div style={{ fontFamily: SANS, fontSize: 20, fontWeight: 400, color: C.ink700, lineHeight: 1.5 }}>
+                  Let's build your portfolio. Start with your main goal.
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 9, paddingLeft: 60 }}>
+              {GOALS.map((label, i) => (
+                <GoalCard key={label} label={label} selected={i === 0} />
+              ))}
+            </div>
+            <div style={{ paddingLeft: 60 }}>
+              <div style={{ height: 48, background: C.ink900, color: C.white, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: SANS, fontSize: 15, fontWeight: 600, letterSpacing: '0.01em', cursor: 'default' }}>Continue →</div>
+            </div>
+          </div>
+
+          {/* Right — portfolio teaser */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px' }}>
+            <div style={{ width: '100%', maxWidth: 540 }}>
+              <div style={{ fontFamily: SANS, fontSize: 12, fontWeight: 600, color: C.ink400, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>
+                Your portfolio — coming together
+              </div>
+              <div style={{ borderRadius: 8, overflow: 'hidden', border: `1px solid ${C.ink100}`, boxShadow: '0 4px 16px rgba(10,14,20,0.06)' }}>
+                <FoggyPortfolio width={500} height={340} />
+              </div>
+              <div style={{ fontFamily: SANS, fontSize: 14, color: C.ink400, marginTop: 16, lineHeight: 1.6, textWrap: 'pretty' }}>
+                Answer a few questions and we'll match you with investing heroes who'll help you build and understand your first portfolio. All simulated — no real money.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     VARIATION C — HERO-FIRST
+     Hierarchy: who is guiding you takes visual weight.
+     The interview feels like meeting someone, not filling a form.
+  ══════════════════════════════════════════════════════════ */
+
+  function HeroSilhouette({ init, color, size = 48, revealed = false }) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+        <div style={{
+          width: size, height: size, borderRadius: '50%',
+          background: revealed ? `${color}14` : C.ink50,
+          border: `1.5px solid ${revealed ? color : C.ink200}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontFamily: SANS, fontWeight: 700, fontSize: size * 0.3,
+          color: revealed ? color : C.ink300,
+          filter: revealed ? 'none' : 'blur(0px)',
+        }}>
+          {revealed ? init : '?'}
+        </div>
+        <div style={{ width: size * 0.8, height: 3, borderRadius: 2, background: revealed ? `${color}30` : C.ink100 }} />
+        <div style={{ width: size * 0.5, height: 3, borderRadius: 2, background: revealed ? `${color}18` : C.ink100 }} />
+      </div>
+    );
+  }
+
+  function HeroFirstMobile() {
+    return (
+      <MobileChrome height={844}>
+        <div style={{ padding: '0 24px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+          <Logo size={19} />
+        </div>
+
+        {/* Hero matching strip */}
+        <div style={{
+          margin: '0 0 0', padding: '16px 24px',
+          background: C.ink900, display: 'flex', flexDirection: 'column', gap: 14,
+          flexShrink: 0,
+        }}>
+          <div style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, color: C.ink400, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Your investing heroes</div>
+          <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+            {[['WB', C.ame400], ['?', C.ink400], ['?', C.ink400]].map(([init, color], i) => (
+              <HeroSilhouette key={i} init={init} color={color} revealed={i === 0} size={52} />
+            ))}
+          </div>
+          <div style={{ fontFamily: SANS, fontSize: 13, color: C.ink400, textAlign: 'center', lineHeight: 1.5 }}>
+            Matched as you answer · up to 3 heroes
+          </div>
+        </div>
+
+        {/* Question area */}
+        <div style={{ flex: 1, padding: '20px 24px 0', display: 'flex', flexDirection: 'column', gap: 16, overflow: 'hidden' }}>
+          <ProgressDots step={1} />
+          <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+            <GuideAv size={32} />
+            <div>
+              <div style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, color: C.ink400, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 5 }}>Your guide</div>
+              <GuideMsg text="Before I introduce you to your heroes — what's your main reason for wanting to invest?" size={14} />
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7, paddingLeft: 44 }}>
+            {GOALS.map((label, i) => (
+              <GoalCard key={label} label={label} selected={i === 0} compact />
+            ))}
+          </div>
+        </div>
+
+        <div style={{ padding: '14px 24px 30px', flexShrink: 0 }}>
+          <div style={{ width: '100%', height: 48, background: C.ink900, color: C.white, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: SANS, fontSize: 15, fontWeight: 600, letterSpacing: '0.01em', cursor: 'default' }}>Continue →</div>
+        </div>
+      </MobileChrome>
+    );
+  }
+
+  function HeroFirstDesktop() {
+    return (
+      <div style={{ width: 1280, height: 800, background: C.paper, display: 'flex', flexDirection: 'column' }}>
+        {/* Nav */}
+        <div style={{
+          height: 64, borderBottom: `1px solid ${C.ink100}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '0 48px', flexShrink: 0, background: C.white,
+        }}>
+          <Logo size={22} />
+          <SimBadge />
+        </div>
+
+        <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
+          {/* Conversation */}
+          <div style={{ flex: 1, padding: '48px 48px', display: 'flex', flexDirection: 'column', gap: 28 }}>
+            <ProgressDots step={1} />
+            <div style={{ display: 'flex', gap: 18, alignItems: 'flex-start' }}>
+              <GuideAv size={44} />
+              <div style={{ flex: 1, paddingTop: 4 }}>
+                <div style={{ fontFamily: SANS, fontSize: 12, fontWeight: 600, color: C.ink400, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>Your guide</div>
+                <div style={{ fontFamily: SANS, fontSize: 21, fontWeight: 400, color: C.ink700, lineHeight: 1.45, textWrap: 'pretty' }}>
+                  Before I introduce you to your heroes — what's your main reason for wanting to invest?
+                </div>
+              </div>
+            </div>
+            <div style={{ paddingLeft: 62, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {GOALS.map((label, i) => (
+                <GoalCard key={label} label={label} selected={i === 0} />
+              ))}
+            </div>
+            <div style={{ paddingLeft: 62 }}>
+              <div style={{ height: 48, background: C.ink900, color: C.white, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: SANS, fontSize: 15, fontWeight: 600, letterSpacing: '0.01em', cursor: 'default' }}>Continue →</div>
+            </div>
+          </div>
+
+          {/* Hero matching sidebar */}
+          <div style={{
+            width: 360, background: C.ink900, display: 'flex', flexDirection: 'column',
+            padding: '48px 36px', gap: 32,
+          }}>
+            <div>
+              <div style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, color: C.ink500, letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 20 }}>Your investing heroes</div>
+              <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: 16 }}>
+                {[['WB', C.ame400, true], ['?', C.ink500, false], ['?', C.ink500, false]].map(([init, color, revealed], i) => (
+                  <HeroSilhouette key={i} init={init} color={color} revealed={revealed} size={64} />
+                ))}
+              </div>
+              <div style={{ fontFamily: SANS, fontSize: 13, color: C.ink500, textAlign: 'center', lineHeight: 1.6 }}>
+                Heroes are matched as you answer.<br/>Up to 3 will join your council.
+              </div>
+            </div>
+
+            {/* First hero hint */}
+            <div style={{ borderTop: `1px solid ${C.ink800}`, paddingTop: 28 }}>
+              <div style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, color: C.ame500, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>First match emerging</div>
+              <div style={{
+                background: `${C.ame400}10`, border: `1px solid ${C.ame400}25`,
+                borderRadius: 6, padding: '14px 16px',
+              }}>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 10 }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: '50%',
+                    background: `${C.ame400}18`, border: `1.5px solid ${C.ame400}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontFamily: SANS, fontWeight: 700, fontSize: 14, color: C.ame400,
+                  }}>WB</div>
+                  <div>
+                    <div style={{ fontFamily: SANS, fontWeight: 600, fontSize: 15, color: C.white }}>Warren Buffett</div>
+                    <div style={{ fontFamily: SANS, fontSize: 13, color: C.ame400 }}>Value investor</div>
+                  </div>
+                </div>
+                <div style={{ fontFamily: SANS, fontSize: 13, color: C.ink400, lineHeight: 1.5, fontStyle: 'italic' }}>
+                  "Based on what you've shared so far, Warren's philosophy aligns with your direction."
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 'auto' }}>
+              <div style={{ fontFamily: SANS, fontSize: 12, color: C.ink600, textAlign: 'center', lineHeight: 1.6 }}>
+                Heroes are revealed after the interview<br/>is complete.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     APP
+  ══════════════════════════════════════════════════════════ */
+  function App() {
+    return (
+      <DesignCanvas title="simFolio Hi-fi v1 — Onboarding interview · 3 variations">
+
+        <DCSection
+          id="chat-first"
+          title="A — Chat-first"
+          subtitle="The conversation is everything. Information lives in the flow. Minimal chrome, maximum breathing room. The guide's presence is subtle — a small ◇ avatar, no name on mobile."
+        >
+          <DCArtboard id="a-mob" label="Mobile · 390px" width={390} height={844}>
+            <ChatFirstMobile />
+          </DCArtboard>
+          <DCArtboard id="a-desk" label="Desktop · 1280px" width={1280} height={800}>
+            <ChatFirstDesktop />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection
+          id="portfolio-first"
+          title="B — Portfolio-first"
+          subtitle="Show the destination before asking the questions. A blurred portfolio teaser motivates the interview — 'this is what you're building.' The guide takes a back seat to the goal."
+        >
+          <DCArtboard id="b-mob" label="Mobile · 390px" width={390} height={844}>
+            <PortfolioFirstMobile />
+          </DCArtboard>
+          <DCArtboard id="b-desk" label="Desktop · 1280px" width={1280} height={800}>
+            <PortfolioFirstDesktop />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection
+          id="hero-first"
+          title="C — Hero-first"
+          subtitle="Meeting your heroes is the promise. The matching mechanic is visible from the first question — heroes are silhouettes that reveal as you answer. The interview feels like a discovery, not a form."
+        >
+          <DCArtboard id="c-mob" label="Mobile · 390px" width={390} height={844}>
+            <HeroFirstMobile />
+          </DCArtboard>
+          <DCArtboard id="c-desk" label="Desktop · 1280px" width={1280} height={800}>
+            <HeroFirstDesktop />
+          </DCArtboard>
+        </DCSection>
+
+      </DesignCanvas>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>simFolio — Wireframes 08: Pending Orders + Order History</title>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    .wf-img { background-color:rgba(0,0,0,0.07); background-image:repeating-linear-gradient(45deg,transparent,transparent 5px,rgba(0,0,0,0.05) 5px,rgba(0,0,0,0.06) 6px); }
+    .term { border-bottom:1.5px dotted #8A60EB; cursor:pointer; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+  const { DesignCanvas, DCSection, DCArtboard } = window;
+  const AME  = '#8A60EB';
+  const AQUA = '#1FC3A4';
+  const GOLD = '#C99A2E';
+  const RED  = '#C04A4A';
+  const WARN = '#D97A10';
+  const f    = 'Caveat';
+  const WB   = { init:'WB', name:'Warren Buffett', short:'Warren', color:AME };
+
+  /* ── primitives ── */
+  function Av({ size=36, init='WB', color=AME, style={} }) {
+    return <div style={{ width:size, height:size, borderRadius:'50%', background:'rgba(0,0,0,0.08)', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:f, fontWeight:600, fontSize:Math.round(size*0.34), color, flexShrink:0, ...style }}>{init}</div>;
+  }
+  function Box({ w, h, label, style={} }) {
+    return <div style={{ width:w, height:h, background:'rgba(0,0,0,0.05)', border:'1.5px dashed rgba(0,0,0,0.13)', borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:f, fontSize:11, color:'#888', textAlign:'center', padding:4, ...style }}>{label}</div>;
+  }
+  function Btn({ label, style={}, ghost=false, danger=false, small=false }) {
+    const bg = danger ? RED : ghost ? 'transparent' : AME;
+    const col = ghost && !danger ? AME : 'white';
+    const border = ghost ? `1.5px solid ${danger ? RED : AME}` : 'none';
+    return <div style={{ background:bg, color:col, border, borderRadius:6, padding:small?'6px 12px':'11px 22px', fontFamily:f, fontSize:small?12:14, fontWeight:600, display:'inline-flex', alignItems:'center', justifyContent:'center', cursor:'default', flexShrink:0, ...style }}>{label}</div>;
+  }
+  function Input({ placeholder, style={}, highlight=false }) {
+    return <div style={{ background:highlight?'rgba(138,96,235,0.06)':'rgba(0,0,0,0.04)', border:`1.5px solid ${highlight?AME:'rgba(0,0,0,0.13)'}`, borderRadius:6, padding:'10px 14px', fontFamily:f, fontSize:13, color:'#666', ...style }}>{placeholder}</div>;
+  }
+  function StatusBar() {
+    return <div style={{ height:44, background:'rgba(0,0,0,0.05)', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 20px', fontFamily:f, fontSize:12, color:'#999', flexShrink:0 }}><span>9:41</span><span>●●● ▌ 100%</span></div>;
+  }
+  function NavBar({ children }) {
+    return <div style={{ height:64, borderBottom:'1.5px solid rgba(0,0,0,0.09)', display:'flex', alignItems:'center', padding:'0 40px', gap:32, flexShrink:0, background:'#F5F5EF' }}>{children}</div>;
+  }
+  function HeroMsg({ hero, text }) {
+    return (
+      <div style={{ display:'flex', gap:8 }}>
+        <Av size={26} init={hero.init} color={hero.color} />
+        <div>
+          <div style={{ fontFamily:f, fontSize:11, color:hero.color, fontWeight:600, marginBottom:3 }}>{hero.short}</div>
+          <div style={{ background:'rgba(0,0,0,0.04)', borderLeft:`3px solid ${hero.color}`, borderRadius:'0 10px 10px 0', padding:'10px 14px', fontFamily:f, fontSize:13, lineHeight:1.4, color:'#222', maxWidth:262 }}>{text}</div>
+        </div>
+      </div>
+    );
+  }
+  function Term({ label }) { return <span className="term">{label}</span>; }
+  function SL({ children }) { return <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.13em', color:'#888', marginBottom:7 }}>{children}</div>; }
+  function Annot({ children, style={} }) { return <div style={{ fontFamily:f, fontSize:11, color:AME, fontStyle:'italic', lineHeight:1.3, ...style }}>{children}</div>; }
+  function Divider({ label }) {
+    return (
+      <div style={{ display:'flex', alignItems:'center', gap:10, padding:'4px 0' }}>
+        <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.08)' }} />
+        <div style={{ fontFamily:f, fontSize:11, color:'#bbb' }}>{label}</div>
+        <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.08)' }} />
+      </div>
+    );
+  }
+
+  /* status pill */
+  function StatusPill({ status }) {
+    const cfg = {
+      pending:   { color:WARN,  bg:'rgba(217,122,16,0.09)',  border:'rgba(217,122,16,0.3)',  label:'Pending' },
+      queued:    { color:'#5A8FD4', bg:'rgba(90,143,212,0.09)', border:'rgba(90,143,212,0.3)', label:'Queued' },
+      filled:    { color:AQUA,  bg:'rgba(31,195,164,0.09)', border:'rgba(31,195,164,0.3)',  label:'Filled' },
+      cancelled: { color:'#888',bg:'rgba(0,0,0,0.05)',       border:'rgba(0,0,0,0.15)',      label:'Cancelled' },
+      expired:   { color:'#888',bg:'rgba(0,0,0,0.05)',       border:'rgba(0,0,0,0.12)',      label:'Expired' },
+      partial:   { color:GOLD,  bg:'rgba(201,154,46,0.09)', border:'rgba(201,154,46,0.3)',  label:'Partial fill' },
+    };
+    const c = cfg[status] || cfg.pending;
+    return (
+      <div style={{ display:'inline-flex', alignItems:'center', gap:5, background:c.bg, border:`1px solid ${c.border}`, borderRadius:999, padding:'3px 10px', flexShrink:0 }}>
+        <div style={{ width:5, height:5, borderRadius:'50%', background:c.color }} />
+        <span style={{ fontFamily:f, fontSize:11, color:c.color, fontWeight:600 }}>{c.label}</span>
+      </div>
+    );
+  }
+
+  /* order card — used in pending list */
+  function PendingOrderCard({ type='buy', ticker, qty, orderType, price, placed, executes, status='pending', onEdit=false }) {
+    const isBuy = type === 'buy';
+    return (
+      <div style={{ background:'white', border:'1px solid rgba(0,0,0,0.09)', borderRadius:8, padding:'14px 16px', display:'flex', flexDirection:'column', gap:10 }}>
+        {/* Header row */}
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <div style={{ width:38, height:38, background:'rgba(0,0,0,0.05)', border:'1.5px dashed rgba(0,0,0,0.13)', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:f, fontSize:11, fontWeight:600, color:'#888', flexShrink:0 }}>{ticker}</div>
+          <div style={{ flex:1 }}>
+            <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+              <div style={{ fontFamily:f, fontWeight:600, fontSize:14 }}>{isBuy ? 'Buy' : 'Sell'} {qty} {ticker}</div>
+              <StatusPill status={status} />
+            </div>
+            <div style={{ fontFamily:f, fontSize:11, color:'#888' }}><Term label={orderType} /> · placed {placed}</div>
+          </div>
+        </div>
+        {/* Detail rows */}
+        <div style={{ display:'flex', gap:0, background:'rgba(0,0,0,0.03)', borderRadius:6, overflow:'hidden' }}>
+          {[['Target price', price], ['Executes', executes]].map(([l,v], i) => (
+            <div key={l} style={{ flex:1, padding:'8px 12px', borderRight:i===0?'1px solid rgba(0,0,0,0.07)':undefined }}>
+              <div style={{ fontFamily:f, fontSize:10, color:'#888', marginBottom:2 }}>{l}</div>
+              <div style={{ fontFamily:f, fontWeight:600, fontSize:13 }}>{v}</div>
+            </div>
+          ))}
+        </div>
+        {/* Actions */}
+        <div style={{ display:'flex', gap:8 }}>
+          {onEdit && <Btn label="Edit order" small ghost style={{ flex:1, borderRadius:6 }} />}
+          <Btn label="Cancel order" small ghost danger style={{ flex:onEdit?1:'100%', borderRadius:6, width:onEdit?'auto':'100%' }} />
+        </div>
+      </div>
+    );
+  }
+
+  /* history row — compact */
+  function HistoryRow({ type, ticker, qty, price, total, pnl, pnlPct, date, status, heroQuote }) {
+    const isGain = pnl && pnl.startsWith('+');
+    const isBuy = type === 'buy';
+    return (
+      <div style={{ background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, padding:'12px 14px', display:'flex', flexDirection:'column', gap:8 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <div style={{ width:36, height:36, background:'rgba(0,0,0,0.05)', border:'1.5px dashed rgba(0,0,0,0.13)', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:f, fontSize:11, fontWeight:600, color:'#888', flexShrink:0 }}>{ticker}</div>
+          <div style={{ flex:1 }}>
+            <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+              <div style={{ fontFamily:f, fontWeight:600, fontSize:14 }}>{isBuy ? 'Bought' : 'Sold'} {qty} {ticker}</div>
+              <StatusPill status={status} />
+            </div>
+            <div style={{ fontFamily:f, fontSize:11, color:'#888' }}>{date} · at {price}/sh</div>
+          </div>
+          <div style={{ textAlign:'right', flexShrink:0 }}>
+            <div style={{ fontFamily:f, fontWeight:600, fontSize:13 }}>{total}</div>
+            {pnl && <div style={{ fontFamily:f, fontSize:11, color:isGain?AQUA:RED }}>{pnl} ({pnlPct})</div>}
+          </div>
+        </div>
+        {heroQuote && (
+          <div style={{ display:'flex', gap:8, alignItems:'flex-start', padding:'8px 10px', background:'rgba(138,96,235,0.04)', borderRadius:6 }}>
+            <Av size={20} init="WB" color={AME} />
+            <div style={{ fontFamily:f, fontSize:12, color:'#555', lineHeight:1.4, fontStyle:'italic' }}>{heroQuote}</div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  /* ═══════════════════════════════════════════════════
+     SECTION 01 — PENDING ORDERS
+  ═══════════════════════════════════════════════════ */
+
+  /* 1A: Pending orders list — mobile */
+  function PendingListMobile() {
+    return (
+      <div style={{ width:375, height:960, background:'#F5F5EF', display:'flex', flexDirection:'column', border:'2.5px solid #2A2A2A', borderRadius:40, overflow:'hidden' }}>
+        <StatusBar />
+        <div style={{ height:52, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 20px', borderBottom:'1px solid rgba(0,0,0,0.06)', flexShrink:0 }}>
+          <div style={{ fontFamily:f, fontSize:13, color:AME }}>← Portfolio</div>
+          <div style={{ fontFamily:f, fontWeight:600, fontSize:17 }}>Orders</div>
+          <div style={{ fontFamily:f, fontSize:13, color:AME, cursor:'default' }}>History</div>
+        </div>
+
+        {/* Tab bar */}
+        <div style={{ display:'flex', borderBottom:'1px solid rgba(0,0,0,0.07)', flexShrink:0 }}>
+          {[['Pending (2)', true],['Filled', false],['Cancelled', false]].map(([label, active]) => (
+            <div key={label} style={{ flex:1, padding:'11px 0', textAlign:'center', fontFamily:f, fontSize:13, color:active?AME:'#888', fontWeight:active?600:400, borderBottom:active?`2.5px solid ${AME}`:'none', cursor:'default' }}>{label}</div>
+          ))}
+        </div>
+
+        <div style={{ flex:1, padding:'14px 16px', display:'flex', flexDirection:'column', gap:12, overflow:'hidden' }}>
+
+          {/* Market closed banner */}
+          <div style={{ background:'rgba(0,0,0,0.04)', border:'1px solid rgba(0,0,0,0.1)', borderRadius:8, padding:'10px 14px', display:'flex', gap:8, alignItems:'center' }}>
+            <div style={{ width:6, height:6, borderRadius:'50%', background:'#888', flexShrink:0 }} />
+            <div>
+              <div style={{ fontFamily:f, fontSize:13, color:'#555' }}>Markets closed · Saturday</div>
+              <div style={{ fontFamily:f, fontSize:11, color:'#aaa' }}>Pending orders execute at Monday 9:30 AM EST</div>
+            </div>
+          </div>
+
+          <PendingOrderCard
+            type="buy" ticker="AAPL" qty="5"
+            orderType="Limit order" price="$187.00"
+            placed="Fri 4:22 PM" executes="When AAPL ≤ $187.00"
+            status="pending" onEdit={true}
+          />
+
+          <PendingOrderCard
+            type="buy" ticker="VTI" qty="10"
+            orderType="Market order" price="~$234.10 (will vary)"
+            placed="Sat 9:12 PM" executes="Mon 9:30 AM EST"
+            status="queued" onEdit={false}
+          />
+
+          {/* Education moment: why queued orders vary */}
+          <div style={{ background:'rgba(138,96,235,0.05)', border:`1.5px dashed ${AME}33`, borderRadius:8, padding:12 }}>
+            <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.13em', color:AME, marginBottom:5 }}>Why does the VTI price say "will vary"?</div>
+            <div style={{ fontFamily:f, fontSize:13, color:'#333', lineHeight:1.5 }}>Market orders execute at whatever price the stock is when markets open Monday. Prices move over the weekend — up or down. If you want a guaranteed price, use a <Term label="limit order" /> instead.</div>
+          </div>
+
+          <HeroMsg hero={WB} text="The limit order on AAPL is sound. You've set a price you believe is fair — now you wait. That patience is exactly right." />
+        </div>
+      </div>
+    );
+  }
+
+  /* 1B: Edit limit order — mobile */
+  function EditLimitOrder() {
+    return (
+      <div style={{ width:375, height:820, background:'#F5F5EF', display:'flex', flexDirection:'column', border:'2.5px solid #2A2A2A', borderRadius:40, overflow:'hidden' }}>
+        <StatusBar />
+        <div style={{ height:52, display:'flex', alignItems:'center', padding:'0 20px', gap:12, borderBottom:'1px solid rgba(0,0,0,0.06)', flexShrink:0 }}>
+          <div style={{ fontFamily:f, fontSize:13, color:AME }}>← Orders</div>
+          <div style={{ flex:1, textAlign:'center', fontFamily:f, fontWeight:600, fontSize:16 }}>Edit order · AAPL</div>
+        </div>
+        <div style={{ flex:1, padding:'16px 20px', display:'flex', flexDirection:'column', gap:14, overflow:'hidden' }}>
+          <div style={{ background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, padding:14 }}>
+            <SL>Current order</SL>
+            <div style={{ fontFamily:f, fontWeight:600, fontSize:16, marginBottom:3 }}>Buy 5 AAPL · Limit $187.00</div>
+            <div style={{ fontFamily:f, fontSize:12, color:'#888' }}>Current price: $196.90 · Your order waits below market</div>
+          </div>
+
+          <div>
+            <div style={{ fontFamily:f, fontSize:12, color:'#888', marginBottom:6 }}>Adjust limit price</div>
+            <Input placeholder="$187.00" highlight style={{ textAlign:'center', fontSize:20, fontWeight:600 }} />
+            <div style={{ fontFamily:f, fontSize:11, color:'#aaa', textAlign:'center', marginTop:6 }}>Current market: $196.90 · Your limit is $9.90 below</div>
+          </div>
+
+          <div>
+            <div style={{ fontFamily:f, fontSize:12, color:'#888', marginBottom:6 }}>Adjust quantity</div>
+            <Input placeholder="5 shares" style={{ textAlign:'center', fontSize:16, fontWeight:600 }} />
+          </div>
+
+          <div>
+            <div style={{ fontFamily:f, fontSize:12, color:'#888', marginBottom:6 }}><Term label="Order expiry" /></div>
+            <div style={{ display:'flex', gap:8 }}>
+              {['Good for today','Good till cancelled'].map((label,i) => (
+                <div key={label} style={{ flex:1, border:`1.5px solid ${i===1?AME:'rgba(0,0,0,0.13)'}`, borderRadius:6, padding:'9px', textAlign:'center', fontFamily:f, fontSize:12, background:i===1?'rgba(138,96,235,0.07)':'white', color:i===1?AME:'#888' }}>{label}</div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, padding:'0 14px' }}>
+            {[['If filled at limit','$935.00 (5 × $187.00)'],['Regulatory fee','$0.01'],['Max cost','$935.01']].map(([l,v],i,arr) => (
+              <div key={l} style={{ display:'flex', justifyContent:'space-between', padding:'8px 0', borderBottom:i<arr.length-1?'1px solid rgba(0,0,0,0.06)':undefined }}>
+                <div style={{ fontFamily:f, fontSize:13, color:'#666' }}>{l}</div>
+                <div style={{ fontFamily:f, fontSize:13, fontWeight:i===arr.length-1?600:400 }}>{v}</div>
+              </div>
+            ))}
+          </div>
+
+          <HeroMsg hero={WB} text="Raising your limit price is fine if your conviction has grown. Lowering it is fine if you want a bigger margin of safety. Neither is wrong." />
+          <Btn label="Update order" style={{ width:'100%', padding:13, borderRadius:8 }} />
+          <Btn label="Cancel this order" style={{ width:'100%', padding:12, borderRadius:8 }} ghost danger />
+        </div>
+      </div>
+    );
+  }
+
+  /* 1C: Cancel confirmation */
+  function CancelConfirm() {
+    return (
+      <div style={{ width:375, height:620, background:'#F5F5EF', display:'flex', flexDirection:'column', border:'2.5px solid #2A2A2A', borderRadius:40, overflow:'hidden' }}>
+        <StatusBar />
+        <div style={{ height:52, display:'flex', alignItems:'center', justifyContent:'center', borderBottom:'1px solid rgba(0,0,0,0.06)', flexShrink:0 }}>
+          <div style={{ fontFamily:f, fontWeight:600, fontSize:16 }}>Cancel order?</div>
+        </div>
+        <div style={{ flex:1, padding:'24px 24px', display:'flex', flexDirection:'column', gap:16 }}>
+          <div style={{ background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, padding:16 }}>
+            <SL>Order to be cancelled</SL>
+            <div style={{ fontFamily:f, fontWeight:600, fontSize:16, marginBottom:4 }}>Buy 5 AAPL</div>
+            <div style={{ fontFamily:f, fontSize:13, color:'#888', marginBottom:3 }}>Limit order · $187.00</div>
+            <div style={{ fontFamily:f, fontSize:12, color:'#aaa' }}>No money has been spent. Nothing changes except this order disappears.</div>
+          </div>
+
+          <div style={{ background:'rgba(0,0,0,0.03)', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, padding:14 }}>
+            <div style={{ fontFamily:f, fontSize:11, color:'#888', fontWeight:600, marginBottom:4 }}>WHAT HAPPENS WHEN YOU CANCEL</div>
+            <div style={{ fontFamily:f, fontSize:13, color:'#555', lineHeight:1.5 }}>The order is removed immediately. No fee. If markets open and AAPL drops to $187.00, this order won't execute. You can always place a new one.</div>
+          </div>
+
+          <Btn label="Yes, cancel this order" style={{ width:'100%', padding:13, borderRadius:8 }} danger />
+          <Btn label="Keep the order" style={{ width:'100%', padding:12, borderRadius:8 }} ghost />
+        </div>
+      </div>
+    );
+  }
+
+  /* 1D: Pending orders — desktop */
+  function PendingDesktop() {
+    return (
+      <div style={{ width:1440, height:900, background:'#F5F5EF', display:'flex', flexDirection:'column' }}>
+        <NavBar>
+          <div style={{ fontFamily:f, fontWeight:600, fontSize:20 }}>simFolio</div>
+          <div style={{ flex:1, display:'flex', gap:24, fontFamily:f, fontSize:15, color:'#888' }}>
+            <span style={{ color:AME, fontWeight:600 }}>Portfolio</span><span>Markets</span><span>Achievements</span>
+          </div>
+          <Av size={34} init="J" />
+        </NavBar>
+        <div style={{ flex:1, display:'flex', minHeight:0 }}>
+          {/* Main */}
+          <div style={{ flex:1, padding:'28px 40px', display:'flex', flexDirection:'column', gap:20, overflow:'hidden' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <div>
+                <div style={{ fontFamily:f, fontWeight:600, fontSize:26 }}>Orders</div>
+                <div style={{ fontFamily:f, fontSize:13, color:'#888' }}>2 pending · 0 partial fills</div>
+              </div>
+              <div style={{ display:'flex', gap:8 }}>
+                {['Pending (2)','Filled','Cancelled'].map((t,i) => (
+                  <div key={t} style={{ padding:'8px 18px', borderRadius:6, fontFamily:f, fontSize:13, background:i===0?AME:'rgba(0,0,0,0.05)', color:i===0?'white':'#888', cursor:'default', fontWeight:i===0?600:400 }}>{t}</div>
+                ))}
+              </div>
+            </div>
+
+            {/* Market closed notice */}
+            <div style={{ background:'rgba(0,0,0,0.03)', border:'1px solid rgba(0,0,0,0.09)', borderRadius:8, padding:'12px 20px', display:'flex', gap:12, alignItems:'center' }}>
+              <div style={{ width:8, height:8, borderRadius:'50%', background:'#888', flexShrink:0 }} />
+              <div style={{ fontFamily:f, fontSize:14, color:'#555' }}>Markets closed · Saturday</div>
+              <div style={{ fontFamily:f, fontSize:13, color:'#aaa' }}>· Pending orders execute at Monday 9:30 AM EST</div>
+            </div>
+
+            {/* Orders table */}
+            <div style={{ background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, overflow:'hidden' }}>
+              {/* Table header */}
+              <div style={{ display:'flex', gap:0, borderBottom:'1px solid rgba(0,0,0,0.08)', padding:'10px 20px', background:'rgba(0,0,0,0.02)' }}>
+                {['Instrument','Type','Side','Qty','Limit price','Placed','Executes when','Status','Actions'].map((h,i) => (
+                  <div key={h} style={{ flex:i===8?0:1, minWidth:i===8?120:0, fontFamily:f, fontSize:11, textTransform:'uppercase', letterSpacing:'0.1em', color:'#888' }}>{h}</div>
+                ))}
+              </div>
+              {/* Rows */}
+              {[
+                { ticker:'AAPL', type:'Limit order', side:'Buy', qty:'5 sh', limit:'$187.00', placed:'Fri 4:22 PM', when:'AAPL ≤ $187.00', status:'pending' },
+                { ticker:'VTI',  type:'Market order', side:'Buy', qty:'10 sh', limit:'~$234 (mkt)', placed:'Sat 9:12 PM', when:'Mon 9:30 AM EST', status:'queued' },
+              ].map((row, i) => (
+                <div key={i} style={{ display:'flex', gap:0, padding:'14px 20px', borderBottom:i<1?'1px solid rgba(0,0,0,0.06)':undefined, alignItems:'center' }}>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontFamily:f, fontWeight:600, fontSize:14 }}>{row.ticker}</div>
+                  </div>
+                  <div style={{ flex:1, fontFamily:f, fontSize:13 }}><Term label={row.type} /></div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ display:'inline-flex', padding:'3px 10px', borderRadius:4, background: row.side==='Buy'?'rgba(31,195,164,0.08)':'rgba(192,74,74,0.08)', fontFamily:f, fontSize:12, fontWeight:600, color: row.side==='Buy'?AQUA:RED }}>{row.side}</div>
+                  </div>
+                  <div style={{ flex:1, fontFamily:f, fontSize:13 }}>{row.qty}</div>
+                  <div style={{ flex:1, fontFamily:f, fontSize:13, fontWeight:600 }}>{row.limit}</div>
+                  <div style={{ flex:1, fontFamily:f, fontSize:12, color:'#888' }}>{row.placed}</div>
+                  <div style={{ flex:1, fontFamily:f, fontSize:12, color:'#555' }}>{row.when}</div>
+                  <div style={{ flex:1 }}><StatusPill status={row.status} /></div>
+                  <div style={{ minWidth:120, display:'flex', gap:6 }}>
+                    {row.type === 'Limit order' && <Btn label="Edit" small ghost style={{ borderRadius:4, padding:'4px 10px' }} />}
+                    <Btn label="Cancel" small ghost danger style={{ borderRadius:4, padding:'4px 10px' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Education */}
+            <div style={{ background:'rgba(138,96,235,0.04)', border:`1.5px dashed ${AME}33`, borderRadius:8, padding:'14px 20px', display:'flex', gap:20, alignItems:'flex-start' }}>
+              <div style={{ flex:1 }}>
+                <div style={{ fontFamily:f, fontSize:11, color:AME, fontWeight:600, marginBottom:4 }}>LIMIT ORDER VS MARKET ORDER — WHILE WAITING</div>
+                <div style={{ fontFamily:f, fontSize:13, color:'#555', lineHeight:1.5 }}>Your AAPL <Term label="limit order" /> will only fill if the stock drops to $187.00. Your VTI <Term label="market order" /> will fill at whatever price VTI opens at Monday — could be higher or lower than today's $234.10.</div>
+              </div>
+              <HeroMsg hero={WB} text="The limit order is the smarter choice here. You've decided what Apple is worth to you — $187. If the market agrees, you own it. If not, you wait." />
+            </div>
+          </div>
+
+          {/* Sidebar — hero commentary */}
+          <div style={{ width:320, borderLeft:'1.5px solid rgba(0,0,0,0.09)', display:'flex', flexDirection:'column' }}>
+            <div style={{ padding:'16px 22px', borderBottom:'1px solid rgba(0,0,0,0.08)', display:'flex', gap:12, alignItems:'center', flexShrink:0 }}>
+              <Av size={36} init="WB" color={AME} />
+              <div>
+                <div style={{ fontFamily:f, fontWeight:600, fontSize:15 }}>Warren Buffett</div>
+                <div style={{ fontFamily:f, fontSize:12, color:AME }}>On your pending orders</div>
+              </div>
+            </div>
+            <div style={{ flex:1, padding:'16px 22px', display:'flex', flexDirection:'column', gap:12 }}>
+              <HeroMsg hero={WB} text="You've placed a limit order at $187 for Apple. That's $9.90 below today's price. Are you willing to miss this trade if Apple never drops that low?" />
+              <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                {['Yes — fair value matters','Maybe — raise my limit','What if it never fills?'].map(p => (
+                  <div key={p} style={{ border:`1.5px solid ${AME}33`, borderRadius:999, padding:'5px 10px', fontFamily:f, fontSize:11, color:AME, background:`${AME}08`, cursor:'default' }}>{p}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ═══════════════════════════════════════════════════
+     SECTION 02 — ORDER HISTORY
+  ═══════════════════════════════════════════════════ */
+
+  /* 2A: History list — mobile */
+  function OrderHistoryMobile() {
+    return (
+      <div style={{ width:375, height:960, background:'#F5F5EF', display:'flex', flexDirection:'column', border:'2.5px solid #2A2A2A', borderRadius:40, overflow:'hidden' }}>
+        <StatusBar />
+        <div style={{ height:52, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 20px', borderBottom:'1px solid rgba(0,0,0,0.06)', flexShrink:0 }}>
+          <div style={{ fontFamily:f, fontSize:13, color:AME }}>← Portfolio</div>
+          <div style={{ fontFamily:f, fontWeight:600, fontSize:17 }}>Order history</div>
+          <div style={{ width:40 }} />
+        </div>
+
+        {/* Filter bar */}
+        <div style={{ padding:'8px 16px', borderBottom:'1px solid rgba(0,0,0,0.06)', display:'flex', gap:8, flexShrink:0 }}>
+          {['All','Buys','Sells','Filled','Cancelled'].map((t,i) => (
+            <div key={t} style={{ padding:'5px 12px', borderRadius:999, fontFamily:f, fontSize:12, background:i===0?AME:'rgba(0,0,0,0.05)', color:i===0?'white':'#888', cursor:'default', flexShrink:0 }}>{t}</div>
+          ))}
+        </div>
+
+        <div style={{ flex:1, padding:'12px 16px', display:'flex', flexDirection:'column', gap:10, overflow:'hidden' }}>
+          <Divider label="This week" />
+          <HistoryRow type="buy" ticker="AAPL" qty="5" price="$189.52" total="$947.61" pnl="+$36.90" pnlPct="+3.9%" date="Mon 9:32 AM" status="filled" heroQuote="The first trade is always the hardest. You did it." />
+          <HistoryRow type="buy" ticker="TSLA" qty="5" price="$200.00" total="$1,000.01" date="Mon 10:14 AM" status="filled" />
+          <HistoryRow type="sell" ticker="TSLA" qty="5" price="$171.98" total="$859.99" pnl="−$140.02" pnlPct="−14.0%" date="Wed 2:05 PM" status="filled" heroQuote="A loss can be the right call. What did you learn?" />
+
+          <Divider label="Last week" />
+          <HistoryRow type="buy" ticker="NVDA" qty="3" price="$887.80" total="$2,663.41" pnl="+$51.60" pnlPct="+1.9%" date="Tue 11:22 AM" status="filled" />
+          <HistoryRow type="buy" ticker="VTI" qty="10" price="~$234.10" total="$2,341.01" date="Mon 9:30 AM" status="filled" />
+          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+            <div style={{ fontFamily:f, fontSize:12, color:AME, cursor:'default' }}>Load older history</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* 2B: History detail — single order expanded */
+  function OrderHistoryDetail() {
+    return (
+      <div style={{ width:375, height:820, background:'#F5F5EF', display:'flex', flexDirection:'column', border:'2.5px solid #2A2A2A', borderRadius:40, overflow:'hidden' }}>
+        <StatusBar />
+        <div style={{ height:52, display:'flex', alignItems:'center', padding:'0 20px', gap:12, borderBottom:'1px solid rgba(0,0,0,0.06)', flexShrink:0 }}>
+          <div style={{ fontFamily:f, fontSize:13, color:AME }}>← History</div>
+          <div style={{ flex:1, textAlign:'center', fontFamily:f, fontWeight:600, fontSize:16 }}>Trade detail</div>
+        </div>
+        <div style={{ flex:1, padding:'16px 20px', display:'flex', flexDirection:'column', gap:14 }}>
+          {/* Trade summary */}
+          <div style={{ textAlign:'center', padding:'8px 0' }}>
+            <div style={{ fontFamily:f, fontWeight:600, fontSize:22 }}>Sold 5 TSLA</div>
+            <div style={{ fontFamily:f, fontSize:13, color:'#888' }}>Wed Jun 4 · 2:05 PM EST</div>
+            <div style={{ fontFamily:f, fontWeight:600, fontSize:28, color:RED, marginTop:4 }}>−$140.02</div>
+            <div style={{ fontFamily:f, fontSize:13, color:'#aaa' }}>realised loss · −14.0%</div>
+          </div>
+
+          {/* Receipt */}
+          <div style={{ background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, padding:'0 16px' }}>
+            <div style={{ padding:'8px 0 4px', fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.12em', color:'#888' }}>Transaction receipt</div>
+            {[
+              ['Sold','5 shares of TSLA'],
+              ['Executed at','$171.98 / share'],
+              ['Gross proceeds','$859.90'],
+              ['Your cost basis','$1,000.00 (5 × $200.00)'],
+              ['Realised loss','−$140.10'],
+              ['Regulatory fee','−$0.01'],
+              ['Net to cash','$859.89'],
+            ].map(([l,v],i,arr) => (
+              <div key={l} style={{ display:'flex', justifyContent:'space-between', padding:'7px 0', borderBottom:i<arr.length-1?'1px solid rgba(0,0,0,0.06)':undefined }}>
+                <div style={{ fontFamily:f, fontSize:13, color: l==='Net to cash'?'#222':'#666', fontWeight:l==='Net to cash'?600:400 }}>{l}</div>
+                <div style={{ fontFamily:f, fontSize:13, fontWeight:l==='Net to cash'||l==='Realised loss'?600:400, color: l==='Realised loss'?RED:l==='Net to cash'?'#222':'#666' }}>{v}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* What Warren said at the time */}
+          <div style={{ background:'rgba(138,96,235,0.04)', border:`1.5px dashed ${AME}33`, borderRadius:8, padding:14 }}>
+            <div style={{ fontFamily:f, fontSize:11, color:AME, fontWeight:600, marginBottom:6 }}>WHAT WARREN SAID AT THE TIME</div>
+            <div style={{ fontFamily:f, fontSize:13, color:'#333', lineHeight:1.5, fontStyle:'italic' }}>"Fear is not a thesis. If your original reason to buy is still valid, a lower price is an opportunity, not a reason to leave. But if the thesis is broken — then selling is the right call."</div>
+            <div style={{ fontFamily:f, fontSize:12, color:AME, marginTop:8, cursor:'default' }}>Ask Warren about this trade →</div>
+          </div>
+
+          {/* What you learned */}
+          <div style={{ background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, padding:14 }}>
+            <div style={{ fontFamily:f, fontSize:12, color:'#888', marginBottom:6 }}>What did you learn from this trade? (optional)</div>
+            <div style={{ fontFamily:f, fontSize:13, color:'#aaa', fontStyle:'italic' }}>Tap to add a note — Warren can reflect on it with you</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* 2C: Order history — desktop */
+  function OrderHistoryDesktop() {
+    return (
+      <div style={{ width:1440, height:900, background:'#F5F5EF', display:'flex', flexDirection:'column' }}>
+        <NavBar>
+          <div style={{ fontFamily:f, fontWeight:600, fontSize:20 }}>simFolio</div>
+          <div style={{ flex:1, display:'flex', gap:24, fontFamily:f, fontSize:15, color:'#888' }}>
+            <span style={{ color:AME, fontWeight:600 }}>Portfolio</span><span>Markets</span><span>Achievements</span>
+          </div>
+          <Av size={34} init="J" />
+        </NavBar>
+        <div style={{ flex:1, display:'flex', minHeight:0 }}>
+          {/* Main */}
+          <div style={{ flex:1, padding:'28px 40px', display:'flex', flexDirection:'column', gap:18, overflow:'hidden' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <div>
+                <div style={{ fontFamily:f, fontWeight:600, fontSize:26 }}>Order history</div>
+                <div style={{ fontFamily:f, fontSize:13, color:'#888' }}>5 trades · P&L: +$36.90 buys, −$140.02 sells</div>
+              </div>
+              <div style={{ display:'flex', gap:8 }}>
+                {['All','Buys','Sells','Filled','Cancelled'].map((t,i) => (
+                  <div key={t} style={{ padding:'7px 14px', borderRadius:6, fontFamily:f, fontSize:13, background:i===0?AME:'rgba(0,0,0,0.05)', color:i===0?'white':'#888', cursor:'default' }}>{t}</div>
+                ))}
+              </div>
+            </div>
+
+            {/* History table */}
+            <div style={{ background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, overflow:'hidden', flex:1 }}>
+              <div style={{ display:'flex', borderBottom:'1px solid rgba(0,0,0,0.08)', padding:'10px 24px', background:'rgba(0,0,0,0.02)' }}>
+                {['Date & time','Instrument','Side','Qty','Executed price','Total','Realised P&L','Status',''].map((h,i) => (
+                  <div key={i} style={{ flex:i===8?0:1, minWidth:i===8?80:0, fontFamily:f, fontSize:11, textTransform:'uppercase', letterSpacing:'0.1em', color:'#888' }}>{h}</div>
+                ))}
+              </div>
+              {[
+                { date:'Mon 9:32 AM', ticker:'AAPL', side:'Buy', qty:'5 sh', price:'$189.52', total:'$947.61', pnl:'+$36.90', pct:'+3.9%', status:'filled', gain:true },
+                { date:'Mon 10:14 AM', ticker:'TSLA', side:'Buy', qty:'5 sh', price:'$200.00', total:'$1,000.01', pnl:'—', pct:'', status:'filled', gain:null },
+                { date:'Tue 11:22 AM', ticker:'NVDA', side:'Buy', qty:'3 sh', price:'$887.80', total:'$2,663.41', pnl:'+$51.60', pct:'+1.9%', status:'filled', gain:true },
+                { date:'Mon 9:30 AM', ticker:'VTI', side:'Buy', qty:'10 sh', price:'$234.10', total:'$2,341.01', pnl:'+$0', pct:'+0.0%', status:'filled', gain:null },
+                { date:'Wed 2:05 PM', ticker:'TSLA', side:'Sell', qty:'5 sh', price:'$171.98', total:'$859.89', pnl:'−$140.02', pct:'−14.0%', status:'filled', gain:false },
+              ].map((row, i) => (
+                <div key={i} style={{ display:'flex', padding:'13px 24px', borderBottom:'1px solid rgba(0,0,0,0.05)', alignItems:'center', cursor:'default' }}>
+                  <div style={{ flex:1, fontFamily:f, fontSize:12, color:'#888' }}>{row.date}</div>
+                  <div style={{ flex:1, fontFamily:f, fontWeight:600, fontSize:14 }}>{row.ticker}</div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ display:'inline-flex', padding:'3px 10px', borderRadius:4, background:row.side==='Buy'?'rgba(31,195,164,0.08)':'rgba(192,74,74,0.08)', fontFamily:f, fontSize:12, fontWeight:600, color:row.side==='Buy'?AQUA:RED }}>{row.side}</div>
+                  </div>
+                  <div style={{ flex:1, fontFamily:f, fontSize:13 }}>{row.qty}</div>
+                  <div style={{ flex:1, fontFamily:f, fontSize:13 }}>{row.price}</div>
+                  <div style={{ flex:1, fontFamily:f, fontSize:13, fontWeight:600 }}>{row.total}</div>
+                  <div style={{ flex:1, fontFamily:f, fontSize:13, fontWeight:600, color:row.gain===true?AQUA:row.gain===false?RED:'#aaa' }}>{row.pnl} {row.pct&&<span style={{ fontWeight:400, fontSize:11 }}>({row.pct})</span>}</div>
+                  <div style={{ flex:1 }}><StatusPill status={row.status} /></div>
+                  <div style={{ minWidth:80, fontFamily:f, fontSize:12, color:AME, cursor:'default' }}>Details →</div>
+                </div>
+              ))}
+            </div>
+
+            {/* P&L summary bar */}
+            <div style={{ display:'flex', gap:16 }}>
+              {[['Total buys','$7,952.04',''],['Total sells','$859.89',''],['Realised P&L','+$88.50 net',AQUA],['Realised losses','−$140.02',RED],['Fees paid','$0.05','#888']].map(([l,v,c]) => (
+                <div key={l} style={{ flex:1, background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, padding:'12px 14px' }}>
+                  <div style={{ fontFamily:f, fontSize:11, color:'#888', marginBottom:3 }}>{l}</div>
+                  <div style={{ fontFamily:f, fontWeight:600, fontSize:16, color:c||'#222' }}>{v}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Detail sidebar — selected row */}
+          <div style={{ width:340, borderLeft:'1.5px solid rgba(0,0,0,0.09)', display:'flex', flexDirection:'column' }}>
+            <div style={{ padding:'16px 22px', borderBottom:'1px solid rgba(0,0,0,0.08)', flexShrink:0 }}>
+              <div style={{ fontFamily:f, fontWeight:600, fontSize:16, marginBottom:2 }}>Sold 5 TSLA · Wed</div>
+              <div style={{ fontFamily:f, fontSize:12, color:RED }}>−$140.02 realised loss</div>
+            </div>
+            <div style={{ flex:1, padding:'16px 22px', display:'flex', flexDirection:'column', gap:12 }}>
+              <div style={{ background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, padding:'0 14px' }}>
+                {[['Executed at','$171.98 / sh'],['Cost basis','$200.00 / sh'],['Net to cash','$859.89']].map(([l,v],i,arr) => (
+                  <div key={l} style={{ display:'flex', justifyContent:'space-between', padding:'8px 0', borderBottom:i<arr.length-1?'1px solid rgba(0,0,0,0.06)':undefined }}>
+                    <div style={{ fontFamily:f, fontSize:13, color:'#666' }}>{l}</div>
+                    <div style={{ fontFamily:f, fontSize:13, fontWeight:600 }}>{v}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ background:'rgba(138,96,235,0.04)', border:`1.5px dashed ${AME}33`, borderRadius:8, padding:14 }}>
+                <div style={{ fontFamily:f, fontSize:11, color:AME, fontWeight:600, marginBottom:6 }}>WARREN AT THE TIME OF THIS TRADE</div>
+                <div style={{ fontFamily:f, fontSize:13, color:'#333', lineHeight:1.5, fontStyle:'italic' }}>"Fear is not a thesis. Has anything changed about Tesla as a business?"</div>
+              </div>
+              <div style={{ fontFamily:f, fontSize:13, color:'#888', fontStyle:'italic' }}>No note added for this trade</div>
+              <div style={{ fontFamily:f, fontSize:12, color:AME, cursor:'default' }}>Add a reflection note →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ═══════════════════════════════════════════════════
+     APP
+  ═══════════════════════════════════════════════════ */
+  function App() {
+    return (
+      <DesignCanvas title="simFolio — Wireframes 08: Pending Orders + Order History">
+
+        <DCSection id="pending" title="01 — Pending orders" subtitle="Pending (limit waiting for price) and Queued (market order waiting for market open) are distinct states. Education card explains the price variance risk of queued market orders. Limit orders are editable; market orders are not. Cancel always shows what will and won't change.">
+          <DCArtboard id="p1a" label="1A — Pending list: 2 orders, market closed (mobile)" width={375} height={960}><PendingListMobile /></DCArtboard>
+          <DCArtboard id="p1b" label="1B — Edit limit order (mobile)" width={375} height={820}><EditLimitOrder /></DCArtboard>
+          <DCArtboard id="p1c" label="1C — Cancel order confirmation" width={375} height={620}><CancelConfirm /></DCArtboard>
+          <DCArtboard id="p1d" label="1D — Pending orders table (desktop)" width={1440} height={900}><PendingDesktop /></DCArtboard>
+        </DCSection>
+
+        <DCSection id="history" title="02 — Order history" subtitle="Full log of all executed and cancelled orders. P&L shown on sells. Hero quote preserved from moment of trade. 'Reflection note' field lets user log what they learned — Warren can discuss it later. P&L summary row at bottom of desktop view.">
+          <DCArtboard id="h2a" label="2A — History list (mobile)" width={375} height={960}><OrderHistoryMobile /></DCArtboard>
+          <DCArtboard id="h2b" label="2B — Trade detail: TSLA loss + reflection note" width={375} height={820}><OrderHistoryDetail /></DCArtboard>
+          <DCArtboard id="h2c" label="2C — History table + detail panel (desktop)" width={1440} height={900}><OrderHistoryDesktop /></DCArtboard>
+        </DCSection>
+
+      </DesignCanvas>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

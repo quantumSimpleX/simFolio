@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>simFolio — Hi-fi Trade Flow</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <style>
+    @font-face { font-family:'MOMCAKE'; src:url('fonts/MOMCAKE-Bold.otf') format('opentype'); font-weight:700; font-display:swap; }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    .term{border-bottom:1.5px dotted #8A60EB;cursor:pointer;}
+  </style>
+</head>
+<body><div id="root"></div>
+<script type="text/babel">
+  const { DesignCanvas, DCSection, DCArtboard } = window;
+
+  const C = {
+    paper:'#FAFAF7', white:'#FFFFFF',
+    ink900:'#0A0E14', ink700:'#242B35', ink600:'#3A434F',
+    ink500:'#5A6573', ink400:'#7E8794', ink300:'#A6ADB7',
+    ink200:'#CDD2D9', ink100:'#E6E9ED', ink50:'#F4F5F7',
+    ame400:'#8A60EB', ame600:'#582EB3', ame100:'#E2D8FC', ame50:'#F2EEFE',
+    aqua400:'#1FC3A4', aqua600:'#008771', aqua50:'#E6FBF7',
+    red:'#D43A2F', redBg:'#FDF1F0',
+    warn:'#B5760A', warnBg:'#FBF5E6',
+  };
+  const SANS = "'Barlow Condensed','Helvetica Neue',system-ui,sans-serif";
+  const DISPLAY = "'MOMCAKE','Helvetica Neue',system-ui,sans-serif";
+
+  /* ── primitives ── */
+  function Logo({ size=20 }) {
+    return (
+      <div style={{display:'flex',alignItems:'center',gap:7}}>
+        <div style={{width:size*1.1,height:size*1.1,background:`${C.ame400}12`,border:`1.5px solid ${C.ame400}28`,borderRadius:3,display:'flex',alignItems:'center',justifyContent:'center',color:C.ame400,fontSize:size*0.6}}>◇</div>
+        <div style={{fontFamily:DISPLAY,fontWeight:700,fontSize:size,color:C.ink900,letterSpacing:'-0.02em'}}>simFolio</div>
+      </div>
+    );
+  }
+  function StatusBar() {
+    return <div style={{height:52,display:'flex',alignItems:'flex-end',justifyContent:'space-between',padding:'0 24px 10px',flexShrink:0}}><div style={{fontFamily:SANS,fontSize:15,fontWeight:600,color:C.ink900}}>9:41</div><div style={{width:16,height:10,border:`1.5px solid ${C.ink900}`,borderRadius:2,position:'relative'}}><div style={{position:'absolute',left:1,top:1,bottom:1,right:'30%',background:C.ink900,borderRadius:1}}/></div></div>;
+  }
+  function Eyebrow({ children, color=C.ink400 }) {
+    return <div style={{fontFamily:SANS,fontSize:11,fontWeight:600,color,letterSpacing:'0.14em',textTransform:'uppercase'}}>{children}</div>;
+  }
+  function SageAv({ size=32 }) {
+    return <div style={{width:size,height:size,borderRadius:'50%',background:C.aqua50,border:`1.5px solid ${C.aqua400}40`,display:'flex',alignItems:'center',justifyContent:'center',color:C.aqua400,fontSize:size*0.44,flexShrink:0}}>◇</div>;
+  }
+  function HeroAv({ init, color, size=32 }) {
+    return <div style={{width:size,height:size,borderRadius:'50%',background:`${color}12`,border:`1.5px solid ${color}35`,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontWeight:700,fontSize:size*0.3,color,flexShrink:0}}>{init}</div>;
+  }
+  function SageMsg({ text, compact=false }) {
+    return (
+      <div style={{display:'flex',gap:10,alignItems:'flex-start'}}>
+        <SageAv size={compact?26:32}/>
+        <div style={{flex:1,paddingTop:2}}>
+          {!compact && <Eyebrow color={C.aqua600}>Guide</Eyebrow>}
+          <div style={{fontFamily:SANS,fontSize:compact?13:15,color:C.ink600,lineHeight:1.55,marginTop:compact?0:5,textWrap:'pretty'}}>{text}</div>
+        </div>
+      </div>
+    );
+  }
+  function Term({ children }) {
+    return <span className="term">{children}</span>;
+  }
+  function CTA({ label='Continue', full=false, style={} }) {
+    return <div style={{height:48,background:C.ink900,color:C.white,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontSize:15,fontWeight:600,letterSpacing:'0.01em',cursor:'default',width:full?'100%':undefined,...style}}>{label}</div>;
+  }
+  function GhostCTA({ label, style={} }) {
+    return <div style={{height:44,border:`1px solid ${C.ink200}`,color:C.ink600,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontSize:14,fontWeight:500,cursor:'default',...style}}>{label}</div>;
+  }
+  function ReceiptRow({ label, value, bold=false, color=C.ink700, termLabel=false }) {
+    return (
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'8px 0',borderBottom:`1px solid ${C.ink100}`}}>
+        <div style={{fontFamily:SANS,fontSize:14,color:C.ink500}}>{termLabel?<Term>{label}</Term>:label}</div>
+        <div style={{fontFamily:SANS,fontSize:14,fontWeight:bold?700:500,color}}>{value}</div>
+      </div>
+    );
+  }
+  function OrderTypeTab({ label, desc, active, style={} }) {
+    return (
+      <div style={{flex:1,padding:'12px 14px',border:`${active?2:1}px solid ${active?C.ame400:C.ink100}`,borderRadius:4,background:active?C.ame50:C.white,cursor:'default',...style}}>
+        <div style={{fontFamily:SANS,fontSize:14,fontWeight:active?700:500,color:active?C.ame600:C.ink700,marginBottom:3}}>{label}</div>
+        <div style={{fontFamily:SANS,fontSize:12,color:active?C.ame400:C.ink400,lineHeight:1.4}}>{desc}</div>
+      </div>
+    );
+  }
+  function QtyInput({ value='5', currency=false }) {
+    return (
+      <div style={{border:`1.5px solid ${C.ame400}`,borderRadius:4,height:56,display:'flex',alignItems:'center',padding:'0 16px',background:C.white,boxShadow:`0 0 0 3px ${C.ame400}18`,justifyContent:'space-between'}}>
+        <div style={{fontFamily:SANS,fontSize:11,color:C.ame400,fontWeight:600,letterSpacing:'0.12em',textTransform:'uppercase'}}>{currency?'Amount (USD)':'Shares'}</div>
+        <div style={{fontFamily:DISPLAY,fontWeight:700,fontSize:28,color:C.ink900,letterSpacing:'-0.02em'}}>{value}</div>
+      </div>
+    );
+  }
+  function MktClosed() {
+    return (
+      <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px',background:C.warnBg,border:`1px solid ${C.warn}30`,borderRadius:4}}>
+        <div style={{width:6,height:6,borderRadius:'50%',background:C.warn,flexShrink:0}}/>
+        <div style={{fontFamily:SANS,fontSize:13,color:C.warn}}>Markets closed · Order will execute Monday 9:30 AM EST</div>
+      </div>
+    );
+  }
+
+  /* ════════════════════════════════════════════════
+     01 — BUY FLOW
+  ════════════════════════════════════════════════ */
+
+  /* 1A: Buy form — mobile, guided by Sage */
+  function BuyFormMobile() {
+    return (
+      <div style={{width:390,height:844,background:C.paper,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        <StatusBar/>
+        {/* Header */}
+        <div style={{padding:'0 24px 14px',display:'flex',alignItems:'center',gap:14,borderBottom:`1px solid ${C.ink100}`,flexShrink:0}}>
+          <div style={{fontFamily:SANS,fontSize:14,color:C.ame400,cursor:'default'}}>← Back</div>
+          <div style={{flex:1,textAlign:'center',fontFamily:SANS,fontWeight:700,fontSize:17,color:C.ink900}}>Buy AAPL</div>
+          <div style={{width:40}}/>
+        </div>
+        {/* Price strip */}
+        <div style={{padding:'14px 24px',borderBottom:`1px solid ${C.ink100}`,display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0,background:C.white}}>
+          <div>
+            <div style={{fontFamily:DISPLAY,fontWeight:700,fontSize:28,color:C.ink900,letterSpacing:'-0.02em'}}>$196.90</div>
+            <div style={{fontFamily:SANS,fontSize:13,color:C.aqua600,marginTop:2}}>+$7.45 · +3.9% today</div>
+          </div>
+          <div style={{textAlign:'right'}}>
+            <div style={{fontFamily:SANS,fontSize:12,color:C.ink400}}>AAPL · NASDAQ</div>
+            <div style={{display:'flex',alignItems:'center',gap:5,justifyContent:'flex-end',marginTop:3}}>
+              <div style={{width:6,height:6,borderRadius:'50%',background:C.aqua400}}/>
+              <div style={{fontFamily:SANS,fontSize:12,color:C.aqua600,fontWeight:500}}>Markets open</div>
+            </div>
+          </div>
+        </div>
+        {/* Form body */}
+        <div style={{flex:1,padding:'20px 24px',display:'flex',flexDirection:'column',gap:18,overflow:'hidden'}}>
+          {/* Sage guide */}
+          <SageMsg text="Let's walk through this together. How many shares do you want? Even 1 is a great start." />
+          {/* Qty input */}
+          <QtyInput value="5"/>
+          {/* Stepper */}
+          <div style={{display:'flex',justifyContent:'center',gap:12}}>
+            {['−1','−0.5','+0.5','+1'].map(l=>(
+              <div key={l} style={{width:60,height:36,border:`1px solid ${C.ink100}`,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontSize:14,color:C.ink600,background:C.white,cursor:'default'}}>{l}</div>
+            ))}
+          </div>
+          {/* Order type */}
+          <div>
+            <div style={{fontFamily:SANS,fontSize:13,color:C.ink500,marginBottom:8}}>Order type</div>
+            <div style={{display:'flex',gap:8}}>
+              <OrderTypeTab label="Market order" desc="Execute now at current price" active/>
+              <OrderTypeTab label="Limit order" desc="Set your max price"/>
+            </div>
+            {/* Inline explanation */}
+            <div style={{marginTop:10,display:'flex',gap:8}}>
+              <SageAv size={20}/>
+              <div style={{fontFamily:SANS,fontSize:12,color:C.ink500,lineHeight:1.5,fontStyle:'italic'}}>A <Term>market order</Term> fills immediately. You'll pay close to $196.90 — the final price may vary slightly (<Term>slippage</Term>).</div>
+            </div>
+          </div>
+          {/* Summary */}
+          <div style={{background:C.white,border:`1px solid ${C.ink100}`,borderRadius:8,padding:'0 16px'}}>
+            <ReceiptRow label="5 shares × $196.90" value="$984.50"/>
+            <ReceiptRow label={<Term>Regulatory fee</Term>} termLabel value="$0.01"/>
+            <ReceiptRow label="Total" value="$984.51" bold color={C.ink900}/>
+          </div>
+        </div>
+        {/* Footer CTA */}
+        <div style={{padding:'14px 24px 32px',borderTop:`1px solid ${C.ink100}`,flexShrink:0}}>
+          <CTA label="Buy 5 AAPL  →" full/>
+          <div style={{fontFamily:SANS,fontSize:12,color:C.ink400,textAlign:'center',marginTop:10}}>Cash after: $15,015.49 of $16,000 available</div>
+        </div>
+      </div>
+    );
+  }
+
+  /* 1B: Market-closed state — queued order */
+  function BuyFormQueued() {
+    return (
+      <div style={{width:390,height:844,background:C.paper,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        <StatusBar/>
+        <div style={{padding:'0 24px 14px',display:'flex',alignItems:'center',gap:14,borderBottom:`1px solid ${C.ink100}`,flexShrink:0}}>
+          <div style={{fontFamily:SANS,fontSize:14,color:C.ame400}}>← Back</div>
+          <div style={{flex:1,textAlign:'center',fontFamily:SANS,fontWeight:700,fontSize:17,color:C.ink900}}>Buy AAPL</div>
+        </div>
+        <div style={{padding:'14px 24px',borderBottom:`1px solid ${C.ink100}`,display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0,background:C.white}}>
+          <div>
+            <div style={{fontFamily:DISPLAY,fontWeight:700,fontSize:28,color:C.ink900,letterSpacing:'-0.02em'}}>$196.90</div>
+            <div style={{fontFamily:SANS,fontSize:13,color:C.ink400,marginTop:2}}>Last close · Saturday</div>
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:5}}>
+            <div style={{width:6,height:6,borderRadius:'50%',background:'#888'}}/>
+            <div style={{fontFamily:SANS,fontSize:12,color:'#888'}}>Markets closed</div>
+          </div>
+        </div>
+        <div style={{flex:1,padding:'20px 24px',display:'flex',flexDirection:'column',gap:18,overflow:'hidden'}}>
+          <MktClosed/>
+          <SageMsg text="Markets are closed right now. Your market order will be queued and execute at Monday's opening price — which may differ from what you see today." />
+          <QtyInput value="5"/>
+          <div style={{display:'flex',gap:8}}>
+            <OrderTypeTab label="Market order" desc="Execute at Monday open" active/>
+            <OrderTypeTab label="Limit order" desc="Set a guaranteed max price"/>
+          </div>
+          <div style={{background:C.white,border:`1px solid ${C.ink100}`,borderRadius:8,padding:'0 16px'}}>
+            <ReceiptRow label="5 shares × ~$196.90" value="~$984.50"/>
+            <ReceiptRow termLabel label="Slippage" value="±unknown"/>
+            <ReceiptRow label="Total (estimated)" value="~$984.51" bold color={C.ink900}/>
+          </div>
+        </div>
+        <div style={{padding:'14px 24px 32px',borderTop:`1px solid ${C.ink100}`,flexShrink:0}}>
+          <CTA label="Queue order for Monday  →" full/>
+        </div>
+      </div>
+    );
+  }
+
+  /* 1C: Order confirmation — receipt */
+  function BuyConfirmation() {
+    return (
+      <div style={{width:390,height:780,background:C.paper,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        <StatusBar/>
+        <div style={{flex:1,padding:'24px 24px',display:'flex',flexDirection:'column',gap:20}}>
+          {/* Success mark */}
+          <div style={{textAlign:'center',padding:'8px 0'}}>
+            <div style={{width:48,height:48,borderRadius:'50%',background:C.aqua50,border:`2px solid ${C.aqua400}`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 12px',fontFamily:SANS,fontSize:22,color:C.aqua400}}>✓</div>
+            <div style={{fontFamily:DISPLAY,fontWeight:700,fontSize:28,color:C.ink900,letterSpacing:'-0.02em'}}>Order filled</div>
+            <div style={{fontFamily:SANS,fontSize:14,color:C.ink400,marginTop:4}}>Monday · 9:32:14 AM EST</div>
+          </div>
+          {/* Receipt card */}
+          <div style={{background:C.white,border:`1px solid ${C.ink100}`,borderRadius:8,padding:'4px 20px 12px'}}>
+            <div style={{padding:'12px 0 6px'}}><Eyebrow>Transaction receipt</Eyebrow></div>
+            <ReceiptRow label="Bought" value="5 shares of AAPL"/>
+            <ReceiptRow label="Executed at" value="$189.52 / share"/>
+            <ReceiptRow label="Gross cost" value="$947.60"/>
+            <ReceiptRow termLabel label="Slippage" value="−$37.35 vs. Fri close"/>
+            <ReceiptRow termLabel label="Regulatory fee" value="$0.01"/>
+            <ReceiptRow label="Net deducted" value="$947.61" bold color={C.ink900}/>
+          </div>
+          {/* Slippage education */}
+          <div style={{background:C.warnBg,border:`1px solid ${C.warn}30`,borderRadius:8,padding:'12px 16px',display:'flex',gap:10}}>
+            <SageAv size={24}/>
+            <div>
+              <div style={{fontFamily:SANS,fontSize:12,fontWeight:600,color:C.warn,letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:4}}>Why is the price different?</div>
+              <div style={{fontFamily:SANS,fontSize:13,color:C.ink600,lineHeight:1.5}}>Friday's price was $196.90. Monday opened at $189.52 — markets moved over the weekend. This difference is called <Term>slippage</Term>. A limit order would have protected you.</div>
+            </div>
+          </div>
+          {/* Cash */}
+          <div style={{display:'flex',justifyContent:'space-between',padding:'0 4px'}}>
+            <div style={{fontFamily:SANS,fontSize:14,color:C.ink500}}>Cash remaining</div>
+            <div style={{fontFamily:SANS,fontSize:14,fontWeight:700,color:C.ink900}}>$15,052.39</div>
+          </div>
+        </div>
+        <div style={{padding:'0 24px 32px',flexShrink:0,display:'flex',flexDirection:'column',gap:10}}>
+          <CTA label="Continue to portfolio  →" full/>
+        </div>
+      </div>
+    );
+  }
+
+  /* 1D: Post-first-trade — Sage → Hero handoff */
+  function HeroHandoff() {
+    return (
+      <div style={{width:390,height:820,background:C.white,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        <StatusBar/>
+        <div style={{flex:1,padding:'20px 24px',display:'flex',flexDirection:'column',gap:20}}>
+          <SageMsg text="You just bought your first stock. You're officially an investor." />
+          <SageMsg text="Before you continue — there's someone I think you should meet. Warren has been following what you've shared, and has a thought about Apple." />
+          {/* Warren intro card */}
+          <div style={{background:C.paper,border:`1.5px solid ${C.ame400}30`,borderRadius:8,padding:'18px 20px',display:'flex',gap:16,alignItems:'flex-start'}}>
+            <HeroAv init="WB" color={C.ame400} size={48}/>
+            <div style={{flex:1}}>
+              <div style={{fontFamily:SANS,fontWeight:700,fontSize:17,color:C.ink900,marginBottom:2}}>Warren Buffett</div>
+              <div style={{fontFamily:SANS,fontSize:13,color:C.ame400,marginBottom:10}}>Value investor · Your first advisor</div>
+              <div style={{fontFamily:SANS,fontSize:14,color:C.ink600,lineHeight:1.55,fontStyle:'italic'}}>"The best time to buy a wonderful company at a fair price is better than a wonderful price at a fair company. Apple qualifies on both counts."</div>
+            </div>
+          </div>
+          {/* Matched signal */}
+          <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 14px',background:C.ame50,borderRadius:4,border:`1px solid ${C.ame100}`}}>
+            <div style={{width:6,height:6,borderRadius:'50%',background:C.ame400,flexShrink:0}}/>
+            <div style={{fontFamily:SANS,fontSize:13,color:C.ame600,lineHeight:1.4}}>Matched based on your long-term goal and interest in quality businesses.</div>
+          </div>
+          <div style={{fontFamily:SANS,fontSize:14,color:C.ink500,lineHeight:1.55}}>From here, Warren will be your guide. He can discuss any trade, question your thinking, and suggest things worth reading. The Sage steps back.</div>
+        </div>
+        <div style={{padding:'0 24px 32px',flexShrink:0,display:'flex',flexDirection:'column',gap:10}}>
+          <CTA label="Talk to Warren  →" full/>
+          <GhostCTA label="Continue buying first"/>
+        </div>
+      </div>
+    );
+  }
+
+  /* 1E: Buy form — desktop */
+  function BuyFormDesktop() {
+    return (
+      <div style={{width:1440,height:900,background:C.paper,display:'flex',flexDirection:'column'}}>
+        {/* Nav */}
+        <div style={{height:64,background:C.white,borderBottom:`1px solid ${C.ink100}`,display:'flex',alignItems:'center',padding:'0 40px',gap:40,flexShrink:0}}>
+          <Logo size={21}/>
+          <div style={{flex:1,display:'flex',gap:28}}>
+            {['Portfolio','Markets','Achievements'].map((item,i)=>(
+              <div key={item} style={{fontFamily:SANS,fontSize:15,fontWeight:i===0?600:400,color:i===0?C.ink900:C.ink400,cursor:'default'}}>{item}</div>
+            ))}
+          </div>
+          <div style={{fontFamily:SANS,fontSize:14,color:C.ink500}}>Cash <span style={{fontWeight:600,color:C.ink900}}>$16,000</span></div>
+          <div style={{width:34,height:34,borderRadius:'50%',background:C.ink900,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontWeight:700,fontSize:14,color:C.white}}>J</div>
+        </div>
+        <div style={{flex:1,display:'flex',minHeight:0}}>
+          {/* Left: form */}
+          <div style={{width:520,padding:'40px 48px',display:'flex',flexDirection:'column',gap:24,borderRight:`1px solid ${C.ink100}`,overflow:'hidden'}}>
+            <div>
+              <div style={{fontFamily:SANS,fontSize:13,color:C.ame400,cursor:'default',marginBottom:8}}>← Back to portfolio</div>
+              <div style={{fontFamily:DISPLAY,fontWeight:700,fontSize:32,color:C.ink900,letterSpacing:'-0.02em',lineHeight:1}}>Buy AAPL</div>
+            </div>
+            {/* Price */}
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'16px 20px',background:C.white,border:`1px solid ${C.ink100}`,borderRadius:8}}>
+              <div>
+                <div style={{fontFamily:DISPLAY,fontWeight:700,fontSize:32,color:C.ink900,letterSpacing:'-0.02em'}}>$196.90</div>
+                <div style={{fontFamily:SANS,fontSize:13,color:C.aqua600,marginTop:3}}>+$7.45 · +3.9% today</div>
+              </div>
+              <div style={{display:'flex',alignItems:'center',gap:6}}>
+                <div style={{width:7,height:7,borderRadius:'50%',background:C.aqua400}}/>
+                <div style={{fontFamily:SANS,fontSize:13,color:C.aqua600,fontWeight:500}}>Markets open</div>
+              </div>
+            </div>
+            {/* Qty */}
+            <div>
+              <div style={{fontFamily:SANS,fontSize:13,color:C.ink500,marginBottom:8}}>Quantity</div>
+              <QtyInput value="5"/>
+              <div style={{display:'flex',gap:8,marginTop:8}}>
+                {['1','5','10','25','Max'].map(l=>(
+                  <div key={l} style={{flex:1,height:36,border:`1px solid ${C.ink100}`,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontSize:13,color:l==='5'?C.ame400:C.ink500,background:l==='5'?C.ame50:C.white,fontWeight:l==='5'?600:400,cursor:'default'}}>{l}</div>
+                ))}
+              </div>
+            </div>
+            {/* Order type */}
+            <div>
+              <div style={{fontFamily:SANS,fontSize:13,color:C.ink500,marginBottom:8}}>Order type</div>
+              <div style={{display:'flex',gap:10}}>
+                <OrderTypeTab label="Market order" desc="Execute immediately at current price" active/>
+                <OrderTypeTab label="Limit order" desc="Only fill if price reaches your target"/>
+              </div>
+            </div>
+            {/* Receipt */}
+            <div style={{background:C.white,border:`1px solid ${C.ink100}`,borderRadius:8,padding:'0 20px'}}>
+              <div style={{padding:'12px 0 4px'}}><Eyebrow>Order summary</Eyebrow></div>
+              <ReceiptRow label="5 shares × $196.90" value="$984.50"/>
+              <ReceiptRow termLabel label="Regulatory fee" value="$0.01"/>
+              <ReceiptRow label="Total" value="$984.51" bold color={C.ink900}/>
+            </div>
+            <CTA label="Buy 5 AAPL  →" full/>
+          </div>
+          {/* Right: Sage + stock context */}
+          <div style={{flex:1,padding:'40px 48px',display:'flex',flexDirection:'column',gap:24}}>
+            <Eyebrow>Apple Inc. — AAPL</Eyebrow>
+            {/* Mini chart */}
+            <div style={{background:C.white,border:`1px solid ${C.ink100}`,borderRadius:8,padding:'20px 24px'}}>
+              <svg width="100%" height={80} viewBox="0 0 600 80" preserveAspectRatio="none">
+                <polyline points="0,72 60,60 120,54 200,42 280,30 360,22 440,16 520,12 600,8" fill="none" stroke={C.aqua400} strokeWidth="1.75" strokeLinejoin="round" strokeLinecap="round"/>
+                <circle cx="600" cy="8" r="3" fill={C.aqua400}/>
+              </svg>
+              <div style={{display:'flex',justifyContent:'space-between',marginTop:4}}>
+                {['1W','1M','3M','1Y','All'].map((l,i)=>(
+                  <div key={l} style={{fontFamily:SANS,fontSize:12,color:i===4?C.ame400:C.ink400,fontWeight:i===4?600:400,cursor:'default'}}>{l}</div>
+                ))}
+              </div>
+            </div>
+            {/* Sage guidance */}
+            <SageMsg text="You're buying 5 shares — a solid start. If you're unsure about the quantity, remember: you can always buy more later. No need to go all-in at once." />
+            {/* Key stats */}
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+              {[['Market cap','$2.9T'],['P/E ratio','28.4'],['52W high','$199.62'],['Dividend yield','0.5%']].map(([l,v])=>(
+                <div key={l} style={{background:C.white,border:`1px solid ${C.ink100}`,borderRadius:8,padding:'12px 16px'}}>
+                  <div style={{fontFamily:SANS,fontSize:12,color:C.ink400,marginBottom:3}}><Term>{l}</Term></div>
+                  <div style={{fontFamily:SANS,fontWeight:700,fontSize:18,color:C.ink900}}>{v}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{fontFamily:SANS,fontSize:12,color:C.ink400,lineHeight:1.5}}>Terms with a <span style={{borderBottom:'1.5px dotted #8A60EB'}}>dotted underline</span> have explanations — hover to learn more.</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ════════════════════════════════════════════════
+     02 — SELL FLOW
+  ════════════════════════════════════════════════ */
+
+  function SellFormMobile() {
+    return (
+      <div style={{width:390,height:844,background:C.paper,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        <StatusBar/>
+        <div style={{padding:'0 24px 14px',display:'flex',alignItems:'center',gap:14,borderBottom:`1px solid ${C.ink100}`,flexShrink:0}}>
+          <div style={{fontFamily:SANS,fontSize:14,color:C.ame400}}>← Back</div>
+          <div style={{flex:1,textAlign:'center',fontFamily:SANS,fontWeight:700,fontSize:17,color:C.ink900}}>Sell TSLA</div>
+        </div>
+        {/* Position context */}
+        <div style={{padding:'14px 24px',borderBottom:`1px solid ${C.ink100}`,flexShrink:0,background:C.white}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+            <div>
+              <div style={{fontFamily:DISPLAY,fontWeight:700,fontSize:26,color:C.ink900,letterSpacing:'-0.02em'}}>$171.98</div>
+              <div style={{fontFamily:SANS,fontSize:13,color:C.red,marginTop:2}}>−$5.20 · −2.9% today</div>
+            </div>
+            <div style={{textAlign:'right'}}>
+              <div style={{fontFamily:SANS,fontSize:12,color:C.ink400}}>You own 5 shares</div>
+              <div style={{fontFamily:SANS,fontSize:12,color:C.red,marginTop:2}}>Cost: $200.00 · Now: $171.98</div>
+            </div>
+          </div>
+        </div>
+        <div style={{flex:1,padding:'20px 24px',display:'flex',flexDirection:'column',gap:18,overflow:'hidden'}}>
+          {/* Hero comment — Warren */}
+          <div style={{display:'flex',gap:10,alignItems:'flex-start',padding:'12px 16px',background:C.ame50,border:`1px solid ${C.ame100}`,borderRadius:8}}>
+            <HeroAv init="WB" color={C.ame400} size={28}/>
+            <div style={{flex:1}}>
+              <div style={{fontFamily:SANS,fontSize:12,fontWeight:600,color:C.ame600,marginBottom:3}}>Warren</div>
+              <div style={{fontFamily:SANS,fontSize:13,color:C.ink600,lineHeight:1.5,fontStyle:'italic'}}>"Fear is not a thesis. Has anything changed about Tesla as a business — or just the price?"</div>
+            </div>
+          </div>
+          {/* Qty */}
+          <div>
+            <div style={{fontFamily:SANS,fontSize:13,color:C.ink500,marginBottom:8}}>Shares to sell (of 5)</div>
+            <QtyInput value="5"/>
+            <div style={{display:'flex',gap:8,marginTop:8}}>
+              {['1','2','3','4','All 5'].map((l,i)=>(
+                <div key={l} style={{flex:1,height:36,border:`1px solid ${i===4?C.red:C.ink100}`,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontSize:13,color:i===4?C.red:C.ink500,background:i===4?C.redBg:C.white,cursor:'default',fontWeight:i===4?600:400}}>{l}</div>
+              ))}
+            </div>
+          </div>
+          {/* P&L preview */}
+          <div style={{background:C.white,border:`1px solid ${C.ink100}`,borderRadius:8,padding:'0 16px'}}>
+            <div style={{padding:'10px 0 4px'}}><Eyebrow>Sale preview</Eyebrow></div>
+            <ReceiptRow label="5 shares × $171.98" value="$859.90"/>
+            <ReceiptRow termLabel label="Regulatory fee" value="−$0.01"/>
+            <ReceiptRow termLabel label="Realised loss" value="−$140.11" color={C.red}/>
+            <ReceiptRow label="Net to cash" value="$859.89" bold color={C.ink900}/>
+          </div>
+        </div>
+        <div style={{padding:'14px 24px 32px',borderTop:`1px solid ${C.ink100}`,flexShrink:0,display:'flex',flexDirection:'column',gap:10}}>
+          <div style={{height:48,background:C.red,color:C.white,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontSize:15,fontWeight:600,cursor:'default'}}>Sell 5 TSLA  →</div>
+          <GhostCTA label="Ask Warren first"/>
+        </div>
+      </div>
+    );
+  }
+
+  function SellConfirmation() {
+    return (
+      <div style={{width:390,height:720,background:C.paper,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        <StatusBar/>
+        <div style={{flex:1,padding:'24px 24px',display:'flex',flexDirection:'column',gap:20}}>
+          <div style={{textAlign:'center',padding:'8px 0'}}>
+            <div style={{width:48,height:48,borderRadius:'50%',background:C.redBg,border:`2px solid ${C.red}`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 12px',fontFamily:SANS,fontSize:22,color:C.red}}>✓</div>
+            <div style={{fontFamily:DISPLAY,fontWeight:700,fontSize:28,color:C.ink900,letterSpacing:'-0.02em'}}>Sold</div>
+            <div style={{fontFamily:SANS,fontSize:14,color:C.ink400,marginTop:4}}>Wednesday · 2:05:22 PM EST</div>
+          </div>
+          <div style={{background:C.white,border:`1px solid ${C.ink100}`,borderRadius:8,padding:'4px 20px 12px'}}>
+            <div style={{padding:'12px 0 6px'}}><Eyebrow>Receipt</Eyebrow></div>
+            <ReceiptRow label="Sold 5 TSLA at $171.98" value="$859.90"/>
+            <ReceiptRow termLabel label="Cost basis" value="$1,000.01 (5 × $200.00)"/>
+            <ReceiptRow termLabel label="Realised loss" value="−$140.11" color={C.red}/>
+            <ReceiptRow termLabel label="Regulatory fee" value="−$0.01"/>
+            <ReceiptRow label="Net to cash" value="$859.89" bold color={C.ink900}/>
+          </div>
+          {/* Warren comment, post-trade */}
+          <div style={{display:'flex',gap:10,alignItems:'flex-start',padding:'12px 16px',background:C.ame50,border:`1px solid ${C.ame100}`,borderRadius:8}}>
+            <HeroAv init="WB" color={C.ame400} size={28}/>
+            <div>
+              <div style={{fontFamily:SANS,fontSize:12,fontWeight:600,color:C.ame600,marginBottom:3}}>Warren on this trade</div>
+              <div style={{fontFamily:SANS,fontSize:13,color:C.ink600,lineHeight:1.5,fontStyle:'italic'}}>"A loss can be the right decision. What changed your mind about Tesla? Understanding your own reasoning is more valuable than the $140."</div>
+              <div style={{fontFamily:SANS,fontSize:12,color:C.ame400,marginTop:6,cursor:'default'}}>Add a reflection note →</div>
+            </div>
+          </div>
+        </div>
+        <div style={{padding:'0 24px 32px',flexShrink:0}}>
+          <CTA label="Back to portfolio  →" full/>
+        </div>
+      </div>
+    );
+  }
+
+  /* ════════════════════════════════════════════════
+     APP
+  ════════════════════════════════════════════════ */
+  function App() {
+    return (
+      <DesignCanvas title="simFolio Hi-fi — Trade Flow">
+        <DCSection id="buy" title="01 — Buy flow" subtitle="Sage guides each step inline — not as a sidebar. Market vs limit explained in plain language at point of choice. Slippage explained automatically on the receipt when it occurs. Post-first-trade: Sage hands off to Warren.">
+          <DCArtboard id="b1" label="Buy form — mobile (markets open)" width={390} height={844}><BuyFormMobile/></DCArtboard>
+          <DCArtboard id="b2" label="Buy form — mobile (markets closed, queued)" width={390} height={844}><BuyFormQueued/></DCArtboard>
+          <DCArtboard id="b3" label="Order confirmation + slippage education" width={390} height={780}><BuyConfirmation/></DCArtboard>
+          <DCArtboard id="b4" label="Post-first-trade: Sage → Warren handoff" width={390} height={820}><HeroHandoff/></DCArtboard>
+          <DCArtboard id="b5" label="Buy form — desktop" width={1440} height={900}><BuyFormDesktop/></DCArtboard>
+        </DCSection>
+        <DCSection id="sell" title="02 — Sell flow" subtitle="Warren's voice appears inline before the user sells — not as advice, but as a question. Realised P&L and cost basis shown clearly. Post-sell receipt includes Warren's reflection prompt and a note field.">
+          <DCArtboard id="s1" label="Sell form — mobile" width={390} height={844}><SellFormMobile/></DCArtboard>
+          <DCArtboard id="s2" label="Sell confirmation + Warren reflection" width={390} height={720}><SellConfirmation/></DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

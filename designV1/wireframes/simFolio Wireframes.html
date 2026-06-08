@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>simFolio — Wireframes v0.1</title>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    .wf-img {
+      background-color: rgba(0,0,0,0.07);
+      background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.05) 5px, rgba(0,0,0,0.05) 6px);
+    }
+    .wf-img-dark {
+      background-color: rgba(255,255,255,0.05);
+      background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255,255,255,0.03) 5px, rgba(255,255,255,0.03) 6px);
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { DesignCanvas, DCSection, DCArtboard } = window;
+    const AME = '#8A60EB';
+    const AQUA = '#1FC3A4';
+
+    function T(dark) {
+      return {
+        bg: dark ? '#17172A' : '#F5F5EF',
+        fg: dark ? '#DDDDF0' : '#222',
+        fgMuted: dark ? '#565675' : '#888',
+        border: dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.09)',
+        surface: dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+        surfaceBorder: dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.13)',
+        accentSurface: dark ? 'rgba(138,96,235,0.1)' : 'rgba(138,96,235,0.06)',
+        accentBorder: 'rgba(138,96,235,0.25)',
+        imgClass: dark ? 'wf-img-dark' : 'wf-img',
+      };
+    }
+
+    /* ── Primitives ─────────────────────────────────────────────── */
+    function Av({ size = 40, init = 'WB', color = AME, dark = false }) {
+      return <div style={{ width: size, height: size, borderRadius: '50%', background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Caveat', fontWeight: 600, fontSize: Math.round(size * 0.34), color, flexShrink: 0 }}>{init}</div>;
+    }
+
+    function Box({ w, h, label, style = {}, dark = false, children }) {
+      const t = T(dark);
+      return <div style={{ width: w, height: h, background: t.surface, border: `1.5px dashed ${t.surfaceBorder}`, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Caveat', fontSize: 11, color: t.fgMuted, textAlign: 'center', padding: 4, ...style }}>{children || label}</div>;
+    }
+
+    function Chip({ label, selected = false, dark = false, style = {} }) {
+      const t = T(dark);
+      return <div style={{ display: 'inline-flex', alignItems: 'center', border: `1.5px solid ${selected ? AME : t.surfaceBorder}`, borderRadius: 999, padding: '5px 13px', fontFamily: 'Caveat', fontSize: 13, background: selected ? 'rgba(138,96,235,0.1)' : 'transparent', color: selected ? AME : t.fg, flexShrink: 0, ...style }}>{label}</div>;
+    }
+
+    function Btn({ label, style = {} }) {
+      return <div style={{ background: AME, color: 'white', borderRadius: 6, padding: '11px 22px', fontFamily: 'Caveat', fontSize: 14, fontWeight: 600, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'default', flexShrink: 0, ...style }}>{label}</div>;
+    }
+
+    function WFInput({ placeholder, dark = false, style = {} }) {
+      const t = T(dark);
+      return <div style={{ background: t.surface, border: `1.5px solid ${t.surfaceBorder}`, borderRadius: 6, padding: '10px 14px', fontFamily: 'Caveat', fontSize: 13, color: t.fgMuted, ...style }}>{placeholder}</div>;
+    }
+
+    function StatusBar() {
+      return <div style={{ height: 44, background: 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', fontFamily: 'Caveat', fontSize: 12, color: '#999', flexShrink: 0 }}><span>9:41</span><span>●●● ▌ 100%</span></div>;
+    }
+
+    function NavBar({ dark = false, children }) {
+      const t = T(dark);
+      return <div style={{ height: 64, borderBottom: `1.5px solid ${t.border}`, display: 'flex', alignItems: 'center', padding: '0 40px', gap: 32, flexShrink: 0, background: t.bg }}>{children}</div>;
+    }
+
+    function HeroBubble({ text, dark = false, style = {} }) {
+      return <div style={{ background: 'rgba(138,96,235,0.1)', border: '1.5px solid rgba(138,96,235,0.2)', borderRadius: '0 12px 12px 12px', padding: '10px 14px', fontFamily: 'Caveat', fontSize: 13, lineHeight: 1.4, color: dark ? '#DDDDF0' : '#222', maxWidth: 280, ...style }}>{text}</div>;
+    }
+
+    function UserBubble({ text, dark = false, style = {} }) {
+      return <div style={{ background: 'rgba(31,195,164,0.1)', border: '1.5px solid rgba(31,195,164,0.2)', borderRadius: '12px 0 12px 12px', padding: '10px 14px', fontFamily: 'Caveat', fontSize: 13, lineHeight: 1.4, color: dark ? '#DDDDF0' : '#222', maxWidth: 260, alignSelf: 'flex-end', ...style }}>{text}</div>;
+    }
+
+    function Dot({ color = 'green' }) {
+      const cols = { green: AQUA, yellow: '#F5C542', red: '#E05C5C' };
+      return <div style={{ width: 8, height: 8, borderRadius: '50%', background: cols[color] || cols.green, flexShrink: 0 }} />;
+    }
+
+    function Annot({ children, style = {} }) {
+      return <div style={{ fontFamily: 'Caveat', fontSize: 11, color: AME, fontStyle: 'italic', lineHeight: 1.3, pointerEvents: 'none', ...style }}>{children}</div>;
+    }
+
+    function SectionLabel({ children, dark = false }) {
+      return <div style={{ fontFamily: 'Caveat', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: T(dark).fgMuted, marginBottom: 8 }}>{children}</div>;
+    }
+
+    function Holding({ ticker, name, qty, value, pct, sentiment = 'green', dark = false }) {
+      const t = T(dark);
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', padding: '9px 0', borderBottom: `1px solid ${t.border}`, gap: 10 }}>
+          <Box w={36} h={36} label={ticker} dark={dark} style={{ fontSize: 11, fontWeight: 600, flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 13, color: t.fg }}>{name}</div>
+            <div style={{ fontFamily: 'Caveat', fontSize: 11, color: t.fgMuted }}>{qty}</div>
+          </div>
+          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+            <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 13, color: t.fg }}>{value}</div>
+            <div style={{ fontFamily: 'Caveat', fontSize: 11, color: pct.startsWith('+') ? AQUA : '#E05C5C' }}>{pct}</div>
+          </div>
+          <Dot color={sentiment} />
+        </div>
+      );
+    }
+
+    function HoldingsList({ dark = false }) {
+      const rows = [['AAPL','Apple Inc.','5 sh','$945','+12.4%','green'],['VTI','Vanguard Total ETF','10 sh','$2,340','+8.1%','green'],['BTC','Bitcoin','0.12 BTC','$7,421','+31.5%','yellow'],['TSLA','Tesla','3 sh','$2,109','-5.2%','red']];
+      return (
+        <div>
+          <SectionLabel dark={dark}>Holdings · <span style={{ color: AME }}>● = Hero sentiment</span></SectionLabel>
+          {rows.map(([t,n,q,v,p,s]) => <Holding key={t} ticker={t} name={n} qty={q} value={v} pct={p} sentiment={s} dark={dark} />)}
+        </div>
+      );
+    }
+
+    /* ── AUTH SCREENS ───────────────────────────────────────────── */
+
+    /* Welcome / landing — mobile */
+    function WelcomeMobile() {
+      return (
+        <div style={{ width:375, height:812, background:'#F5F5EF', display:'flex', flexDirection:'column', border:'2.5px solid #2A2A2A', borderRadius:40, overflow:'hidden' }}>
+          <StatusBar />
+          <div style={{ flex:1, padding:'32px 28px 24px', display:'flex', flexDirection:'column', gap:0 }}>
+            {/* Logo + tagline */}
+            <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16 }}>
+              <div style={{ width:64, height:64, borderRadius:16, background:`${AME}14`, border:`2px solid ${AME}33`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:32 }}>◇</div>
+              <div style={{ textAlign:'center' }}>
+                <div style={{ fontFamily:'Caveat', fontWeight:600, fontSize:34, color:'#222' }}>simFolio</div>
+                <div style={{ fontFamily:'Caveat', fontSize:15, color:'#888', marginTop:4, lineHeight:1.5 }}>Learn investing by doing it.
+With legendary investors as your guides.</div>
+              </div>
+              <div style={{ background:'rgba(138,96,235,0.07)', border:`1px solid ${AME}22`, borderRadius:999, padding:'5px 16px', fontFamily:'Caveat', fontSize:12, color:AME }}>Simulated only — no real money involved</div>
+            </div>
+
+            {/* Auth CTAs */}
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              <Btn label="Get started →" style={{ width:'100%', padding:14, borderRadius:10, fontSize:15 }} />
+              <Btn label="Sign in" style={{ width:'100%', padding:13, borderRadius:10, fontSize:15, background:'transparent', color:AME, border:`1.5px solid ${AME}` }} />
+              {/* Social */}
+              <div style={{ display:'flex', gap:10 }}>
+                {['Continue with Google','Continue with Apple'].map((label,i) => (
+                  <div key={label} style={{ flex:1, border:'1.5px solid rgba(0,0,0,0.15)', borderRadius:8, padding:'11px 8px', display:'flex', alignItems:'center', justifyContent:'center', gap:6, background:'white', cursor:'default' }}>
+                    <div style={{ width:16, height:16, borderRadius:'50%', background:'rgba(0,0,0,0.1)', flexShrink:0 }} />
+                    <div style={{ fontFamily:'Caveat', fontSize:12, color:'#333' }}>{label.split(' ').slice(2).join(' ')}</div>
+                  </div>
+                ))}
+              </div>
+              {/* Language */}
+              <div style={{ textAlign:'center', marginTop:4 }}>
+                <div style={{ fontFamily:'Caveat', fontSize:12, color:'#aaa' }}>Language: <span style={{ color:AME, cursor:'default' }}>English · 繁體中文 →</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* Welcome / landing — desktop */
+    function WelcomeDesktop() {
+      return (
+        <div style={{ width:1280, height:800, background:'#F5F5EF', display:'flex' }}>
+          {/* Left: brand */}
+          <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:24, padding:'60px', borderRight:'1.5px solid rgba(0,0,0,0.08)' }}>
+            <div style={{ display:'flex', gap:16, alignItems:'center' }}>
+              <div style={{ width:56, height:56, borderRadius:14, background:`${AME}14`, border:`2px solid ${AME}33`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:28 }}>◇</div>
+              <div style={{ fontFamily:'Caveat', fontWeight:600, fontSize:40, color:'#222' }}>simFolio</div>
+            </div>
+            <div style={{ fontFamily:'Caveat', fontSize:18, color:'#555', textAlign:'center', lineHeight:1.7, maxWidth:360 }}>
+              Learn investing by doing it.
+With legendary investors as your personal guides.
+All simulated. All educational. No real money.
+            </div>
+            {/* Hero avatars */}
+            <div style={{ display:'flex', gap:14, marginTop:8 }}>
+              {[['WB','Warren Buffett','Value',AME],['CW','Cathie Wood','Growth',AQUA],['RD','Ray Dalio','Balance','#C99A2E']].map(([init,name,style,color]) => (
+                <div key={init} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
+                  <Av size={48} init={init} color={color} />
+                  <div style={{ fontFamily:'Caveat', fontWeight:600, fontSize:13, color:'#222' }}>{name}</div>
+                  <div style={{ fontFamily:'Caveat', fontSize:11, color }}>{style}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontFamily:'Caveat', fontSize:13, color:'#aaa' }}>+ 7 more investing legends in the library</div>
+            <Annot>Heroes revealed after onboarding interview ↓</Annot>
+          </div>
+
+          {/* Right: auth form */}
+          <div style={{ width:420, display:'flex', flexDirection:'column', justifyContent:'center', padding:'60px 48px', gap:20 }}>
+            <div style={{ fontFamily:'Caveat', fontWeight:600, fontSize:28, marginBottom:4 }}>Create your account</div>
+            <div style={{ display:'flex', gap:10 }}>
+              {['Continue with Google','Continue with Apple'].map((label) => (
+                <div key={label} style={{ flex:1, border:'1.5px solid rgba(0,0,0,0.15)', borderRadius:8, padding:'11px', display:'flex', alignItems:'center', justifyContent:'center', gap:6, background:'white', cursor:'default' }}>
+                  <div style={{ width:16, height:16, borderRadius:'50%', background:'rgba(0,0,0,0.1)' }} />
+                  <div style={{ fontFamily:'Caveat', fontSize:12 }}>{label.split(' ').slice(2).join(' ')}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+              <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.1)' }} />
+              <div style={{ fontFamily:'Caveat', fontSize:12, color:'#aaa' }}>or with email</div>
+              <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.1)' }} />
+            </div>
+            <WFInput placeholder="Your name" />
+            <WFInput placeholder="Email address" />
+            <WFInput placeholder="Password" />
+            <Btn label="Create account →" style={{ width:'100%', padding:14, borderRadius:8, fontSize:15 }} />
+            <div style={{ textAlign:'center', fontFamily:'Caveat', fontSize:13, color:'#888' }}>Already have an account? <span style={{ color:AME, cursor:'default' }}>Sign in</span></div>
+            <div style={{ fontFamily:'Caveat', fontSize:11, color:'#aaa', textAlign:'center', lineHeight:1.5 }}>By signing up you agree to our Terms. simFolio uses simulated money only — no real financial transactions occur.</div>
+          </div>
+        </div>
+      );
+    }
+
+    /* Sign up — mobile */
+    function SignUpMobile() {
+      return (
+        <div style={{ width:375, height:812, background:'#F5F5EF', display:'flex', flexDirection:'column', border:'2.5px solid #2A2A2A', borderRadius:40, overflow:'hidden' }}>
+          <StatusBar />
+          <div style={{ height:52, display:'flex', alignItems:'center', padding:'0 20px', borderBottom:'1px solid rgba(0,0,0,0.06)', flexShrink:0 }}>
+            <div style={{ fontFamily:'Caveat', fontSize:13, color:AME }}>← Back</div>
+            <div style={{ flex:1, textAlign:'center', fontFamily:'Caveat', fontWeight:600, fontSize:17 }}>Create account</div>
+          </div>
+          <div style={{ flex:1, padding:'24px 24px', display:'flex', flexDirection:'column', gap:14 }}>
+            {/* Social first */}
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              {['Continue with Google','Continue with Apple'].map(label => (
+                <div key={label} style={{ border:'1.5px solid rgba(0,0,0,0.15)', borderRadius:8, padding:'13px 16px', display:'flex', alignItems:'center', gap:12, background:'white', cursor:'default' }}>
+                  <div style={{ width:20, height:20, borderRadius:'50%', background:'rgba(0,0,0,0.08)', flexShrink:0 }} />
+                  <div style={{ fontFamily:'Caveat', fontSize:14, color:'#333' }}>{label}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+              <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.1)' }} />
+              <div style={{ fontFamily:'Caveat', fontSize:12, color:'#aaa' }}>or with email</div>
+              <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.1)' }} />
+            </div>
+            <WFInput placeholder="Your first name" />
+            <WFInput placeholder="Email address" />
+            <div>
+              <WFInput placeholder="Password" />
+              <div style={{ fontFamily:'Caveat', fontSize:11, color:'#aaa', marginTop:5 }}>At least 8 characters</div>
+            </div>
+            {/* Language preference */}
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 14px', background:'rgba(0,0,0,0.04)', borderRadius:8, border:'1px solid rgba(0,0,0,0.09)' }}>
+              <div style={{ fontFamily:'Caveat', fontSize:13, color:'#555' }}>Tooltip language</div>
+              <div style={{ fontFamily:'Caveat', fontSize:13, color:AME, cursor:'default' }}>繁體中文 →</div>
+            </div>
+            <Btn label="Create account →" style={{ width:'100%', padding:14, borderRadius:10, fontSize:15 }} />
+            <div style={{ fontFamily:'Caveat', fontSize:11, color:'#aaa', textAlign:'center', lineHeight:1.6 }}>By signing up you agree to our Terms.
+All investing on simFolio is simulated — no real money.</div>
+            <div style={{ textAlign:'center', fontFamily:'Caveat', fontSize:13, color:'#888' }}>Already have an account? <span style={{ color:AME, cursor:'default' }}>Sign in</span></div>
+          </div>
+        </div>
+      );
+    }
+
+    /* Sign in — mobile */
+    function SignInMobile() {
+      return (
+        <div style={{ width:375, height:720, background:'#F5F5EF', display:'flex', flexDirection:'column', border:'2.5px solid #2A2A2A', borderRadius:40, overflow:'hidden' }}>
+          <StatusBar />
+          <div style={{ height:52, display:'flex', alignItems:'center', padding:'0 20px', borderBottom:'1px solid rgba(0,0,0,0.06)', flexShrink:0 }}>
+            <div style={{ fontFamily:'Caveat', fontSize:13, color:AME }}>← Back</div>
+            <div style={{ flex:1, textAlign:'center', fontFamily:'Caveat', fontWeight:600, fontSize:17 }}>Sign in</div>
+          </div>
+          <div style={{ flex:1, padding:'28px 24px', display:'flex', flexDirection:'column', gap:14 }}>
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              {['Continue with Google','Continue with Apple'].map(label => (
+                <div key={label} style={{ border:'1.5px solid rgba(0,0,0,0.15)', borderRadius:8, padding:'13px 16px', display:'flex', alignItems:'center', gap:12, background:'white', cursor:'default' }}>
+                  <div style={{ width:20, height:20, borderRadius:'50%', background:'rgba(0,0,0,0.08)', flexShrink:0 }} />
+                  <div style={{ fontFamily:'Caveat', fontSize:14 }}>{label}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+              <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.1)' }} />
+              <div style={{ fontFamily:'Caveat', fontSize:12, color:'#aaa' }}>or with email</div>
+              <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.1)' }} />
+            </div>
+            <WFInput placeholder="Email address" />
+            <div>
+              <WFInput placeholder="Password" />
+              <div style={{ display:'flex', justifyContent:'flex-end', marginTop:6 }}>
+                <div style={{ fontFamily:'Caveat', fontSize:13, color:AME, cursor:'default' }}>Forgot password?</div>
+              </div>
+            </div>
+            <Btn label="Sign in →" style={{ width:'100%', padding:14, borderRadius:10, fontSize:15 }} />
+            <div style={{ textAlign:'center', fontFamily:'Caveat', fontSize:13, color:'#888', marginTop:4 }}>New here? <span style={{ color:AME, cursor:'default' }}>Create an account</span></div>
+          </div>
+        </div>
+      );
+    }
+
+    /* Forgot password — mobile */
+    function ForgotPassword() {
+      return (
+        <div style={{ width:375, height:580, background:'#F5F5EF', display:'flex', flexDirection:'column', border:'2.5px solid #2A2A2A', borderRadius:40, overflow:'hidden' }}>
+          <StatusBar />
+          <div style={{ height:52, display:'flex', alignItems:'center', padding:'0 20px', borderBottom:'1px solid rgba(0,0,0,0.06)', flexShrink:0 }}>
+            <div style={{ fontFamily:'Caveat', fontSize:13, color:AME }}>← Sign in</div>
+            <div style={{ flex:1, textAlign:'center', fontFamily:'Caveat', fontWeight:600, fontSize:17 }}>Reset password</div>
+          </div>
+          <div style={{ flex:1, padding:'28px 24px', display:'flex', flexDirection:'column', gap:16 }}>
+            <div style={{ fontFamily:'Caveat', fontSize:14, color:'#555', lineHeight:1.6 }}>Enter your email and we’ll send you a link to reset your password. The link expires in 1 hour.</div>
+            <WFInput placeholder="Email address" />
+            <Btn label="Send reset link" style={{ width:'100%', padding:14, borderRadius:10, fontSize:15 }} />
+            <div style={{ textAlign:'center', fontFamily:'Caveat', fontSize:13, color:'#aaa' }}>Check your inbox — including spam.</div>
+          </div>
+        </div>
+      );
+    }
+
+    /* Returning user — quick resume */
+    function ReturningUser() {
+      return (
+        <div style={{ width:375, height:620, background:'#F5F5EF', display:'flex', flexDirection:'column', border:'2.5px solid #2A2A2A', borderRadius:40, overflow:'hidden' }}>
+          <StatusBar />
+          <div style={{ flex:1, padding:'40px 28px 32px', display:'flex', flexDirection:'column', gap:20, alignItems:'center', justifyContent:'center' }}>
+            <div style={{ textAlign:'center' }}>
+              <div style={{ fontFamily:'Caveat', fontWeight:600, fontSize:28, marginBottom:6 }}>Welcome back, Jamie</div>
+              <div style={{ fontFamily:'Caveat', fontSize:14, color:'#888', lineHeight:1.5 }}>Your portfolio is up <span style={{ color:AQUA, fontWeight:600 }}>+$1,120</span> since your last visit.</div>
+            </div>
+            {/* Quick stats */}
+            <div style={{ width:'100%', background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, padding:'0 16px' }}>
+              {[['Portfolio value','$28,340'],['Last visited','3 days ago'],['Pending orders','2']].map(([l,v],i,arr) => (
+                <div key={l} style={{ display:'flex', justifyContent:'space-between', padding:'10px 0', borderBottom:i<arr.length-1?'1px solid rgba(0,0,0,0.06)':undefined }}>
+                  <div style={{ fontFamily:'Caveat', fontSize:13, color:'#888' }}>{l}</div>
+                  <div style={{ fontFamily:'Caveat', fontWeight:600, fontSize:13 }}>{v}</div>
+                </div>
+              ))}
+            </div>
+            {/* Biometric / quick sign-in */}
+            <div style={{ width:'100%', display:'flex', flexDirection:'column', gap:10 }}>
+              <div style={{ border:'1.5px solid rgba(0,0,0,0.15)', borderRadius:8, padding:'13px 16px', display:'flex', alignItems:'center', justifyContent:'center', gap:10, background:'white', cursor:'default' }}>
+                <div style={{ width:20, height:20, background:'rgba(0,0,0,0.08)', borderRadius:4 }} />
+                <div style={{ fontFamily:'Caveat', fontSize:14 }}>Sign in with Face ID</div>
+              </div>
+              <Btn label="Continue to portfolio →" style={{ width:'100%', padding:14, borderRadius:10, fontSize:15 }} />
+              <div style={{ textAlign:'center', fontFamily:'Caveat', fontSize:13, color:'#aaa', cursor:'default' }}>Not Jamie? Sign out</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ── Guide primitives ─────────────────────────────────────────── */
+    function GuideAv({ size = 36 }) {
+      return <div style={{ width: size, height: size, borderRadius: Math.round(size * 0.28), background: AME, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: Math.round(size * 0.44), flexShrink: 0 }}>◇</div>;
+    }
+    function GuideBubble({ text, style = {} }) {
+      return <div style={{ background: 'rgba(0,0,0,0.05)', border: '1.5px solid rgba(0,0,0,0.1)', borderRadius: '0 12px 12px 12px', padding: '10px 14px', fontFamily: 'Caveat', fontSize: 13, lineHeight: 1.4, color: '#222', ...style }}>{text}</div>;
+    }
+    function GoalCard({ label, selected = false }) {
+      return <div style={{ border: `1.5px solid ${selected ? AME : 'rgba(0,0,0,0.13)'}`, borderRadius: 8, padding: '11px 14px', fontFamily: 'Caveat', fontSize: 13, background: selected ? 'rgba(138,96,235,0.07)' : 'rgba(255,255,255,0.7)', color: selected ? AME : '#333', fontWeight: selected ? 600 : 400, cursor: 'default', lineHeight: 1.2 }}>{selected ? '◉  ' : '○  '}{label}</div>;
+    }
+    function HeroGalleryCard({ init, name, style, tags, quote, selected = false }) {
+      return (
+        <div style={{ border: `1.5px solid ${selected ? AME : 'rgba(0,0,0,0.1)'}`, borderRadius: 8, padding: 12, background: selected ? 'rgba(138,96,235,0.06)' : 'rgba(255,255,255,0.8)', position: 'relative', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {selected && <div style={{ position: 'absolute', top: 8, right: 8, width: 20, height: 20, borderRadius: '50%', background: AME, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 11 }}>✓</div>}
+          <Av size={44} init={init} color={selected ? AME : '#999'} />
+          <div>
+            <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 13 }}>{name}</div>
+            <div style={{ fontFamily: 'Caveat', fontSize: 11, color: AME }}>{style}</div>
+          </div>
+          <div style={{ fontFamily: 'Caveat', fontSize: 11, color: '#666', fontStyle: 'italic', lineHeight: 1.3 }}>{quote}</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+            {tags.map(tag => <div key={tag} style={{ background: 'rgba(0,0,0,0.06)', borderRadius: 3, padding: '2px 6px', fontFamily: 'Caveat', fontSize: 10, color: '#666' }}>{tag}</div>)}
+          </div>
+        </div>
+      );
+    }
+    function ProgressBar({ step, total = 8 }) {
+      return <div style={{ height: 3, background: 'rgba(0,0,0,0.07)', flexShrink: 0 }}><div style={{ width: `${Math.round((step/total)*100)}%`, height: '100%', background: AME }} /></div>;
+    }
+    function TickerChip({ symbol }) {
+      return <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: AME, color: 'white', borderRadius: 6, padding: '4px 10px', fontFamily: 'Caveat', fontSize: 12, fontWeight: 600, letterSpacing: '0.04em', flexShrink: 0 }}>{symbol} ×</div>;
+    }
+
+    /* ── 01A · Onboarding: Opening + goal question ───────────────── */
+    function OnboardGoal() {
+      return (
+        <div style={{ width: 375, height: 900, background: '#F5F5EF', display: 'flex', flexDirection: 'column', border: '2.5px solid #2A2A2A', borderRadius: 40, overflow: 'hidden', position: 'relative' }}>
+          <StatusBar />
+          <div style={{ height: 52, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', borderBottom: '1px solid rgba(0,0,0,0.06)', flexShrink: 0 }}>
+            <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 18 }}>simFolio</div>
+            <Chip label="EN / 中" style={{ fontSize: 12 }} />
+          </div>
+          <ProgressBar step={1} />
+          <div style={{ flex: 1, padding: '14px 20px 12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <GuideAv size={36} />
+              <div>
+                <div style={{ fontFamily: 'Caveat', fontSize: 11, color: '#888', marginBottom: 4 }}>Your guide</div>
+                <GuideBubble text="Hey — good to meet you. Think of this as a conversation, not a form. Just tell me a bit about yourself and we'll figure out where to go." />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <div style={{ width: 36, flexShrink: 0 }} />
+              <GuideBubble text="Let's start with the big one — what are you hoping to get out of investing?" />
+            </div>
+            <div style={{ paddingLeft: 46, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[['Build long-term wealth', true],['Save for something specific', false],['Beat my savings account', false],['Learn how investing works', false],['Just exploring for now', false]].map(([label, sel]) => (
+                <GoalCard key={label} label={label} selected={sel} />
+              ))}
+            </div>
+          </div>
+          <div style={{ padding: '10px 20px 24px', borderTop: '1px solid rgba(0,0,0,0.07)', display: 'flex', gap: 8, flexShrink: 0 }}>
+            <WFInput placeholder="Or describe in your own words…" style={{ flex: 1 }} />
+            <Btn label="→" style={{ padding: '10px 16px', borderRadius: 8 }} />
+          </div>
+        </div>
+      );
+    }
+
+    /* ── 01B · Onboarding: Mid-interview (5 of 8 questions done) ─── */
+    function OnboardMidChat() {
+      return (
+        <div style={{ width: 375, height: 900, background: '#F5F5EF', display: 'flex', flexDirection: 'column', border: '2.5px solid #2A2A2A', borderRadius: 40, overflow: 'hidden' }}>
+          <StatusBar />
+          <div style={{ height: 52, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', borderBottom: '1px solid rgba(0,0,0,0.06)', flexShrink: 0 }}>
+            <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 18 }}>simFolio</div>
+            <Chip label="EN / 中" style={{ fontSize: 12 }} />
+          </div>
+          <ProgressBar step={5} />
+          <div style={{ flex: 1, padding: '12px 20px 12px', display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
+            <UserBubble text="Build long-term wealth" />
+            <div style={{ display: 'flex', gap: 8 }}><GuideAv size={26} /><GuideBubble text="Have you ever bought stocks before? If so, roughly how long ago?" style={{ maxWidth: 238 }} /></div>
+            <UserBubble text="Never — complete beginner" />
+            <div style={{ display: 'flex', gap: 8 }}><GuideAv size={26} /><GuideBubble text="No problem. What language are you most comfortable with? I want explanations to land well for you." style={{ maxWidth: 248 }} /></div>
+            <UserBubble text="English, but I also read Traditional Chinese" />
+            <div style={{ display: 'flex', gap: 8 }}><GuideAv size={26} /><GuideBubble text="Got it. How familiar are you with financial markets — do terms like P/E ratio or ETF mean anything to you?" style={{ maxWidth: 255 }} /></div>
+            <div style={{ paddingLeft: 34, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {[["Not really — starting from zero", false],["A little — I've read some basics", true],["Fairly comfortable — I follow markets", false]].map(([label, sel]) => (
+                <div key={label} style={{ border: `1.5px solid ${sel ? AME : 'rgba(0,0,0,0.13)'}`, borderRadius: 8, padding: '9px 12px', fontFamily: 'Caveat', fontSize: 12, background: sel ? 'rgba(138,96,235,0.07)' : 'rgba(255,255,255,0.7)', color: sel ? AME : '#333', fontWeight: sel ? 600 : 400 }}>{sel ? '◉  ' : '○  '}{label}</div>
+              ))}
+            </div>
+          </div>
+          <div style={{ padding: '10px 20px 24px', borderTop: '1px solid rgba(0,0,0,0.07)', display: 'flex', gap: 8, flexShrink: 0 }}>
+            <WFInput placeholder="Or describe in your own words…" style={{ flex: 1 }} />
+            <Btn label="→" style={{ padding: '10px 16px', borderRadius: 8 }} />
+          </div>
+        </div>
+      );
+    }
+
+    /* ── 01C · Onboarding: Stock interest phase (interview done) ─── */
+    function OnboardStocksPhase() {
+      return (
+        <div style={{ width: 375, height: 900, background: '#F5F5EF', display: 'flex', flexDirection: 'column', border: '2.5px solid #2A2A2A', borderRadius: 40, overflow: 'hidden' }}>
+          <StatusBar />
+          <div style={{ height: 52, display: 'flex', alignItems: 'center', padding: '0 20px', borderBottom: '1px solid rgba(0,0,0,0.06)', flexShrink: 0 }}>
+            <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 18 }}>simFolio</div>
+          </div>
+          <ProgressBar step={8} />
+          <div style={{ padding: '8px 16px', display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', borderBottom: '1px solid rgba(0,0,0,0.06)', minHeight: 48, flexShrink: 0 }}>
+            <div style={{ fontFamily: 'Caveat', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#aaa', marginRight: 4 }}>Watchlist</div>
+            {['AAPL','TSLA','BTC'].map(s => <TickerChip key={s} symbol={s} />)}
+          </div>
+          <div style={{ flex: 1, padding: '14px 20px 12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', gap: 8 }}><GuideAv size={28} /><GuideBubble text="Great — I have everything I need. Now, before we dive in — any stocks, ETFs, or crypto you've been curious about? Say the name or ticker — like 'Apple' or 'AAPL'." style={{ maxWidth: 258 }} /></div>
+            <UserBubble text="Apple, Tesla, and maybe some Bitcoin" />
+            <div style={{ display: 'flex', gap: 8 }}><GuideAv size={28} /><GuideBubble text="Added AAPL, TSLA, and BTC. Anything else on your list?" style={{ maxWidth: 245 }} /></div>
+            <UserBubble text="That's it for now." />
+            <div style={{ display: 'flex', gap: 8 }}><GuideAv size={28} /><GuideBubble text="Perfect. Let's go get you invested." style={{ maxWidth: 200 }} /></div>
+          </div>
+          <div style={{ padding: '10px 20px 24px', borderTop: '1px solid rgba(0,0,0,0.07)', display: 'flex', gap: 8, flexShrink: 0 }}>
+            <WFInput placeholder="Add another stock or ticker…" style={{ flex: 1 }} />
+            <Btn label="→" style={{ padding: '10px 16px', borderRadius: 8 }} />
+          </div>
+        </div>
+      );
+    }
+
+    /* ── 01C-Alt · No ideas → Hero introduced before first trade ──── */
+    function OnboardNoIdeas() {
+      return (
+        <div style={{ width: 375, height: 820, background: '#F5F5EF', display: 'flex', flexDirection: 'column', border: '2.5px solid #2A2A2A', borderRadius: 40, overflow: 'hidden' }}>
+          <StatusBar />
+          <div style={{ height: 52, display: 'flex', alignItems: 'center', padding: '0 20px', borderBottom: '1px solid rgba(0,0,0,0.06)', flexShrink: 0 }}>
+            <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 18 }}>simFolio</div>
+          </div>
+          <ProgressBar step={8} />
+          <div style={{ padding: '8px 16px', minHeight: 44, display: 'flex', alignItems: 'center', borderBottom: '1px solid rgba(0,0,0,0.06)', flexShrink: 0 }}>
+            <div style={{ fontFamily: 'Caveat', fontSize: 11, color: '#bbb', fontStyle: 'italic' }}>Watchlist empty — add stocks or let your advisor suggest some</div>
+          </div>
+          <div style={{ flex: 1, padding: '16px 20px 12px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'flex', gap: 8 }}><GuideAv size={28} /><GuideBubble text="Any stocks, ETFs, or crypto you've been curious about? Something you've heard mentioned, read about, or just wondered about?" style={{ maxWidth: 258 }} /></div>
+            <UserBubble text="Honestly, I have no idea where to start." />
+            <div style={{ display: 'flex', gap: 8 }}><GuideAv size={28} /><GuideBubble text="That's completely fine — and a great reason to meet your advisor first. Let me show you some legendary investors. Pick one and they'll help you think through what might be worth exploring." style={{ maxWidth: 265 }} /></div>
+            <Btn label="Meet the investors →" style={{ width: '100%', padding: 14, borderRadius: 8, marginTop: 4 }} />
+            <div style={{ background: 'rgba(138,96,235,0.06)', border: '1.5px dashed rgba(138,96,235,0.2)', borderRadius: 8, padding: '10px 14px' }}>
+              <div style={{ fontFamily: 'Caveat', fontSize: 11, color: AME, fontWeight: 600, marginBottom: 4 }}>THIS IS THE ONLY PRE-TRADE HERO MOMENT</div>
+              <div style={{ fontFamily: 'Caveat', fontSize: 11, color: '#888', lineHeight: 1.4 }}>Hero/gallery shown before first trade only when user has no stock ideas. Otherwise, hero appears after the first trade.</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ── 01C2 · Onboarding: Which stock first? ───────────────────── */
+    function OnboardWhichFirst() {
+      return (
+        <div style={{ width: 375, height: 760, background: '#F5F5EF', display: 'flex', flexDirection: 'column', border: '2.5px solid #2A2A2A', borderRadius: 40, overflow: 'hidden' }}>
+          <StatusBar />
+          <div style={{ height: 52, display: 'flex', alignItems: 'center', padding: '0 20px', borderBottom: '1px solid rgba(0,0,0,0.06)', flexShrink: 0 }}>
+            <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 18 }}>simFolio</div>
+          </div>
+          <div style={{ padding: '8px 16px', display: 'flex', gap: 6, borderBottom: '1px solid rgba(0,0,0,0.06)', flexShrink: 0 }}>
+            {['AAPL','TSLA','BTC'].map(s => <TickerChip key={s} symbol={s} />)}
+          </div>
+          <div style={{ flex: 1, padding: '16px 20px 12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', gap: 8 }}><GuideAv size={28} /><GuideBubble text="Let's go invest! You've got 3 on your list. Which one do you want to start with?" style={{ maxWidth: 248 }} /></div>
+            <div style={{ paddingLeft: 36, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[['AAPL — Apple Inc.', true],['TSLA — Tesla', false],['BTC — Bitcoin', false]].map(([label, sel]) => (
+                <div key={label} style={{ border: `1.5px solid ${sel ? AME : 'rgba(0,0,0,0.13)'}`, borderRadius: 8, padding: '10px 14px', fontFamily: 'Caveat', fontSize: 13, background: sel ? 'rgba(138,96,235,0.07)' : 'rgba(255,255,255,0.7)', color: sel ? AME : '#333', fontWeight: sel ? 600 : 400 }}>{sel ? '◉  ' : '○  '}{label}</div>
+              ))}
+            </div>
+          </div>
+          <div style={{ padding: '10px 20px 24px', borderTop: '1px solid rgba(0,0,0,0.07)', display: 'flex', gap: 8, flexShrink: 0 }}>
+            <WFInput placeholder="Or just tell me which one…" style={{ flex: 1 }} />
+            <Btn label="→" style={{ padding: '10px 16px', borderRadius: 8 }} />
+          </div>
+        </div>
+      );
+    }
+
+    /* ── 01C3 · Onboarding: Trade walkthrough (Sage guides) ──────── */
+    function OnboardTradeWalk() {
+      return (
+        <div style={{ width: 375, height: 900, background: '#F5F5EF', display: 'flex', flexDirection: 'column', border: '2.5px solid #2A2A2A', borderRadius: 40, overflow: 'hidden' }}>
+          <StatusBar />
+          <div style={{ height: 52, display: 'flex', alignItems: 'center', padding: '0 20px', borderBottom: '1px solid rgba(0,0,0,0.06)', flexShrink: 0 }}>
+            <div style={{ fontFamily: 'Caveat', fontSize: 13, color: AME }}>←</div>
+            <div style={{ flex: 1, textAlign: 'center', fontFamily: 'Caveat', fontWeight: 600, fontSize: 16 }}>Buying AAPL</div>
+          </div>
+          <div style={{ padding: '10px 16px', borderBottom: '1px solid rgba(0,0,0,0.06)', background: 'rgba(138,96,235,0.04)', flexShrink: 0 }}>
+            <div style={{ display: 'flex', gap: 10 }}><GuideAv size={26} /><GuideBubble text="Let's walk through this together. How many shares of Apple do you want? Even 1 is a great start." style={{ maxWidth: 278, fontSize: 12 }} /></div>
+          </div>
+          <div style={{ padding: '10px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(0,0,0,0.06)', flexShrink: 0 }}>
+            <div><div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 16 }}>Apple Inc. — AAPL</div><div style={{ fontFamily: 'Caveat', fontSize: 11, color: '#888' }}>NASDAQ · Real-time price</div></div>
+            <div style={{ textAlign: 'right' }}><div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 20 }}>$189.45</div><div style={{ fontFamily: 'Caveat', fontSize: 11, color: AQUA }}>+2.31% today</div></div>
+          </div>
+          <div style={{ flex: 1, padding: '14px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', background: 'rgba(0,0,0,0.04)', borderRadius: 8, overflow: 'hidden' }}>
+              {['Shares','Dollar amount'].map((tab, i) => <div key={tab} style={{ flex: 1, padding: 9, textAlign: 'center', fontFamily: 'Caveat', fontSize: 13, background: i === 0 ? AME : 'transparent', color: i === 0 ? 'white' : '#888', borderRadius: i === 0 ? 8 : 0 }}>{tab}</div>)}
+            </div>
+            <Box w="100%" h={52} label="5" style={{ fontSize: 22, fontWeight: 600 }} />
+            <div>
+              <div style={{ fontFamily: 'Caveat', fontSize: 12, color: '#888', marginBottom: 6 }}>Order type</div>
+              <div style={{ display: 'flex', gap: 8 }}>{['Market Order','Limit Order'].map((t, i) => <Chip key={t} label={t} selected={i === 0} style={{ flex: 1, justifyContent: 'center', fontSize: 12 }} />)}</div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}><GuideAv size={20} /><div style={{ fontFamily: 'Caveat', fontSize: 11, color: '#666', fontStyle: 'italic', lineHeight: 1.4 }}>Market order = buy right now at the current price. The simplest choice to get started.</div></div>
+            </div>
+            <Box w="100%" h={48} label="Total: $947.25  ·  Cash remaining: $9,052.75" style={{ fontSize: 12 }} />
+            <Btn label="Buy AAPL" style={{ width: '100%', padding: 14, borderRadius: 8 }} />
+          </div>
+        </div>
+      );
+    }
+
+    /* ── 01C4 · Onboarding: Post-trade, Sage introduces Hero ─────── */
+    function OnboardHeroIntro() {
+      return (
+        <div style={{ width: 375, height: 820, background: '#F5F5EF', display: 'flex', flexDirection: 'column', border: '2.5px solid #2A2A2A', borderRadius: 40, overflow: 'hidden' }}>
+          <StatusBar />
+          <div style={{ height: 52, display: 'flex', alignItems: 'center', padding: '0 20px', borderBottom: '1px solid rgba(0,0,0,0.06)', flexShrink: 0 }}>
+            <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 18 }}>simFolio</div>
+          </div>
+          <div style={{ flex: 1, padding: '20px 20px 12px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'flex', gap: 8 }}><GuideAv size={28} /><GuideBubble text="You just bought your first stock. You're officially an investor." style={{ maxWidth: 250 }} /></div>
+            <div style={{ display: 'flex', gap: 8 }}><div style={{ width: 28, flexShrink: 0 }} /><GuideBubble text="Before you buy the rest — there's someone I think you should meet. Warren Buffett has a few thoughts on Apple that I think you'd find useful." style={{ maxWidth: 268 }} /></div>
+            <div style={{ background: 'white', border: `2px solid ${AME}`, borderRadius: 12, padding: 16, display: 'flex', gap: 14, alignItems: 'center', boxShadow: '0 4px 20px rgba(138,96,235,0.12)' }}>
+              <Av size={56} init="WB" color={AME} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 18 }}>Warren Buffett</div>
+                <div style={{ fontFamily: 'Caveat', fontSize: 12, color: AME }}>Value Investor · Your advisor</div>
+                <Box w="100%" h={30} label="philosophy snippet…" style={{ marginTop: 8, fontSize: 11 }} />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}><div style={{ width: 28, flexShrink: 0 }} /><GuideBubble text="Want to hear what Warren thinks before you continue? He might have thoughts on your TSLA and BTC picks too." style={{ maxWidth: 265 }} /></div>
+            <Btn label="Talk to Warren →" style={{ width: '100%', padding: 14, borderRadius: 8 }} />
+            <div style={{ textAlign: 'center', fontFamily: 'Caveat', fontSize: 13, color: AME, cursor: 'default' }}>Continue buying first →</div>
+            <div style={{ textAlign: 'center', fontFamily: 'Caveat', fontSize: 12, color: '#888', cursor: 'default' }}>Browse all advisors instead</div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ── 01C5 · Onboarding: Sage hands off → Hero takes over ──────── */
+    function OnboardHandoff() {
+      return (
+        <div style={{ width: 375, height: 840, background: '#F5F5EF', display: 'flex', flexDirection: 'column', border: '2.5px solid #2A2A2A', borderRadius: 40, overflow: 'hidden' }}>
+          <StatusBar />
+          <div style={{ height: 52, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', borderBottom: '1px solid rgba(0,0,0,0.06)', flexShrink: 0 }}>
+            <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 18 }}>simFolio</div>
+            <div style={{ fontFamily: 'Caveat', fontSize: 12, color: AME }}>Warren Buffett</div>
+          </div>
+          <div style={{ flex: 1, padding: '16px 20px 12px', display: 'flex', flexDirection: 'column', gap: 12, overflow: 'hidden' }}>
+            {/* Sage’s final message */}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <GuideAv size={26} />
+              <GuideBubble text="My job is done. You’re in good hands from here. I’ll let Warren take it." style={{ maxWidth: 240, fontSize: 12 }} />
+            </div>
+            {/* Transition divider */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.08)' }} />
+              <div style={{ fontFamily: 'Caveat', fontSize: 11, color: '#aaa' }}>Sage steps back</div>
+              <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.08)' }} />
+            </div>
+            {/* Hero enters */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '4px 0' }}>
+              <Av size={48} init="WB" color={AME} />
+              <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 15, color: '#222' }}>Warren Buffett</div>
+              <div style={{ fontFamily: 'Caveat', fontSize: 11, color: AME }}>Your investing advisor</div>
+            </div>
+            {/* Hero’s first message */}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Av size={28} init="WB" color={AME} />
+              <HeroBubble text="Good to meet you. I’ve been watching your portfolio take shape. Tell me — what made you choose Apple first?" style={{ maxWidth: 258 }} />
+            </div>
+            <UserBubble text="It felt safe. Something I actually use every day." />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Av size={28} init="WB" color={AME} />
+              <HeroBubble text="That’s exactly the right instinct. Investing in what you understand is one of the most important principles. Let’s talk about why." style={{ maxWidth: 258 }} />
+            </div>
+          </div>
+          {/* Input now addresses the Hero, not Sage */}
+          <div style={{ padding: '10px 20px 24px', borderTop: '1px solid rgba(0,0,0,0.08)', display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+            <Av size={26} init="WB" color={AME} />
+            <WFInput placeholder="Ask Warren anything…" style={{ flex: 1 }} />
+            <Btn label="→" style={{ padding: '10px 14px', borderRadius: 8 }} />
+          </div>
+        </div>
+      );
+    }
+
+    /* ── 01D · Onboarding: Hero gallery — mobile ─────────────────── */
+    function OnboardGalleryMobile() {
+      const heroes = [
+        { init: 'WB', name: 'Warren Buffett', style: 'Value', tags: ['Long-term','Moats'], quote: '"Wonderful cos. at fair prices"', selected: true },
+        { init: 'CM', name: 'Charlie Munger', style: 'Mental models', tags: ['Rationality','Inversion'], quote: '"Invert, always invert"' },
+        { init: 'PL', name: 'Peter Lynch', style: 'Growth value', tags: ['Research','Know what you own'], quote: '"Invest in what you know"' },
+        { init: 'JB', name: 'John Bogle', style: 'Index', tags: ['Low cost','Simplicity'], quote: '"Stay the course"', selected: true },
+        { init: 'RD', name: 'Ray Dalio', style: 'All-weather', tags: ['Macro','Balance'], quote: '"Diversify everything"' },
+        { init: 'CW', name: 'Cathie Wood', style: 'Disruptive tech', tags: ['Innovation','Bold bets'], quote: '"Innovation is exponential"' },
+      ];
+      return (
+        <div style={{ width: 375, height: 960, background: '#F5F5EF', display: 'flex', flexDirection: 'column', border: '2.5px solid #2A2A2A', borderRadius: 40, overflow: 'hidden' }}>
+          <StatusBar />
+          <div style={{ height: 52, display: 'flex', alignItems: 'center', padding: '0 20px', borderBottom: '1px solid rgba(0,0,0,0.06)', flexShrink: 0 }}>
+            <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 18 }}>simFolio</div>
+          </div>
+          <div style={{ flex: 1, padding: '16px 20px 12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <GuideAv size={28} />
+              <GuideBubble text="Here are investors whose thinking fits where you want to go. Pick up to 3 — they'll form your Hero Council." style={{ maxWidth: 255 }} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontFamily: 'Caveat', fontSize: 12, color: '#888' }}>Select up to 3</div>
+              <div style={{ fontFamily: 'Caveat', fontSize: 12, color: AME, fontWeight: 600 }}>2 of 3 selected</div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              {heroes.map(h => <HeroGalleryCard key={h.init} {...h} />)}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1.5px dashed rgba(0,0,0,0.15)', borderRadius: 8, padding: '10px 14px', fontFamily: 'Caveat', fontSize: 13, color: '#888', cursor: 'default' }}>
+              + Request another investor
+            </div>
+          </div>
+          <div style={{ padding: '12px 20px 24px', borderTop: '1px solid rgba(0,0,0,0.07)', flexShrink: 0 }}>
+            <Btn label="Build my Council →" style={{ width: '100%', padding: 14, borderRadius: 8 }} />
+          </div>
+        </div>
+      );
+    }
+
+    /* ── 01E · Onboarding: Hero gallery — desktop ────────────────── */
+    function OnboardGalleryDesktop() {
+      const heroes = [
+        { init: 'WB', name: 'Warren Buffett', style: 'Value investing', tags: ['Long-term','Moats','Patience'], quote: '"Wonderful companies at fair prices"', selected: true },
+        { init: 'CM', name: 'Charlie Munger', style: 'Mental models', tags: ['Rationality','Inversion','Simplicity'], quote: '"Invert, always invert"' },
+        { init: 'PL', name: 'Peter Lynch', style: 'Growth at value', tags: ['Research','Know what you own','Everyday cos.'], quote: '"Invest in what you know"' },
+        { init: 'JB', name: 'John Bogle', style: 'Index investing', tags: ['Low cost','Diversification','Simplicity'], quote: '"Stay the course"', selected: true },
+        { init: 'RD', name: 'Ray Dalio', style: 'All-weather', tags: ['Macro','Risk parity','Balance'], quote: '"Diversify across everything"' },
+        { init: 'CW', name: 'Cathie Wood', style: 'Disruptive tech', tags: ['Innovation','Bold bets','High-growth'], quote: '"Innovation is exponential"' },
+      ];
+      return (
+        <div style={{ width: 1280, height: 800, background: '#F5F5EF', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ height: 64, borderBottom: '1.5px solid rgba(0,0,0,0.09)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 48px', flexShrink: 0 }}>
+            <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 22 }}>simFolio</div>
+            <div style={{ fontFamily: 'Caveat', fontSize: 13, color: '#888' }}>Educational simulation — not financial advice</div>
+          </div>
+          <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
+            <div style={{ width: 360, borderRight: '1.5px solid rgba(0,0,0,0.08)', padding: '32px 36px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <div style={{ display: 'flex', gap: 14 }}>
+                <GuideAv size={44} />
+                <div>
+                  <div style={{ fontFamily: 'Caveat', fontSize: 12, color: '#888', marginBottom: 4 }}>Your guide</div>
+                  <GuideBubble text="Based on your answers, here are the investors most aligned with your goals and thinking." style={{ maxWidth: 220, fontSize: 14 }} />
+                </div>
+              </div>
+              <div style={{ background: 'rgba(138,96,235,0.06)', border: '1.5px dashed rgba(138,96,235,0.25)', borderRadius: 8, padding: 16 }}>
+                <div style={{ fontFamily: 'Caveat', fontSize: 11, color: AME, fontWeight: 600, marginBottom: 10 }}>YOUR PROFILE</div>
+                {[['Goal','Long-term wealth'],['Horizon','Decade-plus'],['Risk comfort','Moderate'],['Style match','Value + Index']].map(([l, v]) => (
+                  <div key={l} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <div style={{ fontFamily: 'Caveat', fontSize: 13, color: '#888' }}>{l}</div>
+                    <div style={{ fontFamily: 'Caveat', fontSize: 13, fontWeight: 600 }}>{v}</div>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <div style={{ fontFamily: 'Caveat', fontSize: 12, color: '#888', marginBottom: 10 }}>Selected council</div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {['WB','JB'].map(init => (
+                    <div key={init} style={{ display: 'flex', gap: 6, alignItems: 'center', padding: '6px 12px', border: `1.5px solid ${AME}`, borderRadius: 999, background: 'rgba(138,96,235,0.08)' }}>
+                      <Av size={20} init={init} color={AME} />
+                      <span style={{ fontFamily: 'Caveat', fontSize: 12, color: AME }}>✓ {init}</span>
+                    </div>
+                  ))}
+                  <div style={{ padding: '6px 12px', border: '1.5px dashed rgba(0,0,0,0.15)', borderRadius: 999, fontFamily: 'Caveat', fontSize: 12, color: '#888' }}>+ 1 more</div>
+                </div>
+              </div>
+              <Btn label="Build my Council →" style={{ width: '100%', padding: 14, borderRadius: 8, marginTop: 'auto' }} />
+            </div>
+            <div style={{ flex: 1, padding: '28px 40px', overflow: 'hidden' }}>
+              <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 24, marginBottom: 4 }}>Choose your Hero Council</div>
+              <div style={{ fontFamily: 'Caveat', fontSize: 14, color: '#888', marginBottom: 20 }}>Select up to 3 investors whose thinking aligns with yours.</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+                {heroes.map(h => (
+                  <div key={h.init} style={{ border: `1.5px solid ${h.selected ? AME : 'rgba(0,0,0,0.1)'}`, borderRadius: 8, padding: 18, background: h.selected ? 'rgba(138,96,235,0.05)' : 'rgba(255,255,255,0.8)', position: 'relative', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {h.selected && <div style={{ position: 'absolute', top: 10, right: 10, width: 22, height: 22, borderRadius: '50%', background: AME, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12 }}>✓</div>}
+                    <Av size={52} init={h.init} color={h.selected ? AME : '#999'} />
+                    <div>
+                      <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 16 }}>{h.name}</div>
+                      <div style={{ fontFamily: 'Caveat', fontSize: 12, color: AME }}>{h.style}</div>
+                    </div>
+                    <div style={{ fontFamily: 'Caveat', fontSize: 13, color: '#666', fontStyle: 'italic' }}>{h.quote}</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {h.tags.map(tag => <div key={tag} style={{ background: 'rgba(0,0,0,0.05)', borderRadius: 4, padding: '3px 8px', fontFamily: 'Caveat', fontSize: 11, color: '#666' }}>{tag}</div>)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1.5px dashed rgba(0,0,0,0.13)', borderRadius: 8, padding: '12px 18px', fontFamily: 'Caveat', fontSize: 14, color: '#888', marginTop: 16, cursor: 'default' }}>
+                + Request another investor — if there's someone specific you'd like to learn from
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ── 02A · Portfolio: The Council ────────────────────────────── */
+    function PortfolioA({ dark = false }) {
+      const t = T(dark);
+      return (
+        <div style={{ width: 1440, height: 900, background: t.bg, color: t.fg, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+          <NavBar dark={dark}>
+            <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 20 }}>simFolio</div>
+            <div style={{ flex: 1, display: 'flex', gap: 24, fontFamily: 'Caveat', fontSize: 15, color: t.fgMuted }}>
+              <span style={{ color: AME, fontWeight: 600 }}>Portfolio</span><span>Markets</span><span>Achievements</span>
+            </div>
+            <div style={{ fontFamily: 'Caveat', fontSize: 14, color: t.fg }}>Cash: <strong>$4,215</strong></div>
+            <Av size={34} init="J" dark={dark} />
+          </NavBar>
+          <div style={{ flex: 1, padding: '28px 40px', display: 'flex', flexDirection: 'column', gap: 22 }}>
+            <div>
+              <SectionLabel dark={dark}>Your Hero Council</SectionLabel>
+              <div style={{ display: 'flex', gap: 16 }}>
+                {[['WB','Warren Buffett','Value Investor'],['PL','Peter Lynch','Growth Finder'],['JB','John Bogle','Index Pioneer']].map(([init,name,style]) => (
+                  <div key={name} style={{ flex: 1, border: `1.5px solid ${t.accentBorder}`, borderRadius: 8, padding: '16px 20px', display: 'flex', gap: 14, alignItems: 'center', background: t.accentSurface }}>
+                    <Av size={50} init={init} color={AME} dark={dark} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 16, color: t.fg }}>{name}</div>
+                      <div style={{ fontFamily: 'Caveat', fontSize: 12, color: AME }}>{style}</div>
+                      <Box w="100%" h={28} label="recent commentary…" dark={dark} style={{ marginTop: 8 }} />
+                    </div>
+                    <Btn label="Ask" style={{ padding: '8px 16px', fontSize: 13 }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 24, flex: 1, minHeight: 0 }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ display: 'flex', gap: 14 }}>
+                  {[['Portfolio Value','$24,815'],['Today','+$312 (+1.27%)'],['Total Return','+$4,815 (+24.1%)']].map(([l,v]) => (
+                    <div key={l} style={{ flex: 1, border: `1.5px dashed ${t.surfaceBorder}`, borderRadius: 6, padding: 12 }}>
+                      <div style={{ fontFamily: 'Caveat', fontSize: 11, color: t.fgMuted, marginBottom: 3 }}>{l}</div>
+                      <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 18, color: t.fg }}>{v}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className={t.imgClass} style={{ flex: 1, borderRadius: 8, position: 'relative', minHeight: 120 }}>
+                  <div style={{ position: 'absolute', top: 12, left: 12, fontFamily: 'Caveat', fontSize: 12, color: t.fgMuted }}>Portfolio performance chart</div>
+                </div>
+              </div>
+              <div style={{ width: 400, flexShrink: 0 }}>
+                <HoldingsList dark={dark} />
+              </div>
+            </div>
+          </div>
+          <div style={{ position: 'absolute', bottom: 32, right: 40, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+            <Annot>floating action ↗</Annot>
+            <Btn label="✦  Ask Council" style={{ borderRadius: 999, padding: '14px 28px', boxShadow: `0 4px 20px rgba(138,96,235,${dark ? 0.4 : 0.22})` }} />
+          </div>
+        </div>
+      );
+    }
+
+    /* ── 02B · Portfolio: The Advisor's Room ─────────────────────── */
+    function PortfolioB({ dark = false }) {
+      const t = T(dark);
+      return (
+        <div style={{ width: 1440, height: 900, background: t.bg, color: t.fg, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+          <NavBar dark={dark}>
+            <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 20 }}>simFolio</div>
+            <div style={{ flex: 1, display: 'flex', gap: 24, fontFamily: 'Caveat', fontSize: 15, color: t.fgMuted }}>
+              <span style={{ color: AME, fontWeight: 600 }}>Portfolio</span><span>Markets</span><span>Achievements</span>
+            </div>
+            <Av size={34} init="J" dark={dark} />
+          </NavBar>
+          <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
+            <div style={{ flex: 1, padding: '28px 40px', display: 'flex', flexDirection: 'column', gap: 18, overflow: 'hidden' }}>
+              <div>
+                <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 32, color: t.fg }}>$24,815.43</div>
+                <div style={{ fontFamily: 'Caveat', fontSize: 14, color: AQUA }}>+$312.18 today (+1.27%)</div>
+              </div>
+              <div className={t.imgClass} style={{ height: 200, borderRadius: 8 }} />
+              <HoldingsList dark={dark} />
+            </div>
+            <div style={{ width: 340, flexShrink: 0, borderLeft: `1.5px solid ${t.border}`, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ height: 52, display: 'flex', borderBottom: `1px solid ${t.border}`, flexShrink: 0 }}>
+                {[['WB', true],['PL', false],['JB', false]].map(([init, active]) => (
+                  <div key={init} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Caveat', fontWeight: 600, fontSize: 14, color: active ? AME : t.fgMuted, borderBottom: active ? `2px solid ${AME}` : 'none' }}>{init}</div>
+                ))}
+              </div>
+              <div style={{ flex: 1, padding: 22, display: 'flex', flexDirection: 'column', gap: 14, overflow: 'hidden' }}>
+                <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+                  <Av size={58} init="WB" color={AME} dark={dark} />
+                  <div>
+                    <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 18, color: t.fg }}>Warren Buffett</div>
+                    <div style={{ fontFamily: 'Caveat', fontSize: 12, color: AME }}>Value Investor</div>
+                    <div style={{ display: 'flex', gap: 4, alignItems: 'center', marginTop: 4 }}>
+                      <Dot /><span style={{ fontFamily: 'Caveat', fontSize: 11, color: t.fgMuted }}>Watching your portfolio</span>
+                    </div>
+                  </div>
+                </div>
+                <div style={{ background: t.accentSurface, border: `1.5px dashed ${t.accentBorder}`, borderRadius: 8, padding: 14 }}>
+                  <div style={{ fontFamily: 'Caveat', fontSize: 11, color: AME, marginBottom: 6 }}>WARREN'S LATEST</div>
+                  <Box w="100%" h={52} label="commentary preview…" dark={dark} />
+                </div>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
+                  <UserBubble text="Should I buy more AAPL?" dark={dark} />
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <Av size={26} init="WB" color={AME} dark={dark} />
+                    <HeroBubble text="I'd look at their cash flows first…" dark={dark} />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <WFInput placeholder="Ask Warren…" dark={dark} style={{ flex: 1 }} />
+                  <Btn label="→" style={{ padding: '10px 14px', borderRadius: 8 }} />
+                </div>
+              </div>
+            </div>
+          </div>
+          <Annot style={{ position: 'absolute', top: 76, right: 352 }}>Sidebar persists across all views ↗</Annot>
+        </div>
+      );
+    }
+
+    /* ── 02C · Portfolio: The Flight Deck ───────────────────────── */
+    function PortfolioC({ dark = false }) {
+      const t = T(dark);
+      return (
+        <div style={{ width: 1440, height: 900, background: t.bg, color: t.fg, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ height: 96, borderBottom: `1.5px solid ${t.border}`, display: 'flex', alignItems: 'center', padding: '0 32px', gap: 20, background: t.accentSurface, flexShrink: 0 }}>
+            <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 18 }}>simFolio</div>
+            <div style={{ width: 1, height: 48, background: t.border }} />
+            {[['WB','Warren B.','Value',true],['PL','Peter L.','Growth',false],['JB','John B.','Index',false]].map(([init,name,style,active]) => (
+              <div key={name} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '6px 14px', borderRadius: 8, background: active ? 'rgba(138,96,235,0.14)' : 'transparent', border: active ? `1.5px solid ${t.accentBorder}` : '1.5px solid transparent' }}>
+                <Av size={44} init={init} color={active ? AME : t.fgMuted} dark={dark} />
+                <div>
+                  <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 13, color: active ? AME : t.fgMuted }}>{name}</div>
+                  <div style={{ fontFamily: 'Caveat', fontSize: 11, color: t.fgMuted }}>{style}</div>
+                </div>
+                {active && <Dot />}
+              </div>
+            ))}
+            <div style={{ flex: 1, borderLeft: `1.5px dashed ${t.accentBorder}`, paddingLeft: 20, marginLeft: 4 }}>
+              <div style={{ fontFamily: 'Caveat', fontSize: 11, color: AME, marginBottom: 4 }}>WARREN'S TAKE TODAY</div>
+              <div style={{ fontFamily: 'Caveat', fontSize: 13, fontStyle: 'italic', color: t.fg, opacity: 0.8 }}>"Your Apple position shows good discipline — the moat is still intact…"</div>
+            </div>
+            <Av size={34} init="J" dark={dark} />
+          </div>
+          <div style={{ display: 'flex', borderBottom: `1px solid ${t.border}`, padding: '0 32px', flexShrink: 0 }}>
+            {[['Portfolio Value','$24,815'],['Today','+$312 (+1.27%)'],['Total Return','+$4,815 (+24.1%)'],['Cash','$4,215']].map(([l,v], idx) => (
+              <div key={l} style={{ flex: 1, padding: '14px 0', borderRight: idx < 3 ? `1px solid ${t.border}` : 'none', paddingRight: idx < 3 ? 20 : 0, paddingLeft: idx > 0 ? 20 : 0 }}>
+                <div style={{ fontFamily: 'Caveat', fontSize: 11, color: t.fgMuted }}>{l}</div>
+                <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 20, color: t.fg }}>{v}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ flex: 1, display: 'flex', padding: '20px 32px', gap: 24, minHeight: 0 }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
+              <div className={t.imgClass} style={{ flex: 1, borderRadius: 8, minHeight: 120 }} />
+              <div>
+                <SectionLabel dark={dark}>Council commentary</SectionLabel>
+                {[['WB','Apple','Their cash generation is exceptional. A long-term hold.'],['PL','Your portfolio','Crypto exposure is worth monitoring closely.']].map(([init,sub,txt]) => (
+                  <div key={txt} style={{ display: 'flex', gap: 12, padding: '10px 12px', background: t.surface, borderRadius: 6, marginBottom: 8 }}>
+                    <Av size={30} init={init} color={AME} dark={dark} />
+                    <div>
+                      <div style={{ fontFamily: 'Caveat', fontSize: 11, color: t.fgMuted, marginBottom: 2 }}>{init} · on {sub}</div>
+                      <div style={{ fontFamily: 'Caveat', fontSize: 13, color: t.fg }}>{txt}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ width: 380, flexShrink: 0 }}>
+              <HoldingsList dark={dark} />
+              <Btn label="+ Add Position" style={{ width: '100%', marginTop: 16, borderRadius: 6 }} />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ── 03 · Hero Consultation Mobile ──────────────────────────── */
+    function HeroConsultMobile() {
+      return (
+        <div style={{ width: 375, height: 812, background: '#F5F5EF', display: 'flex', flexDirection: 'column', border: '2.5px solid #2A2A2A', borderRadius: 40, overflow: 'hidden' }}>
+          <StatusBar />
+          <div style={{ height: 52, display: 'flex', alignItems: 'center', padding: '0 20px', borderBottom: '1px solid rgba(0,0,0,0.08)', gap: 12, flexShrink: 0 }}>
+            <div style={{ fontFamily: 'Caveat', fontSize: 14, color: AME }}>← Portfolio</div>
+            <div style={{ flex: 1, textAlign: 'center', fontFamily: 'Caveat', fontWeight: 600, fontSize: 16 }}>Warren Buffett</div>
+          </div>
+          <div style={{ padding: '16px 20px', display: 'flex', gap: 14, borderBottom: '1px solid rgba(0,0,0,0.07)', flexShrink: 0 }}>
+            <Av size={56} init="WB" color={AME} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 17 }}>Warren Buffett</div>
+              <div style={{ fontFamily: 'Caveat', fontSize: 12, color: AME }}>Value Investor</div>
+              <Box w="100%" h={28} label="investing philosophy…" style={{ marginTop: 8 }} />
+            </div>
+          </div>
+          <div style={{ padding: '10px 20px', display: 'flex', gap: 8, flexShrink: 0, borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+            {['My portfolio?','Buy AAPL?','Diversified?'].map(q => <Chip key={q} label={q} selected={true} style={{ fontSize: 12 }} />)}
+          </div>
+          <div style={{ flex: 1, padding: '14px 20px', display: 'flex', flexDirection: 'column', gap: 12, overflow: 'hidden' }}>
+            <div style={{ display: 'flex', gap: 10 }}><Av size={28} init="WB" color={AME} /><HeroBubble text="I see you've been active with tech stocks. Let's talk about what you're building." /></div>
+            <UserBubble text="Should I buy more Apple?" />
+            <div style={{ display: 'flex', gap: 10 }}><Av size={28} init="WB" color={AME} /><HeroBubble text="Apple has a remarkable ecosystem. What's your current cost basis?" /></div>
+            <UserBubble text="My average is $189.45 per share." />
+            <div style={{ display: 'flex', gap: 10 }}><Av size={28} init="WB" color={AME} /><Box w={220} h={52} label="AI response generating…" /></div>
+          </div>
+          <div style={{ padding: '10px 20px 24px', borderTop: '1px solid rgba(0,0,0,0.08)', display: 'flex', gap: 8, flexShrink: 0 }}>
+            <WFInput placeholder="Ask Warren anything…" style={{ flex: 1 }} />
+            <Btn label="→" style={{ padding: '10px 14px', borderRadius: 8 }} />
+          </div>
+        </div>
+      );
+    }
+
+    /* ── 03 · Hero Consultation Desktop ─────────────────────────── */
+    function HeroConsultDesktop() {
+      const t = T(false);
+      return (
+        <div style={{ width: 1440, height: 900, background: t.bg, color: t.fg, display: 'flex', flexDirection: 'column' }}>
+          <NavBar dark={false}>
+            <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 20 }}>simFolio</div>
+            <div style={{ flex: 1, display: 'flex', gap: 24, fontFamily: 'Caveat', fontSize: 15, color: t.fgMuted }}>
+              <span style={{ color: AME, fontWeight: 600 }}>Portfolio</span><span>Markets</span><span>Achievements</span>
+            </div>
+            <Av size={34} init="J" />
+          </NavBar>
+          <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
+            <div style={{ flex: 1, padding: '28px 40px', opacity: 0.32, display: 'flex', flexDirection: 'column', gap: 16, overflow: 'hidden' }}>
+              <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 28 }}>$24,815.43</div>
+              <div className={t.imgClass} style={{ height: 200, borderRadius: 8 }} />
+              <HoldingsList dark={false} />
+            </div>
+            <div style={{ width: 480, flexShrink: 0, borderLeft: `1.5px solid ${t.border}`, display: 'flex', flexDirection: 'column', boxShadow: '-6px 0 32px rgba(138,96,235,0.08)' }}>
+              <div style={{ padding: '20px 24px', borderBottom: `1px solid ${t.border}`, display: 'flex', gap: 16, alignItems: 'center', flexShrink: 0 }}>
+                <Av size={60} init="WB" color={AME} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 20 }}>Warren Buffett</div>
+                  <div style={{ fontFamily: 'Caveat', fontSize: 13, color: AME }}>Value Investor</div>
+                  <Box w="100%" h={28} label="philosophy excerpt…" style={{ marginTop: 8 }} />
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {[['PL'],['JB']].map(([i]) => <Av key={i} size={34} init={i} />)}
+                </div>
+              </div>
+              <div style={{ padding: '12px 24px', display: 'flex', gap: 8, flexWrap: 'wrap', borderBottom: `1px solid ${t.border}`, flexShrink: 0 }}>
+                {['My portfolio?','Buy AAPL?','Too much crypto?','Diversified?'].map(q => <Chip key={q} label={q} selected={true} style={{ fontSize: 12 }} />)}
+              </div>
+              <div style={{ flex: 1, padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 12, overflow: 'hidden' }}>
+                <div style={{ display: 'flex', gap: 10 }}><Av size={32} init="WB" color={AME} /><HeroBubble text="I see you've been active with technology. Let's talk about your overall strategy." style={{ maxWidth: 340, fontSize: 14 }} /></div>
+                <UserBubble text="Should I buy more Apple shares?" style={{ maxWidth: 300, fontSize: 14 }} />
+                <div style={{ display: 'flex', gap: 10 }}><Av size={32} init="WB" color={AME} /><HeroBubble text="Apple's ecosystem is remarkable. The key question is whether you're paying a fair price." style={{ maxWidth: 340, fontSize: 14 }} /></div>
+                <UserBubble text="What about my overall diversification?" style={{ maxWidth: 280, fontSize: 14 }} />
+                <div style={{ display: 'flex', gap: 10 }}><Av size={32} init="WB" color={AME} /><Box w={320} h={60} label="AI response generating…" /></div>
+              </div>
+              <div style={{ padding: '16px 24px', borderTop: `1px solid ${t.border}`, display: 'flex', gap: 12, flexShrink: 0 }}>
+                <WFInput placeholder="Ask Warren about investing…" style={{ flex: 1, fontSize: 14 }} />
+                <Btn label="Send" />
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ── 04 · Trade Flow Mobile ─────────────────────────────────── */
+    function TradeMobile() {
+      return (
+        <div style={{ width: 375, height: 812, background: '#F5F5EF', display: 'flex', flexDirection: 'column', border: '2.5px solid #2A2A2A', borderRadius: 40, overflow: 'hidden' }}>
+          <StatusBar />
+          <div style={{ height: 52, display: 'flex', alignItems: 'center', padding: '0 20px', borderBottom: '1px solid rgba(0,0,0,0.08)', flexShrink: 0 }}>
+            <div style={{ fontFamily: 'Caveat', fontSize: 14, color: AME }}>←</div>
+            <div style={{ flex: 1, textAlign: 'center', fontFamily: 'Caveat', fontWeight: 600, fontSize: 17 }}>AAPL — Apple</div>
+            <div style={{ fontFamily: 'Caveat', fontSize: 13, color: AQUA }}>+2.3%</div>
+          </div>
+          <div style={{ flex: 1, padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12, overflow: 'hidden' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 30 }}>$189.45</div>
+              <div style={{ fontFamily: 'Caveat', fontSize: 13, color: '#888' }}>+$4.27 today</div>
+            </div>
+            <div className="wf-img" style={{ height: 72, borderRadius: 6 }} />
+            <div style={{ background: 'rgba(138,96,235,0.07)', border: '1.5px dashed rgba(138,96,235,0.25)', borderRadius: 8, padding: 14 }}>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <Av size={30} init="WB" color={AME} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontFamily: 'Caveat', fontSize: 11, color: AME, marginBottom: 4 }}>WARREN'S TAKE ON AAPL</div>
+                  <div style={{ fontFamily: 'Caveat', fontSize: 13, lineHeight: 1.4 }}>"Apple's ecosystem creates a remarkable moat. But price matters — never overpay for a wonderful business."</div>
+                  <div style={{ fontFamily: 'Caveat', fontSize: 12, color: AME, marginTop: 6 }}>Ask Warren more →</div>
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', background: 'rgba(0,0,0,0.05)', borderRadius: 8, overflow: 'hidden' }}>
+              {['Shares','Amount ($)'].map((tab, i) => (
+                <div key={tab} style={{ flex: 1, padding: 10, textAlign: 'center', fontFamily: 'Caveat', fontSize: 14, background: i === 0 ? AME : 'transparent', color: i === 0 ? 'white' : '#888', borderRadius: i === 0 ? 8 : 0 }}>{tab}</div>
+              ))}
+            </div>
+            <Box w="100%" h={56} label="5 shares" style={{ fontSize: 22, fontWeight: 600 }} />
+            <div style={{ display: 'flex', gap: 8 }}>
+              {['Market Order','Limit Order'].map((tab, i) => <Chip key={tab} label={tab} selected={i === 0} style={{ flex: 1, justifyContent: 'center' }} />)}
+            </div>
+            <Box w="100%" h={52} label="Total: $947.25 · Cash remaining: $3,267.75" />
+            <Btn label="Buy AAPL" style={{ width: '100%', padding: 14, borderRadius: 8 }} />
+          </div>
+        </div>
+      );
+    }
+
+    /* ── 04 · Trade Flow Desktop ────────────────────────────────── */
+    function TradeDesktop() {
+      const t = T(false);
+      return (
+        <div style={{ width: 1440, height: 900, background: t.bg, color: t.fg, display: 'flex', flexDirection: 'column' }}>
+          <NavBar dark={false}>
+            <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 20 }}>simFolio</div>
+            <div style={{ flex: 1, display: 'flex', gap: 24, fontFamily: 'Caveat', fontSize: 15, color: t.fgMuted }}>
+              <span style={{ color: AME, fontWeight: 600 }}>Portfolio</span><span>Markets</span><span>Achievements</span>
+            </div>
+            <Av size={34} init="J" />
+          </NavBar>
+          <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
+            <div style={{ flex: 1, padding: '28px 40px', display: 'flex', flexDirection: 'column', gap: 16, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 30 }}>Apple Inc.</div>
+                  <div style={{ fontFamily: 'Caveat', fontSize: 13, color: t.fgMuted }}>AAPL · NASDAQ</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 30 }}>$189.45</div>
+                  <div style={{ fontFamily: 'Caveat', fontSize: 13, color: AQUA }}>+$4.27 (+2.31%) today</div>
+                </div>
+              </div>
+              <div className={t.imgClass} style={{ height: 220, borderRadius: 8 }} />
+              <div style={{ display: 'flex', gap: 12 }}>
+                {[['Market Cap','$2.9T'],['P/E Ratio','28.4'],['52W High','$199.62'],['52W Low','$164.08']].map(([l,v]) => (
+                  <div key={l} style={{ flex: 1, border: `1.5px dashed ${t.surfaceBorder}`, borderRadius: 6, padding: 12 }}>
+                    <div style={{ fontFamily: 'Caveat', fontSize: 11, color: t.fgMuted }}>{l}</div>
+                    <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 16 }}>{v}</div>
+                  </div>
+                ))}
+              </div>
+              <Box w="100%" h={60} label="Company description and business overview…" dark={false} />
+            </div>
+            <div style={{ width: 420, flexShrink: 0, borderLeft: `1.5px solid ${t.border}`, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: 24, borderBottom: `1.5px solid ${t.border}` }}>
+                <div style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 18, marginBottom: 16 }}>Place Order</div>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                  {['Buy','Sell'].map((tab, i) => <Chip key={tab} label={tab} selected={i === 0} style={{ flex: 1, justifyContent: 'center' }} />)}
+                </div>
+                <Box w="100%" h={52} label="5 shares" style={{ fontSize: 20, fontWeight: 600, marginBottom: 12 }} />
+                <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                  {['Market Order','Limit Order'].map((tab, i) => <Chip key={tab} label={tab} selected={i === 0} style={{ flex: 1, justifyContent: 'center', fontSize: 13 }} />)}
+                </div>
+                <Box w="100%" h={52} label="Estimated total: $947.25  ·  Cash after: $3,267.75" style={{ marginBottom: 16 }} />
+                <Btn label="Buy AAPL" style={{ width: '100%', padding: 14, borderRadius: 8 }} />
+              </div>
+              <div style={{ flex: 1, padding: 24, display: 'flex', flexDirection: 'column', gap: 12, overflow: 'hidden' }}>
+                <SectionLabel>Hero Council on AAPL</SectionLabel>
+                {[['WB','Warren','"Apple\'s moat is exceptional. Price matters though."','green'],['PL','Peter','"Consistent earnings growth — worth watching closely."','green']].map(([init,name,quote,sent]) => (
+                  <div key={name} style={{ display: 'flex', gap: 12, padding: 12, border: `1.5px dashed ${t.surfaceBorder}`, borderRadius: 6 }}>
+                    <Av size={34} init={init} color={AME} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
+                        <span style={{ fontFamily: 'Caveat', fontWeight: 600, fontSize: 13 }}>{name}</span>
+                        <Dot color={sent} />
+                      </div>
+                      <div style={{ fontFamily: 'Caveat', fontSize: 13, fontStyle: 'italic' }}>{quote}</div>
+                    </div>
+                  </div>
+                ))}
+                <div style={{ fontFamily: 'Caveat', fontSize: 12, color: AME, textAlign: 'center', marginTop: 4 }}>Ask your heroes about AAPL →</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ── App ─────────────────────────────────────────────────────── */
+    function App() {
+      return (
+        <DesignCanvas title="simFolio — Wireframes v0.1">
+
+          <DCSection id="auth" title="00 — Sign up / Sign in" subtitle="Lightweight auth: social (Google, Apple) or email. Language preference set at sign-up. Returning user sees portfolio delta since last visit and can resume with Face ID. Welcome screen makes the simulation promise prominent from the start.">
+            <DCArtboard id="a0" label="Welcome / landing (mobile)" width={375} height={812}><WelcomeMobile /></DCArtboard>
+            <DCArtboard id="a1" label="Welcome / landing (desktop)" width={1280} height={800}><WelcomeDesktop /></DCArtboard>
+            <DCArtboard id="a2" label="Sign up (mobile)" width={375} height={812}><SignUpMobile /></DCArtboard>
+            <DCArtboard id="a3" label="Sign in (mobile)" width={375} height={720}><SignInMobile /></DCArtboard>
+            <DCArtboard id="a4" label="Forgot password (mobile)" width={375} height={580}><ForgotPassword /></DCArtboard>
+            <DCArtboard id="a5" label="Returning user: quick resume" width={375} height={620}><ReturningUser /></DCArtboard>
+          </DCSection>
+
+          <DCSection id="onboard" title="01 — Onboarding: Full first-time flow" subtitle="8-question interview (goal always first, rest randomized) → stock interest → trade walkthrough → Hero introduced post-trade. Heroes never appear until user has real skin in the game.">
+            <DCArtboard id="ob-1" label="State 1 — Goal question (1/8)" width={375} height={900}><OnboardGoal /></DCArtboard>
+            <DCArtboard id="ob-2" label="State 2 — Mid-interview: experience + language + market knowledge (5/8)" width={375} height={900}><OnboardMidChat /></DCArtboard>
+            <DCArtboard id="ob-3" label="State 3 — Stock interest phase (interview 8/8 complete)" width={375} height={900}><OnboardStocksPhase /></DCArtboard>
+            <DCArtboard id="ob-3b" label="State 3B — No ideas? Hero gallery shown here (pre-trade only)" width={375} height={820}><OnboardNoIdeas /></DCArtboard>
+            <DCArtboard id="ob-4" label="State 4 — Which stock first?" width={375} height={760}><OnboardWhichFirst /></DCArtboard>
+            <DCArtboard id="ob-5" label="State 5 — Trade walkthrough (Sage guides)" width={375} height={900}><OnboardTradeWalk /></DCArtboard>
+            <DCArtboard id="ob-6" label="State 6 — Post-trade: Sage introduces Hero" width={375} height={820}><OnboardHeroIntro /></DCArtboard>
+            <DCArtboard id="ob-6b" label="State 6B — Handoff: Sage exits, Hero takes over" width={375} height={840}><OnboardHandoff /></DCArtboard>
+            <DCArtboard id="ob-7" label="State 7 — Hero gallery mobile (no prior match)" width={375} height={960}><OnboardGalleryMobile /></DCArtboard>
+            <DCArtboard id="ob-8" label="State 8 — Hero gallery desktop" width={1280} height={800}><OnboardGalleryDesktop /></DCArtboard>
+          </DCSection>
+
+          <DCSection id="pa" title="02A — Portfolio: The Council" subtitle="Hero-first. The three Heroes are the primary navigation element — each card shows live commentary. Holdings sit below.">
+            <DCArtboard id="pa-l" label="Light mode" width={1440} height={900}><PortfolioA dark={false} /></DCArtboard>
+            <DCArtboard id="pa-d" label="Dark mode" width={1440} height={900}><PortfolioA dark={true} /></DCArtboard>
+          </DCSection>
+
+          <DCSection id="pb" title="02B — Portfolio: The Advisor's Room" subtitle="Classic portfolio view with a persistent Hero sidebar. Tabbed between the 3 heroes. Sidebar docks to all screens.">
+            <DCArtboard id="pb-l" label="Light mode" width={1440} height={900}><PortfolioB dark={false} /></DCArtboard>
+            <DCArtboard id="pb-d" label="Dark mode" width={1440} height={900}><PortfolioB dark={true} /></DCArtboard>
+          </DCSection>
+
+          <DCSection id="pc" title="02C — Portfolio: The Flight Deck" subtitle="Hero strip replaces the top nav entirely. Heroes are always present as co-pilots. Metrics row below the strip.">
+            <DCArtboard id="pc-l" label="Light mode" width={1440} height={900}><PortfolioC dark={false} /></DCArtboard>
+            <DCArtboard id="pc-d" label="Dark mode" width={1440} height={900}><PortfolioC dark={true} /></DCArtboard>
+          </DCSection>
+
+          <DCSection id="hc" title="03 — Hero Consultation" subtitle="Mobile: full-screen takeover. Desktop: expanded side panel with portfolio dimmed. Quick-prompt chips reduce typing friction.">
+            <DCArtboard id="hc-mob" label="Mobile: full-screen chat" width={375} height={812}><HeroConsultMobile /></DCArtboard>
+            <DCArtboard id="hc-desk" label="Desktop: expanded panel" width={1440} height={900}><HeroConsultDesktop /></DCArtboard>
+          </DCSection>
+
+          <DCSection id="tr" title="04 — Trade Flow" subtitle="Hero commentary appears before the trade — not after. Warren weighs in on the specific stock at the moment of decision.">
+            <DCArtboard id="tr-mob" label="Mobile: buy with hero" width={375} height={812}><TradeMobile /></DCArtboard>
+            <DCArtboard id="tr-desk" label="Desktop: stock + order + hero" width={1440} height={900}><TradeDesktop /></DCArtboard>
+          </DCSection>
+
+        </DesignCanvas>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

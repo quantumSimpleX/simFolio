@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>simFolio — Hi-fi Orders & Achievements</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <style>
+    @font-face { font-family:'MOMCAKE'; src:url('fonts/MOMCAKE-Bold.otf') format('opentype'); font-weight:700; font-display:swap; }
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+    .term { border-bottom:1.5px dotted #8A60EB; cursor:pointer; }
+  </style>
+</head>
+<body><div id="root"></div>
+<script type="text/babel">
+  const { DesignCanvas, DCSection, DCArtboard } = window;
+
+  const C = {
+    paper:'#FAFAF7', white:'#FFFFFF',
+    ink900:'#0A0E14', ink700:'#242B35', ink600:'#3A434F',
+    ink500:'#5A6573', ink400:'#7E8794', ink300:'#A6ADB7',
+    ink200:'#CDD2D9', ink100:'#E6E9ED', ink50:'#F4F5F7',
+    ame400:'#8A60EB', ame600:'#582EB3', ame100:'#E2D8FC', ame50:'#F2EEFE',
+    aqua400:'#1FC3A4', aqua600:'#008771', aqua50:'#E6FBF7',
+    red:'#D43A2F', redBg:'#FDF1F0',
+    gold:'#B5860A', goldBg:'#FBF5E6', goldLight:'#E8C84A',
+    warn:'#B5760A', warnBg:'#FBF5E6',
+  };
+  const SANS    = "'Barlow Condensed','Helvetica Neue',system-ui,sans-serif";
+  const DISPLAY = "'MOMCAKE','Helvetica Neue',system-ui,sans-serif";
+
+  /* ── primitives ── */
+  function StatusBar() {
+    return <div style={{height:52,display:'flex',alignItems:'flex-end',justifyContent:'space-between',padding:'0 24px 10px',flexShrink:0}}>
+      <div style={{fontFamily:SANS,fontSize:15,fontWeight:600,color:C.ink900}}>9:41</div>
+      <div style={{width:16,height:10,border:`1.5px solid ${C.ink900}`,borderRadius:2,position:'relative'}}><div style={{position:'absolute',left:1,top:1,bottom:1,right:'30%',background:C.ink900,borderRadius:1}}/></div>
+    </div>;
+  }
+  function Logo({ size=20 }) {
+    return <div style={{display:'flex',alignItems:'center',gap:7}}>
+      <div style={{width:size*1.1,height:size*1.1,background:`${C.ame400}12`,border:`1.5px solid ${C.ame400}28`,borderRadius:3,display:'flex',alignItems:'center',justifyContent:'center',color:C.ame400,fontSize:size*0.6}}>◇</div>
+      <div style={{fontFamily:DISPLAY,fontWeight:700,fontSize:size,color:C.ink900,letterSpacing:'-0.02em'}}>simFolio</div>
+    </div>;
+  }
+  function Eyebrow({ children, color=C.ink400 }) {
+    return <div style={{fontFamily:SANS,fontSize:11,fontWeight:600,color,letterSpacing:'0.14em',textTransform:'uppercase'}}>{children}</div>;
+  }
+  function HeroAv({ init, color, size=28 }) {
+    return <div style={{width:size,height:size,borderRadius:'50%',background:`${color}12`,border:`1.5px solid ${color}35`,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontWeight:700,fontSize:size*0.3,color,flexShrink:0}}>{init}</div>;
+  }
+  function CTA({ label, full=false, ghost=false, danger=false, style={} }) {
+    const bg = danger ? C.red : ghost ? 'transparent' : C.ink900;
+    const col = ghost ? C.ink700 : C.white;
+    const border = ghost ? `1px solid ${C.ink200}` : 'none';
+    return <div style={{height:48,background:bg,color:col,border,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontSize:15,fontWeight:600,cursor:'default',width:full?'100%':undefined,...style}}>{label}</div>;
+  }
+  function StatusPill({ status }) {
+    const cfg = {
+      pending:   { color:C.warn,    bg:C.warnBg,  border:`${C.warn}40`,   label:'Pending' },
+      queued:    { color:'#4A7FC4', bg:'#EFF4FC',  border:'#4A7FC440',    label:'Queued' },
+      filled:    { color:C.aqua600, bg:C.aqua50,   border:`${C.aqua400}40`, label:'Filled' },
+      cancelled: { color:C.ink500,  bg:C.ink50,    border:`${C.ink300}50`, label:'Cancelled' },
+      partial:   { color:C.gold,    bg:C.goldBg,   border:`${C.gold}40`,   label:'Partial fill' },
+    };
+    const c = cfg[status] || cfg.pending;
+    return <div style={{display:'inline-flex',alignItems:'center',gap:5,background:c.bg,border:`1px solid ${c.border}`,borderRadius:999,padding:'3px 10px',flexShrink:0}}>
+      <div style={{width:5,height:5,borderRadius:'50%',background:c.color}}/>
+      <span style={{fontFamily:SANS,fontSize:11,color:c.color,fontWeight:600}}>{c.label}</span>
+    </div>;
+  }
+  function Divider({ label }) {
+    return <div style={{display:'flex',alignItems:'center',gap:10,padding:'6px 0'}}>
+      <div style={{flex:1,height:1,background:C.ink100}}/>
+      <div style={{fontFamily:SANS,fontSize:11,color:C.ink300}}>{label}</div>
+      <div style={{flex:1,height:1,background:C.ink100}}/>
+    </div>;
+  }
+  function Term({ children }) { return <span className="term">{children}</span>; }
+
+  /* Badge shape — geometric, QSXC-compliant, stroked */
+  function BadgeGlyph({ shape='diamond', color=C.ame400, size=40, earned=true }) {
+    const dim = { width:size, height:size, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 };
+    const opacity = earned ? 1 : 0.28;
+    if (shape === 'diamond') return (
+      <div style={{...dim, opacity}}>
+        <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+          <polygon points="20,3 37,20 20,37 3,20" stroke={color} strokeWidth="1.75" fill={`${color}10`}/>
+          <polygon points="20,9 31,20 20,31 9,20" stroke={color} strokeWidth="1" fill="none" opacity="0.4"/>
+        </svg>
+      </div>
+    );
+    if (shape === 'hex') return (
+      <div style={{...dim, opacity}}>
+        <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+          <polygon points="20,2 35,11 35,29 20,38 5,29 5,11" stroke={color} strokeWidth="1.75" fill={`${color}10`}/>
+          <circle cx="20" cy="20" r="5" stroke={color} strokeWidth="1.25" fill="none" opacity="0.5"/>
+        </svg>
+      </div>
+    );
+    if (shape === 'triangle') return (
+      <div style={{...dim, opacity}}>
+        <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+          <polygon points="20,3 38,36 2,36" stroke={color} strokeWidth="1.75" fill={`${color}10`}/>
+          <polygon points="20,11 31,32 9,32" stroke={color} strokeWidth="1" fill="none" opacity="0.35"/>
+        </svg>
+      </div>
+    );
+    if (shape === 'circle') return (
+      <div style={{...dim, opacity}}>
+        <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+          <circle cx="20" cy="20" r="17" stroke={color} strokeWidth="1.75" fill={`${color}10`}/>
+          <circle cx="20" cy="20" r="10" stroke={color} strokeWidth="1" fill="none" opacity="0.4"/>
+        </svg>
+      </div>
+    );
+    if (shape === 'star') return (
+      <div style={{...dim, opacity}}>
+        <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+          <polygon points="20,2 24.5,14.5 38,14.5 27,22.5 31.5,35 20,27 8.5,35 13,22.5 2,14.5 15.5,14.5" stroke={color} strokeWidth="1.75" fill={`${color}10`}/>
+        </svg>
+      </div>
+    );
+    return null;
+  }
+
+  /* Medal glyph — more elaborate, bar beneath */
+  function MedalGlyph({ color=C.gold, size=52, earned=true }) {
+    const opacity = earned ? 1 : 0.25;
+    return (
+      <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3,opacity,flexShrink:0}}>
+        <svg width={size} height={size} viewBox="0 0 52 52" fill="none">
+          <circle cx="26" cy="26" r="22" stroke={color} strokeWidth="2" fill={`${color}10`}/>
+          <circle cx="26" cy="26" r="15" stroke={color} strokeWidth="1.25" fill="none" opacity="0.4"/>
+          <circle cx="26" cy="26" r="7" stroke={color} strokeWidth="1" fill={`${color}18`} opacity="0.7"/>
+        </svg>
+        {/* ribbon bar */}
+        <div style={{width:size*0.55,height:4,borderRadius:2,background:color,opacity:0.5}}/>
+        <div style={{width:size*0.35,height:3,borderRadius:2,background:color,opacity:0.3}}/>
+      </div>
+    );
+  }
+
+  /* Trophy glyph */
+  function TrophyGlyph({ color=C.goldLight, size=64, earned=true }) {
+    const opacity = earned ? 1 : 0.2;
+    return (
+      <div style={{opacity,flexShrink:0}}>
+        <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
+          {/* cup */}
+          <path d="M18 8 H46 V30 C46 42 36 48 32 48 C28 48 18 42 18 30 Z" stroke={color} strokeWidth="2" fill={`${color}12`}/>
+          {/* handles */}
+          <path d="M18 14 C10 14 8 20 8 24 C8 30 14 34 18 32" stroke={color} strokeWidth="1.75" fill="none"/>
+          <path d="M46 14 C54 14 56 20 56 24 C56 30 50 34 46 32" stroke={color} strokeWidth="1.75" fill="none"/>
+          {/* stem */}
+          <line x1="32" y1="48" x2="32" y2="54" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+          {/* base */}
+          <rect x="22" y="54" width="20" height="4" rx="2" stroke={color} strokeWidth="1.75" fill={`${color}12`}/>
+          {/* inner star */}
+          <polygon points="32,18 34,24 40,24 35,28 37,34 32,30 27,34 29,28 24,24 30,24" stroke={color} strokeWidth="1" fill={`${color}20`} opacity="0.6"/>
+        </svg>
+      </div>
+    );
+  }
+
+  /* Progress ring */
+  function ProgressRing({ value, total, size=48, color=C.ame400 }) {
+    const r = (size - 6) / 2;
+    const circ = 2 * Math.PI * r;
+    const pct = value / total;
+    return (
+      <div style={{position:'relative',width:size,height:size,flexShrink:0}}>
+        <svg width={size} height={size} style={{transform:'rotate(-90deg)'}}>
+          <circle cx={size/2} cy={size/2} r={r} stroke={C.ink100} strokeWidth="3" fill="none"/>
+          <circle cx={size/2} cy={size/2} r={r} stroke={color} strokeWidth="3" fill="none"
+            strokeDasharray={circ} strokeDashoffset={circ * (1 - pct)} strokeLinecap="round"/>
+        </svg>
+        <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontSize:11,fontWeight:700,color}}>
+          {value}/{total}
+        </div>
+      </div>
+    );
+  }
+
+  /* ═══════════════════════════════════════════
+     SECTION 01 — PENDING ORDERS
+  ═══════════════════════════════════════════ */
+
+  function PendingOrdersMobile() {
+    return (
+      <div style={{width:390,height:900,background:C.paper,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        <StatusBar/>
+        <div style={{padding:'0 24px 14px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:`1px solid ${C.ink100}`,flexShrink:0}}>
+          <div style={{fontFamily:SANS,fontSize:14,color:C.ame400}}>← Portfolio</div>
+          <div style={{fontFamily:SANS,fontWeight:700,fontSize:17,color:C.ink900}}>Orders</div>
+          <div style={{fontFamily:SANS,fontSize:14,color:C.ame400,cursor:'default'}}>History</div>
+        </div>
+        {/* Tabs */}
+        <div style={{display:'flex',borderBottom:`1px solid ${C.ink100}`,flexShrink:0}}>
+          {[['Pending (2)',true],['Filled',false],['Cancelled',false]].map(([l,active])=>(
+            <div key={l} style={{flex:1,padding:'11px 0',textAlign:'center',fontFamily:SANS,fontSize:13,color:active?C.ink900:C.ink400,fontWeight:active?700:400,borderBottom:active?`2px solid ${C.ink900}`:'2px solid transparent',cursor:'default'}}>{l}</div>
+          ))}
+        </div>
+        <div style={{flex:1,padding:'16px 24px',display:'flex',flexDirection:'column',gap:14,overflow:'hidden'}}>
+          {/* Market closed banner */}
+          <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 14px',background:C.ink50,border:`1px solid ${C.ink100}`,borderRadius:4}}>
+            <div style={{width:6,height:6,borderRadius:'50%',background:'#888',flexShrink:0}}/>
+            <div>
+              <div style={{fontFamily:SANS,fontSize:13,color:C.ink700,fontWeight:600}}>Markets closed · Saturday</div>
+              <div style={{fontFamily:SANS,fontSize:12,color:C.ink400}}>Orders execute Monday 9:30 AM EST</div>
+            </div>
+          </div>
+
+          {/* Order card 1 — limit */}
+          <div style={{background:C.white,border:`1px solid ${C.ink100}`,borderRadius:8,padding:'14px 18px',display:'flex',flexDirection:'column',gap:12}}>
+            <div style={{display:'flex',alignItems:'center',gap:10}}>
+              <div style={{width:38,height:38,background:C.ink50,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontWeight:700,fontSize:11,color:C.ink500,flexShrink:0}}>AAPL</div>
+              <div style={{flex:1}}>
+                <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:2}}>
+                  <div style={{fontFamily:SANS,fontWeight:700,fontSize:15,color:C.ink900}}>Buy 5 AAPL</div>
+                  <StatusPill status="pending"/>
+                </div>
+                <div style={{fontFamily:SANS,fontSize:12,color:C.ink400}}><Term>Limit order</Term> · placed Fri 4:22 PM</div>
+              </div>
+            </div>
+            <div style={{display:'flex',background:C.ink50,borderRadius:4,overflow:'hidden'}}>
+              {[['Limit price','$187.00'],['Executes when','AAPL ≤ $187.00']].map(([l,v],i)=>(
+                <div key={l} style={{flex:1,padding:'8px 12px',borderRight:i===0?`1px solid ${C.ink100}`:'none'}}>
+                  <div style={{fontFamily:SANS,fontSize:11,color:C.ink400,marginBottom:2}}>{l}</div>
+                  <div style={{fontFamily:SANS,fontWeight:700,fontSize:14,color:C.ink900}}>{v}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{display:'flex',gap:8}}>
+              <div style={{flex:1,height:36,border:`1px solid ${C.ink200}`,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontSize:13,color:C.ink700,cursor:'default'}}>Edit order</div>
+              <div style={{flex:1,height:36,border:`1px solid ${C.red}`,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontSize:13,color:C.red,cursor:'default'}}>Cancel</div>
+            </div>
+          </div>
+
+          {/* Order card 2 — queued market order */}
+          <div style={{background:C.white,border:`1px solid ${C.ink100}`,borderRadius:8,padding:'14px 18px',display:'flex',flexDirection:'column',gap:12}}>
+            <div style={{display:'flex',alignItems:'center',gap:10}}>
+              <div style={{width:38,height:38,background:C.ink50,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontWeight:700,fontSize:11,color:C.ink500,flexShrink:0}}>VTI</div>
+              <div style={{flex:1}}>
+                <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:2}}>
+                  <div style={{fontFamily:SANS,fontWeight:700,fontSize:15,color:C.ink900}}>Buy 10 VTI</div>
+                  <StatusPill status="queued"/>
+                </div>
+                <div style={{fontFamily:SANS,fontSize:12,color:C.ink400}}><Term>Market order</Term> · placed Sat 9:12 PM</div>
+              </div>
+            </div>
+            <div style={{display:'flex',background:C.ink50,borderRadius:4,overflow:'hidden'}}>
+              {[['Est. price','~$234 (varies)'],['Executes','Mon 9:30 AM EST']].map(([l,v],i)=>(
+                <div key={l} style={{flex:1,padding:'8px 12px',borderRight:i===0?`1px solid ${C.ink100}`:'none'}}>
+                  <div style={{fontFamily:SANS,fontSize:11,color:C.ink400,marginBottom:2}}>{l}</div>
+                  <div style={{fontFamily:SANS,fontWeight:700,fontSize:14,color:C.ink900}}>{v}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{padding:'10px 14px',background:C.warnBg,border:`1px solid ${C.warn}30`,borderRadius:4}}>
+              <div style={{fontFamily:SANS,fontSize:12,color:C.warn,lineHeight:1.5}}>Price may differ from $234 — markets move over the weekend. A <Term>limit order</Term> guarantees your max price.</div>
+            </div>
+            <div style={{height:36,border:`1px solid ${C.red}`,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontSize:13,color:C.red,cursor:'default'}}>Cancel order</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function PendingOrdersDesktop() {
+    return (
+      <div style={{width:1440,height:860,background:C.paper,display:'flex',flexDirection:'column'}}>
+        <div style={{height:64,background:C.white,borderBottom:`1px solid ${C.ink100}`,display:'flex',alignItems:'center',padding:'0 40px',gap:40,flexShrink:0}}>
+          <Logo size={21}/>
+          <div style={{flex:1,display:'flex',gap:28}}>
+            {['Portfolio','Markets','Achievements'].map((item,i)=>(
+              <div key={item} style={{fontFamily:SANS,fontSize:15,fontWeight:i===0?600:400,color:i===0?C.ink900:C.ink400,cursor:'default'}}>{item}</div>
+            ))}
+          </div>
+          <div style={{width:34,height:34,borderRadius:'50%',background:C.ink900,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontWeight:700,fontSize:14,color:C.white}}>J</div>
+        </div>
+        <div style={{flex:1,padding:'36px 48px',display:'flex',flexDirection:'column',gap:20,overflow:'hidden'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end'}}>
+            <div>
+              <div style={{fontFamily:DISPLAY,fontWeight:700,fontSize:30,color:C.ink900,letterSpacing:'-0.02em',lineHeight:1}}>Orders</div>
+              <div style={{fontFamily:SANS,fontSize:14,color:C.ink500,marginTop:4}}>2 pending · markets closed</div>
+            </div>
+            <div style={{display:'flex',gap:8}}>
+              {[['Pending (2)',true],['Filled',false],['Cancelled',false]].map(([l,active])=>(
+                <div key={l} style={{padding:'8px 18px',borderRadius:4,background:active?C.ink900:'transparent',border:`1px solid ${active?C.ink900:C.ink200}`,fontFamily:SANS,fontSize:13,color:active?C.white:C.ink500,cursor:'default',fontWeight:active?600:400}}>{l}</div>
+              ))}
+            </div>
+          </div>
+          {/* Market closed notice */}
+          <div style={{display:'flex',alignItems:'center',gap:12,padding:'12px 20px',background:C.ink50,border:`1px solid ${C.ink100}`,borderRadius:4}}>
+            <div style={{width:7,height:7,borderRadius:'50%',background:'#888',flexShrink:0}}/>
+            <div style={{fontFamily:SANS,fontSize:14,color:C.ink700}}>Markets closed · Saturday</div>
+            <div style={{fontFamily:SANS,fontSize:13,color:C.ink400}}>· Pending orders execute Monday 9:30 AM EST</div>
+          </div>
+          {/* Table */}
+          <div style={{background:C.white,border:`1px solid ${C.ink100}`,borderRadius:8,overflow:'hidden',flex:1}}>
+            <div style={{display:'grid',gridTemplateColumns:'1.5fr 1.2fr 0.6fr 0.7fr 1fr 1.3fr 1.3fr 0.8fr 1fr',padding:'10px 24px',borderBottom:`1px solid ${C.ink100}`,background:C.ink50}}>
+              {['Instrument','Type','Side','Qty','Limit price','Placed','Executes when','Status','Actions'].map(h=>(
+                <div key={h} style={{fontFamily:SANS,fontSize:11,color:C.ink400,fontWeight:600,letterSpacing:'0.1em',textTransform:'uppercase'}}>{h}</div>
+              ))}
+            </div>
+            {[
+              {ticker:'AAPL',type:'Limit order',side:'Buy',qty:'5 sh',limit:'$187.00',placed:'Fri 4:22 PM',when:'AAPL ≤ $187.00',status:'pending',canEdit:true},
+              {ticker:'VTI', type:'Market order',side:'Buy',qty:'10 sh',limit:'~$234',placed:'Sat 9:12 PM',when:'Mon 9:30 AM EST',status:'queued',canEdit:false},
+            ].map((row,i)=>(
+              <div key={i} style={{display:'grid',gridTemplateColumns:'1.5fr 1.2fr 0.6fr 0.7fr 1fr 1.3fr 1.3fr 0.8fr 1fr',padding:'15px 24px',borderBottom:i<1?`1px solid ${C.ink50}`:'none',alignItems:'center'}}>
+                <div style={{fontFamily:SANS,fontWeight:700,fontSize:15,color:C.ink900}}>{row.ticker}</div>
+                <div style={{fontFamily:SANS,fontSize:14,color:C.ink600}}><Term>{row.type}</Term></div>
+                <div style={{display:'inline-flex',padding:'3px 10px',borderRadius:3,background:row.side==='Buy'?C.aqua50:C.redBg,fontFamily:SANS,fontSize:12,fontWeight:700,color:row.side==='Buy'?C.aqua600:C.red,width:'fit-content'}}>{row.side}</div>
+                <div style={{fontFamily:SANS,fontSize:14,color:C.ink700}}>{row.qty}</div>
+                <div style={{fontFamily:SANS,fontWeight:700,fontSize:15,color:C.ink900}}>{row.limit}</div>
+                <div style={{fontFamily:SANS,fontSize:13,color:C.ink400}}>{row.placed}</div>
+                <div style={{fontFamily:SANS,fontSize:13,color:C.ink600}}>{row.when}</div>
+                <StatusPill status={row.status}/>
+                <div style={{display:'flex',gap:6}}>
+                  {row.canEdit && <div style={{height:30,padding:'0 10px',border:`1px solid ${C.ink200}`,borderRadius:3,display:'flex',alignItems:'center',fontFamily:SANS,fontSize:12,color:C.ink600,cursor:'default'}}>Edit</div>}
+                  <div style={{height:30,padding:'0 10px',border:`1px solid ${C.red}`,borderRadius:3,display:'flex',alignItems:'center',fontFamily:SANS,fontSize:12,color:C.red,cursor:'default'}}>Cancel</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ═══════════════════════════════════════════
+     SECTION 02 — ORDER HISTORY
+  ═══════════════════════════════════════════ */
+
+  function OrderHistoryMobile() {
+    return (
+      <div style={{width:390,height:960,background:C.paper,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        <StatusBar/>
+        <div style={{padding:'0 24px 14px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:`1px solid ${C.ink100}`,flexShrink:0}}>
+          <div style={{fontFamily:SANS,fontSize:14,color:C.ame400}}>← Portfolio</div>
+          <div style={{fontFamily:SANS,fontWeight:700,fontSize:17,color:C.ink900}}>Order history</div>
+          <div style={{width:40}}/>
+        </div>
+        {/* Filter chips */}
+        <div style={{padding:'10px 24px',display:'flex',gap:6,borderBottom:`1px solid ${C.ink100}`,flexShrink:0}}>
+          {[['All',true],['Buys',false],['Sells',false],['Filled',false]].map(([l,active])=>(
+            <div key={l} style={{padding:'5px 14px',borderRadius:4,background:active?C.ink900:'transparent',border:`1px solid ${active?C.ink900:C.ink200}`,fontFamily:SANS,fontSize:13,color:active?C.white:C.ink500,cursor:'default',fontWeight:active?600:400}}>{l}</div>
+          ))}
+        </div>
+        <div style={{flex:1,padding:'12px 24px',display:'flex',flexDirection:'column',gap:10,overflow:'hidden'}}>
+          <Divider label="This week"/>
+          {/* History rows */}
+          {[
+            {side:'Buy',ticker:'AAPL',qty:'5',price:'$189.52',total:'$947.61',pnl:'+$36.90',pnlPct:'+3.9%',date:'Mon 9:32 AM',status:'filled',pos:true,quote:'The first trade is always the hardest. You did it.'},
+            {side:'Buy',ticker:'TSLA',qty:'5',price:'$200.00',total:'$1,000.01',pnl:null,date:'Mon 10:14 AM',status:'filled',pos:null},
+            {side:'Sell',ticker:'TSLA',qty:'5',price:'$171.98',total:'$859.89',pnl:'−$140.02',pnlPct:'−14.0%',date:'Wed 2:05 PM',status:'filled',pos:false,quote:'A loss can be the right call. What did you learn?'},
+          ].map((row,i)=>(
+            <div key={i} style={{background:C.white,border:`1px solid ${C.ink100}`,borderRadius:8,padding:'12px 16px',display:'flex',flexDirection:'column',gap:8}}>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <div style={{width:36,height:36,background:C.ink50,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontWeight:700,fontSize:11,color:C.ink500,flexShrink:0}}>{row.ticker}</div>
+                <div style={{flex:1}}>
+                  <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:2}}>
+                    <div style={{fontFamily:SANS,fontWeight:700,fontSize:14,color:C.ink900}}>{row.side==='Buy'?'Bought':'Sold'} {row.qty} {row.ticker}</div>
+                    <StatusPill status={row.status}/>
+                  </div>
+                  <div style={{fontFamily:SANS,fontSize:12,color:C.ink400}}>{row.date} · at {row.price}/sh</div>
+                </div>
+                <div style={{textAlign:'right',flexShrink:0}}>
+                  <div style={{fontFamily:SANS,fontWeight:700,fontSize:14,color:C.ink900}}>{row.total}</div>
+                  {row.pnl && <div style={{fontFamily:SANS,fontSize:12,color:row.pos?C.aqua600:C.red}}>{row.pnl} ({row.pnlPct})</div>}
+                </div>
+              </div>
+              {row.quote && (
+                <div style={{display:'flex',gap:8,padding:'8px 12px',background:C.ame50,borderRadius:4,alignItems:'flex-start'}}>
+                  <HeroAv init="WB" color={C.ame400} size={20}/>
+                  <div style={{fontFamily:SANS,fontSize:12,color:C.ink600,lineHeight:1.45,fontStyle:'italic'}}>"{row.quote}"</div>
+                </div>
+              )}
+            </div>
+          ))}
+          <Divider label="Last week"/>
+          {[
+            {side:'Buy',ticker:'NVDA',qty:'3',price:'$887.80',total:'$2,663.41',pnl:'+$51.60',pnlPct:'+1.9%',date:'Tue 11:22 AM',status:'filled',pos:true},
+            {side:'Buy',ticker:'VTI', qty:'10',price:'$234.10',total:'$2,341.01',pnl:null,date:'Mon 9:30 AM',status:'filled',pos:null},
+          ].map((row,i)=>(
+            <div key={i} style={{background:C.white,border:`1px solid ${C.ink100}`,borderRadius:8,padding:'12px 16px',display:'flex',alignItems:'center',gap:10}}>
+              <div style={{width:36,height:36,background:C.ink50,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontWeight:700,fontSize:11,color:C.ink500,flexShrink:0}}>{row.ticker}</div>
+              <div style={{flex:1}}>
+                <div style={{fontFamily:SANS,fontWeight:700,fontSize:14,color:C.ink900}}>{row.side==='Buy'?'Bought':'Sold'} {row.qty} {row.ticker}</div>
+                <div style={{fontFamily:SANS,fontSize:12,color:C.ink400}}>{row.date} · at {row.price}</div>
+              </div>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontFamily:SANS,fontWeight:700,fontSize:14,color:C.ink900}}>{row.total}</div>
+                {row.pnl && <div style={{fontFamily:SANS,fontSize:12,color:row.pos?C.aqua600:C.red}}>{row.pnl}</div>}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  function TradeDetailMobile() {
+    return (
+      <div style={{width:390,height:800,background:C.paper,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        <StatusBar/>
+        <div style={{padding:'0 24px 14px',display:'flex',alignItems:'center',gap:14,borderBottom:`1px solid ${C.ink100}`,flexShrink:0}}>
+          <div style={{fontFamily:SANS,fontSize:14,color:C.ame400}}>← History</div>
+          <div style={{flex:1,textAlign:'center',fontFamily:SANS,fontWeight:700,fontSize:17,color:C.ink900}}>Trade detail</div>
+        </div>
+        <div style={{flex:1,padding:'20px 24px',display:'flex',flexDirection:'column',gap:18}}>
+          <div style={{textAlign:'center'}}>
+            <div style={{fontFamily:DISPLAY,fontWeight:700,fontSize:26,color:C.ink900,letterSpacing:'-0.02em'}}>Sold 5 TSLA</div>
+            <div style={{fontFamily:SANS,fontSize:13,color:C.ink400,marginTop:3}}>Wed Jun 4 · 2:05 PM EST</div>
+            <div style={{fontFamily:DISPLAY,fontWeight:700,fontSize:36,color:C.red,letterSpacing:'-0.025em',marginTop:8}}>−$140.02</div>
+            <div style={{fontFamily:SANS,fontSize:13,color:C.ink400}}>realised loss · −14.0%</div>
+          </div>
+          {/* Receipt */}
+          <div style={{background:C.white,border:`1px solid ${C.ink100}`,borderRadius:8,padding:'0 18px'}}>
+            <div style={{padding:'12px 0 4px'}}><Eyebrow>Receipt</Eyebrow></div>
+            {[['Sold','5 shares at $171.98'],['Cost basis','$200.00 / share (×5)'],['Gross proceeds','$859.90'],['Realised loss','−$140.10',C.red],['Regulatory fee','−$0.01'],['Net to cash','$859.89',C.ink900,true]].map(([l,v,c,b],i,arr)=>(
+              <div key={l} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:i<arr.length-1?`1px solid ${C.ink100}`:'none'}}>
+                <div style={{fontFamily:SANS,fontSize:14,color:C.ink500}}>{l}</div>
+                <div style={{fontFamily:SANS,fontSize:14,fontWeight:b?700:500,color:c||C.ink700}}>{v}</div>
+              </div>
+            ))}
+          </div>
+          {/* Warren reflection */}
+          <div style={{background:C.ame50,border:`1px solid ${C.ame100}`,borderRadius:8,padding:'14px 16px',display:'flex',gap:12}}>
+            <HeroAv init="WB" color={C.ame400} size={30}/>
+            <div style={{flex:1}}>
+              <div style={{fontFamily:SANS,fontSize:12,fontWeight:600,color:C.ame600,marginBottom:4}}>Warren at the time of this trade</div>
+              <div style={{fontFamily:SANS,fontSize:13,color:C.ink600,lineHeight:1.55,fontStyle:'italic'}}>"Fear is not a thesis. If your original reason to buy is still valid, a lower price is an opportunity. But if the thesis is broken — selling is correct."</div>
+              <div style={{fontFamily:SANS,fontSize:12,color:C.ame400,marginTop:8,cursor:'default'}}>Ask Warren about this trade →</div>
+            </div>
+          </div>
+          {/* Reflection note */}
+          <div style={{background:C.white,border:`1px solid ${C.ink100}`,borderRadius:8,padding:'14px 16px'}}>
+            <div style={{fontFamily:SANS,fontSize:12,color:C.ink400,marginBottom:6}}>Your reflection (optional)</div>
+            <div style={{fontFamily:SANS,fontSize:14,color:C.ink300,fontStyle:'italic'}}>What did you learn? Warren can discuss it with you…</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ═══════════════════════════════════════════
+     SECTION 03 — ACHIEVEMENTS
+  ═══════════════════════════════════════════ */
+
+  const BADGES = [
+    {shape:'diamond',color:C.aqua400,name:'First Trade',desc:'Made your first simulated trade',earned:true},
+    {shape:'hex',color:C.ame400,name:'Diversified',desc:'Owned 3+ different instruments',earned:true},
+    {shape:'triangle',color:C.gold,name:'Patient Investor',desc:'Held a position for 30+ days',earned:true},
+    {shape:'circle',color:'#4A7FC4',name:'Researcher',desc:'Viewed 10+ stock detail pages',earned:false},
+    {shape:'star',color:C.red,name:'Contrarian',desc:'Bought during a market down day',earned:false},
+    {shape:'diamond',color:C.aqua400,name:'ETF Explorer',desc:'Purchased your first ETF',earned:false},
+  ];
+
+  function AchievementsHome() {
+    return (
+      <div style={{width:390,height:960,background:C.paper,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        <StatusBar/>
+        <div style={{padding:'0 24px 14px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:`1px solid ${C.ink100}`,flexShrink:0}}>
+          <div style={{fontFamily:SANS,fontSize:14,color:C.ame400}}>← Portfolio</div>
+          <div style={{fontFamily:SANS,fontWeight:700,fontSize:17,color:C.ink900}}>Achievements</div>
+          <div style={{width:40}}/>
+        </div>
+        <div style={{flex:1,padding:'16px 24px',display:'flex',flexDirection:'column',gap:20,overflow:'hidden'}}>
+          {/* Progress summary */}
+          <div style={{background:C.white,border:`1px solid ${C.ink100}`,borderRadius:8,padding:'18px 20px',display:'flex',gap:20,alignItems:'center'}}>
+            <div style={{flex:1}}>
+              <div style={{fontFamily:DISPLAY,fontWeight:700,fontSize:28,color:C.ink900,letterSpacing:'-0.02em',lineHeight:1}}>3 badges</div>
+              <div style={{fontFamily:SANS,fontSize:13,color:C.ink400,marginTop:4}}>7 more → first medal</div>
+              <div style={{marginTop:10,height:5,background:C.ink100,borderRadius:3}}>
+                <div style={{width:'30%',height:'100%',background:C.ame400,borderRadius:3}}/>
+              </div>
+              <div style={{fontFamily:SANS,fontSize:11,color:C.ink400,marginTop:4}}>3 of 10 badges toward Medal 1</div>
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:10,alignItems:'center'}}>
+              <div style={{display:'flex',gap:8,alignItems:'flex-end'}}>
+                <div style={{textAlign:'center'}}><MedalGlyph color={C.ink300} size={36} earned={false}/><div style={{fontFamily:SANS,fontSize:10,color:C.ink400,marginTop:4}}>0 medals</div></div>
+                <div style={{textAlign:'center'}}><TrophyGlyph color={C.ink300} size={44} earned={false}/><div style={{fontFamily:SANS,fontSize:10,color:C.ink400,marginTop:4}}>0 trophies</div></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Badge grid */}
+          <div>
+            <div style={{marginBottom:12}}><Eyebrow>Badges · 3 earned of 10</Eyebrow></div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10}}>
+              {BADGES.map(b=>(
+                <div key={b.name} style={{background:C.white,border:`1px solid ${b.earned?C.ink100:C.ink50}`,borderRadius:8,padding:'14px 10px',display:'flex',flexDirection:'column',alignItems:'center',gap:6,opacity:b.earned?1:0.65}}>
+                  <BadgeGlyph shape={b.shape} color={b.color} size={36} earned={b.earned}/>
+                  <div style={{fontFamily:SANS,fontWeight:600,fontSize:12,color:b.earned?C.ink900:C.ink400,textAlign:'center',lineHeight:1.2}}>{b.name}</div>
+                  {!b.earned && <div style={{fontFamily:SANS,fontSize:10,color:C.ink300,textAlign:'center',lineHeight:1.3}}>{b.desc}</div>}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Medal progress */}
+          <div>
+            <div style={{marginBottom:12}}><Eyebrow>Medals · 0 earned</Eyebrow></div>
+            <div style={{display:'flex',gap:10}}>
+              {[{color:C.gold,name:'Gold',req:'10 badges'},{color:C.ink400,name:'Silver',req:'20 badges'},{color:C.ame400,name:'Prestige',req:'30 badges'}].map(m=>(
+                <div key={m.name} style={{flex:1,background:C.white,border:`1px solid ${C.ink100}`,borderRadius:8,padding:'14px',display:'flex',flexDirection:'column',alignItems:'center',gap:6}}>
+                  <MedalGlyph color={m.color} size={40} earned={false}/>
+                  <div style={{fontFamily:SANS,fontWeight:600,fontSize:12,color:C.ink400,textAlign:'center'}}>{m.name}</div>
+                  <div style={{fontFamily:SANS,fontSize:10,color:C.ink300}}>{m.req}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        {/* Bottom nav */}
+        <div style={{height:72,borderTop:`1px solid ${C.ink100}`,background:C.white,display:'flex',alignItems:'center',flexShrink:0}}>
+          {[['Portfolio',false],['Markets',false],['Ask',false],['Achievements',true]].map(([l,active])=>(
+            <div key={l} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
+              <div style={{width:22,height:22,borderRadius:l==='Ask'?'50%':4,background:l==='Ask'?C.ame400:active?C.ink900:C.ink100}}/>
+              <div style={{fontFamily:SANS,fontSize:10,fontWeight:500,color:active?C.ink900:l==='Ask'?C.ame400:C.ink400}}>{l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  /* Badge earned moment — full-screen celebration, no bounce */
+  function BadgeEarnedMoment() {
+    return (
+      <div style={{width:390,height:740,background:C.ink900,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        <StatusBar/>
+        <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:24,padding:'0 40px'}}>
+          {/* Badge */}
+          <BadgeGlyph shape="diamond" color={C.aqua400} size={96} earned/>
+          <div style={{textAlign:'center'}}>
+            <div style={{fontFamily:SANS,fontSize:11,fontWeight:600,color:C.ink400,letterSpacing:'0.16em',textTransform:'uppercase',marginBottom:10}}>Badge earned</div>
+            <div style={{fontFamily:DISPLAY,fontWeight:700,fontSize:36,color:C.white,letterSpacing:'-0.02em',lineHeight:1}}>First Trade</div>
+            <div style={{fontFamily:SANS,fontSize:15,color:C.ink400,marginTop:8,lineHeight:1.5}}>You made your first simulated trade. You're an investor now.</div>
+          </div>
+          {/* Progress toward medal */}
+          <div style={{width:'100%',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'16px 20px',display:'flex',alignItems:'center',gap:16}}>
+            <ProgressRing value={1} total={10} size={52} color={C.ame400}/>
+            <div>
+              <div style={{fontFamily:SANS,fontWeight:600,fontSize:15,color:C.white,marginBottom:3}}>1 of 10 toward your first medal</div>
+              <div style={{fontFamily:SANS,fontSize:13,color:C.ink400}}>Keep trading, exploring, and learning.</div>
+            </div>
+          </div>
+          {/* Warren */}
+          <div style={{display:'flex',gap:10,alignItems:'flex-start',padding:'12px 16px',background:'rgba(255,255,255,0.04)',borderRadius:8,width:'100%'}}>
+            <HeroAv init="WB" color={C.ame400} size={26}/>
+            <div style={{fontFamily:SANS,fontSize:13,color:C.ink400,fontStyle:'italic',lineHeight:1.5}}>"Every investor started exactly here — with one trade."</div>
+          </div>
+        </div>
+        <div style={{padding:'0 24px 36px',flexShrink:0}}>
+          <div style={{height:48,background:C.white,color:C.ink900,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontSize:15,fontWeight:700,cursor:'default'}}>Continue  →</div>
+        </div>
+      </div>
+    );
+  }
+
+  /* Medal earned moment */
+  function MedalEarnedMoment() {
+    return (
+      <div style={{width:390,height:740,background:C.ink900,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        <StatusBar/>
+        <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:24,padding:'0 40px'}}>
+          <MedalGlyph color={C.goldLight} size={88} earned/>
+          <div style={{textAlign:'center'}}>
+            <div style={{fontFamily:SANS,fontSize:11,fontWeight:600,color:C.gold,letterSpacing:'0.16em',textTransform:'uppercase',marginBottom:10}}>Medal earned</div>
+            <div style={{fontFamily:DISPLAY,fontWeight:700,fontSize:36,color:C.white,letterSpacing:'-0.02em',lineHeight:1}}>Apprentice</div>
+            <div style={{fontFamily:SANS,fontSize:15,color:C.ink400,marginTop:8,lineHeight:1.5}}>10 badges collected. You're building real investing habits.</div>
+          </div>
+          <div style={{width:'100%',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'16px 20px',display:'flex',alignItems:'center',gap:16}}>
+            <ProgressRing value={1} total={10} size={52} color={C.goldLight}/>
+            <div>
+              <div style={{fontFamily:SANS,fontWeight:600,fontSize:15,color:C.white,marginBottom:3}}>1 of 10 toward your first trophy</div>
+              <div style={{fontFamily:SANS,fontSize:13,color:C.ink400}}>Earn 9 more medals to unlock a trophy.</div>
+            </div>
+          </div>
+        </div>
+        <div style={{padding:'0 24px 36px',flexShrink:0}}>
+          <div style={{height:48,background:C.white,color:C.ink900,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontSize:15,fontWeight:700,cursor:'default'}}>Continue  →</div>
+        </div>
+      </div>
+    );
+  }
+
+  /* Trophy earned moment */
+  function TrophyEarnedMoment() {
+    return (
+      <div style={{width:390,height:760,background:C.ink900,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        <StatusBar/>
+        <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:24,padding:'0 40px'}}>
+          <TrophyGlyph color={C.goldLight} size={100} earned/>
+          <div style={{textAlign:'center'}}>
+            <div style={{fontFamily:SANS,fontSize:11,fontWeight:600,color:C.goldLight,letterSpacing:'0.16em',textTransform:'uppercase',marginBottom:10}}>Trophy earned</div>
+            <div style={{fontFamily:DISPLAY,fontWeight:700,fontSize:34,color:C.white,letterSpacing:'-0.02em',lineHeight:1.05}}>The Disciplined<br/>Investor</div>
+            <div style={{fontFamily:SANS,fontSize:15,color:C.ink400,marginTop:10,lineHeight:1.5}}>100 badges. 10 medals. You think like an investor — not a speculator.</div>
+          </div>
+          <div style={{width:'100%',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'16px 20px',display:'flex',alignItems:'center',gap:16}}>
+            <ProgressRing value={1} total={10} size={52} color={C.goldLight}/>
+            <div>
+              <div style={{fontFamily:SANS,fontWeight:600,fontSize:15,color:C.white,marginBottom:3}}>1 of 10 toward Master of Trading</div>
+              <div style={{fontFamily:SANS,fontSize:13,color:C.ink400}}>The rarest achievement in simFolio.</div>
+            </div>
+          </div>
+        </div>
+        <div style={{padding:'0 24px 36px',flexShrink:0}}>
+          <div style={{height:48,background:C.white,color:C.ink900,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontSize:15,fontWeight:700,cursor:'default'}}>Continue  →</div>
+        </div>
+      </div>
+    );
+  }
+
+  /* Master of Trading — the ultimate screen */
+  function MasterOfTrading() {
+    return (
+      <div style={{width:390,height:820,background:C.ink900,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        <StatusBar/>
+        <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:20,padding:'0 32px'}}>
+          {/* Trophy row */}
+          <div style={{display:'flex',gap:8,alignItems:'flex-end',justifyContent:'center'}}>
+            {[60,80,60].map((s,i)=><TrophyGlyph key={i} color={i===1?C.goldLight:`${C.goldLight}60`} size={s} earned/>)}
+          </div>
+          <div style={{textAlign:'center'}}>
+            <div style={{fontFamily:SANS,fontSize:11,fontWeight:600,color:C.goldLight,letterSpacing:'0.2em',textTransform:'uppercase',marginBottom:14}}>Ultimate achievement</div>
+            <div style={{fontFamily:DISPLAY,fontWeight:700,fontSize:40,color:C.white,letterSpacing:'-0.025em',lineHeight:0.95}}>Master of<br/>Trading</div>
+            <div style={{width:60,height:2,background:C.goldLight,borderRadius:1,margin:'14px auto'}}/>
+            <div style={{fontFamily:SANS,fontSize:15,color:C.ink400,lineHeight:1.6}}>1,000 badges. 100 medals. 10 trophies.<br/>You've learned everything this simulator can teach.</div>
+          </div>
+          {/* All heroes congratulate */}
+          <div style={{width:'100%',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'16px 18px',display:'flex',flexDirection:'column',gap:12}}>
+            <div style={{fontFamily:SANS,fontSize:11,color:C.ink500,fontWeight:600,letterSpacing:'0.1em',textTransform:'uppercase'}}>From your council</div>
+            {[{init:'WB',color:C.ame400,quote:'Patience and discipline. That\'s the whole game.'},
+              {init:'CW',color:C.aqua400,quote:'Now go find the disruptors nobody else has noticed yet.'},
+            ].map(h=>(
+              <div key={h.init} style={{display:'flex',gap:10,alignItems:'flex-start'}}>
+                <HeroAv init={h.init} color={h.color} size={24}/>
+                <div style={{fontFamily:SANS,fontSize:13,color:C.ink300,fontStyle:'italic',lineHeight:1.45}}>"{h.quote}"</div>
+              </div>
+            ))}
+          </div>
+          <div style={{fontFamily:SANS,fontSize:12,color:C.ink600,textAlign:'center',lineHeight:1.5}}>
+            Your simFolio record is preserved.<br/>The real markets are waiting.
+          </div>
+        </div>
+        <div style={{padding:'0 24px 36px',flexShrink:0}}>
+          <div style={{height:48,background:`linear-gradient(90deg, ${C.ame400}, ${C.goldLight})`,color:C.white,borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontSize:15,fontWeight:700,cursor:'default',letterSpacing:'0.02em'}}>Share my achievement  →</div>
+        </div>
+      </div>
+    );
+  }
+
+  /* Achievements desktop */
+  function AchievementsDesktop() {
+    return (
+      <div style={{width:1440,height:900,background:C.paper,display:'flex',flexDirection:'column'}}>
+        <div style={{height:64,background:C.white,borderBottom:`1px solid ${C.ink100}`,display:'flex',alignItems:'center',padding:'0 40px',gap:40,flexShrink:0}}>
+          <Logo size={21}/>
+          <div style={{flex:1,display:'flex',gap:28}}>
+            {['Portfolio','Markets','Achievements'].map((item,i)=>(
+              <div key={item} style={{fontFamily:SANS,fontSize:15,fontWeight:i===2?600:400,color:i===2?C.ink900:C.ink400,borderBottom:i===2?`2px solid ${C.ink900}`:'none',paddingBottom:i===2?2:0,cursor:'default'}}>{item}</div>
+            ))}
+          </div>
+          <div style={{width:34,height:34,borderRadius:'50%',background:C.ink900,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:SANS,fontWeight:700,fontSize:14,color:C.white}}>J</div>
+        </div>
+        <div style={{flex:1,display:'flex',minHeight:0}}>
+          {/* Left: progress summary */}
+          <div style={{width:340,borderRight:`1px solid ${C.ink100}`,padding:'36px 36px',display:'flex',flexDirection:'column',gap:24}}>
+            <div>
+              <div style={{fontFamily:DISPLAY,fontWeight:700,fontSize:32,color:C.ink900,letterSpacing:'-0.02em',lineHeight:1}}>Achievements</div>
+              <div style={{fontFamily:SANS,fontSize:14,color:C.ink400,marginTop:4}}>3 badges · 0 medals · 0 trophies</div>
+            </div>
+            {/* Tier progress */}
+            {[{label:'Badges → Medal',val:3,total:10,color:C.ame400},{label:'Medals → Trophy',val:0,total:10,color:C.gold},{label:'Trophies → Master',val:0,total:10,color:C.goldLight}].map(t=>(
+              <div key={t.label}>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}>
+                  <div style={{fontFamily:SANS,fontSize:13,color:C.ink600}}>{t.label}</div>
+                  <div style={{fontFamily:SANS,fontSize:13,fontWeight:600,color:t.color}}>{t.val}/{t.total}</div>
+                </div>
+                <div style={{height:5,background:C.ink100,borderRadius:3}}>
+                  <div style={{width:`${(t.val/t.total)*100}%`,height:'100%',background:t.color,borderRadius:3}}/>
+                </div>
+              </div>
+            ))}
+            {/* Tier icons */}
+            <div style={{display:'flex',gap:20,justifyContent:'center',marginTop:8}}>
+              <div style={{textAlign:'center'}}>
+                <BadgeGlyph shape="diamond" color={C.ame400} size={36} earned/>
+                <div style={{fontFamily:SANS,fontSize:11,color:C.ink400,marginTop:4}}>Badge</div>
+              </div>
+              <div style={{textAlign:'center',opacity:0.3}}>
+                <MedalGlyph color={C.gold} size={36} earned={false}/>
+                <div style={{fontFamily:SANS,fontSize:11,color:C.ink400,marginTop:4}}>Medal</div>
+              </div>
+              <div style={{textAlign:'center',opacity:0.2}}>
+                <TrophyGlyph color={C.goldLight} size={44} earned={false}/>
+                <div style={{fontFamily:SANS,fontSize:11,color:C.ink400,marginTop:4}}>Trophy</div>
+              </div>
+            </div>
+          </div>
+          {/* Right: badge grid */}
+          <div style={{flex:1,padding:'36px 40px',display:'flex',flexDirection:'column',gap:20,overflow:'hidden'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <Eyebrow>Badges · 3 earned of 10 → first medal</Eyebrow>
+              <div style={{display:'flex',gap:8}}>
+                {[['All',true],['Earned',false],['Locked',false]].map(([l,active])=>(
+                  <div key={l} style={{padding:'6px 14px',borderRadius:4,background:active?C.ink900:'transparent',border:`1px solid ${active?C.ink900:C.ink200}`,fontFamily:SANS,fontSize:12,color:active?C.white:C.ink500,cursor:'default'}}>{l}</div>
+                ))}
+              </div>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:14}}>
+              {[...BADGES,...BADGES.slice(0,4)].map((b,i)=>(
+                <div key={i} style={{background:C.white,border:`1px solid ${b.earned?C.ink100:C.ink50}`,borderRadius:8,padding:'20px 14px',display:'flex',flexDirection:'column',alignItems:'center',gap:8,opacity:b.earned?1:0.5,cursor:'default'}}>
+                  <BadgeGlyph shape={b.shape} color={b.color} size={44} earned={b.earned}/>
+                  <div style={{fontFamily:SANS,fontWeight:700,fontSize:13,color:b.earned?C.ink900:C.ink400,textAlign:'center',lineHeight:1.2}}>{b.name}</div>
+                  <div style={{fontFamily:SANS,fontSize:11,color:C.ink400,textAlign:'center',lineHeight:1.3}}>{b.desc}</div>
+                  {b.earned && <div style={{display:'inline-flex',alignItems:'center',gap:4,background:C.aqua50,borderRadius:999,padding:'2px 8px'}}>
+                    <div style={{width:4,height:4,borderRadius:'50%',background:C.aqua400}}/>
+                    <div style={{fontFamily:SANS,fontSize:10,color:C.aqua600,fontWeight:600}}>Earned</div>
+                  </div>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function App() {
+    return (
+      <DesignCanvas title="simFolio Hi-fi — Orders & Achievements">
+
+        <DCSection id="pending" title="01 — Pending orders" subtitle="Pending (limit waiting on price) vs Queued (market order waiting for open) shown distinctly. Education card auto-appears for queued market orders explaining price variance. Cancel always confirms no money spent. Desktop: sortable table.">
+          <DCArtboard id="p1" label="Pending orders — mobile" width={390} height={900}><PendingOrdersMobile/></DCArtboard>
+          <DCArtboard id="p2" label="Pending orders — desktop table" width={1440} height={860}><PendingOrdersDesktop/></DCArtboard>
+        </DCSection>
+
+        <DCSection id="history" title="02 — Order history" subtitle="Grouped by week. Filter chips. Hero quote preserved at moment of each trade. Sells show realised P&L in red. Reflection note field on trade detail — Warren can discuss it later. Trade detail shows full receipt with cost basis.">
+          <DCArtboard id="h1" label="History list — mobile" width={390} height={960}><OrderHistoryMobile/></DCArtboard>
+          <DCArtboard id="h2" label="Trade detail: TSLA loss + reflection" width={390} height={800}><TradeDetailMobile/></DCArtboard>
+        </DCSection>
+
+        <DCSection id="achievements" title="03 — Achievements home" subtitle="10 badges = 1 medal · 10 medals = 1 trophy · 10 trophies = Master of Trading. Badge glyphs are geometric and stroked — never emoji. Progress rings show exact ratio toward next tier. Locked badges are visible but dimmed — motivational.">
+          <DCArtboard id="a1" label="Achievements home — mobile" width={390} height={960}><AchievementsHome/></DCArtboard>
+          <DCArtboard id="a2" label="Achievements — desktop" width={1440} height={900}><AchievementsDesktop/></DCArtboard>
+        </DCSection>
+
+        <DCSection id="moments" title="04 — Achievement earned moments" subtitle="Full-screen ink-900 moments — deliberate, not bouncy. Badge → Medal → Trophy → Master of Trading. Progress ring shows current tier ratio. Hero council comments at each level. Master of Trading: the rarest screen in the app.">
+          <DCArtboard id="m1" label="Badge earned: First Trade" width={390} height={740}><BadgeEarnedMoment/></DCArtboard>
+          <DCArtboard id="m2" label="Medal earned: Apprentice" width={390} height={740}><MedalEarnedMoment/></DCArtboard>
+          <DCArtboard id="m3" label="Trophy earned: The Disciplined Investor" width={390} height={760}><TrophyEarnedMoment/></DCArtboard>
+          <DCArtboard id="m4" label="Master of Trading — the ultimate screen" width={390} height={820}><MasterOfTrading/></DCArtboard>
+        </DCSection>
+
+      </DesignCanvas>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

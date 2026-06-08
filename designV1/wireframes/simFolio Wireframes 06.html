@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>simFolio — Wireframes 06: Sell Flow + Settings</title>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    .wf-img { background-color:rgba(0,0,0,0.07); background-image:repeating-linear-gradient(45deg,transparent,transparent 5px,rgba(0,0,0,0.05) 5px,rgba(0,0,0,0.06) 6px); }
+    .term { border-bottom:1.5px dotted #8A60EB; cursor:pointer; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+  const { DesignCanvas, DCSection, DCArtboard } = window;
+  const AME  = '#8A60EB';
+  const AQUA = '#1FC3A4';
+  const GOLD = '#C99A2E';
+  const RED  = '#C04A4A';
+  const f    = 'Caveat';
+  const WB   = { init:'WB', name:'Warren Buffett', short:'Warren', color:AME };
+  const CW   = { init:'CW', name:'Cathie Wood',    short:'Cathie', color:AQUA };
+
+  /* ── primitives ── */
+  function Av({ size=36, init='WB', color=AME, style={} }) {
+    return <div style={{ width:size, height:size, borderRadius:'50%', background:'rgba(0,0,0,0.08)', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:f, fontWeight:600, fontSize:Math.round(size*0.34), color, flexShrink:0, ...style }}>{init}</div>;
+  }
+  function Box({ w, h, label, style={} }) {
+    return <div style={{ width:w, height:h, background:'rgba(0,0,0,0.05)', border:'1.5px dashed rgba(0,0,0,0.13)', borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:f, fontSize:11, color:'#888', textAlign:'center', padding:4, ...style }}>{label}</div>;
+  }
+  function Btn({ label, style={}, ghost=false, danger=false }) {
+    const bg = danger ? RED : ghost ? 'transparent' : AME;
+    const col = (ghost && !danger) ? AME : 'white';
+    const border = ghost ? `1.5px solid ${danger ? RED : AME}` : 'none';
+    return <div style={{ background:bg, color:col, border, borderRadius:6, padding:'11px 22px', fontFamily:f, fontSize:14, fontWeight:600, display:'inline-flex', alignItems:'center', justifyContent:'center', cursor:'default', flexShrink:0, ...style }}>{label}</div>;
+  }
+  function Input({ placeholder, style={}, highlight=false }) {
+    return <div style={{ background:highlight?'rgba(138,96,235,0.06)':'rgba(0,0,0,0.04)', border:`1.5px solid ${highlight?AME:'rgba(0,0,0,0.13)'}`, borderRadius:6, padding:'10px 14px', fontFamily:f, fontSize:13, color:'#666', ...style }}>{placeholder}</div>;
+  }
+  function StatusBar() {
+    return <div style={{ height:44, background:'rgba(0,0,0,0.05)', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 20px', fontFamily:f, fontSize:12, color:'#999', flexShrink:0 }}><span>9:41</span><span>●●● ▌ 100%</span></div>;
+  }
+  function NavBar({ children }) {
+    return <div style={{ height:64, borderBottom:'1.5px solid rgba(0,0,0,0.09)', display:'flex', alignItems:'center', padding:'0 40px', gap:32, flexShrink:0, background:'#F5F5EF' }}>{children}</div>;
+  }
+  function UserBubble({ text }) {
+    return <div style={{ background:'rgba(31,195,164,0.1)', border:'1.5px solid rgba(31,195,164,0.2)', borderRadius:'12px 0 12px 12px', padding:'10px 14px', fontFamily:f, fontSize:13, lineHeight:1.4, color:'#222', maxWidth:260, alignSelf:'flex-end' }}>{text}</div>;
+  }
+  function HeroMsg({ hero, text }) {
+    return (
+      <div style={{ display:'flex', gap:8 }}>
+        <Av size={26} init={hero.init} color={hero.color} />
+        <div>
+          <div style={{ fontFamily:f, fontSize:11, color:hero.color, fontWeight:600, marginBottom:3 }}>{hero.short}</div>
+          <div style={{ background:'rgba(0,0,0,0.04)', borderLeft:`3px solid ${hero.color}`, borderRadius:'0 10px 10px 0', padding:'10px 14px', fontFamily:f, fontSize:13, lineHeight:1.4, color:'#222', maxWidth:262 }}>{text}</div>
+        </div>
+      </div>
+    );
+  }
+  function Term({ label }) { return <span className="term">{label}</span>; }
+  function SL({ children }) { return <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.13em', color:'#888', marginBottom:7 }}>{children}</div>; }
+  function Annot({ children, style={} }) { return <div style={{ fontFamily:f, fontSize:11, color:AME, fontStyle:'italic', lineHeight:1.3, ...style }}>{children}</div>; }
+  function FeeRow({ label, amount, highlight=false }) {
+    return (
+      <div style={{ display:'flex', justifyContent:'space-between', padding:'7px 0', borderBottom:'1px solid rgba(0,0,0,0.06)' }}>
+        <div style={{ fontFamily:f, fontSize:13, color:highlight?'#222':'#666' }}>{label}</div>
+        <div style={{ fontFamily:f, fontSize:13, fontWeight:highlight?600:400, color:highlight?'#222':'#666' }}>{amount}</div>
+      </div>
+    );
+  }
+  function LearnCard({ title, body }) {
+    return (
+      <div style={{ background:'rgba(138,96,235,0.05)', border:`1.5px solid ${AME}22`, borderRadius:8, padding:14 }}>
+        <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.13em', color:AME, marginBottom:6 }}>{title}</div>
+        <div style={{ fontFamily:f, fontSize:13, color:'#333', lineHeight:1.5 }}>{body}</div>
+      </div>
+    );
+  }
+
+  /* ═══════════════════════════════════════════════════
+     SECTION 01 — SELL FLOW
+  ═══════════════════════════════════════════════════ */
+
+  /* 1A: Sell form — mobile, profitable position */
+  function SellFormProfit() {
+    return (
+      <div style={{ width:375, height:960, background:'#F5F5EF', display:'flex', flexDirection:'column', border:'2.5px solid #2A2A2A', borderRadius:40, overflow:'hidden' }}>
+        <StatusBar />
+        <div style={{ height:52, display:'flex', alignItems:'center', padding:'0 20px', gap:12, borderBottom:'1px solid rgba(0,0,0,0.06)', flexShrink:0 }}>
+          <div style={{ fontFamily:f, fontSize:13, color:AME }}>←</div>
+          <div style={{ flex:1, textAlign:'center', fontFamily:f, fontWeight:600, fontSize:16 }}>Sell AAPL</div>
+          <div style={{ fontFamily:f, fontSize:12, color:AQUA }}>Mkt open</div>
+        </div>
+
+        <div style={{ flex:1, padding:'16px 20px', display:'flex', flexDirection:'column', gap:13, overflow:'hidden' }}>
+
+          {/* Position summary — shown on sell, never on buy */}
+          <div style={{ background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, padding:14 }}>
+            <SL>Your position</SL>
+            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+              <div style={{ fontFamily:f, fontWeight:600, fontSize:16 }}>31 shares of AAPL</div>
+              <div style={{ fontFamily:f, fontWeight:600, fontSize:16 }}>$6,104</div>
+            </div>
+            <div style={{ display:'flex', justifyContent:'space-between' }}>
+              <div style={{ fontFamily:f, fontSize:12, color:'#888' }}>Avg cost: $184.10 / sh</div>
+              <div style={{ fontFamily:f, fontSize:13, color:AQUA }}>+$236 (+4.0%) unrealised</div>
+            </div>
+          </div>
+
+          {/* Shares to sell */}
+          <div>
+            <div style={{ fontFamily:f, fontSize:12, color:'#888', marginBottom:6 }}>Shares to sell</div>
+            <div style={{ display:'flex', background:'rgba(0,0,0,0.04)', borderRadius:6, overflow:'hidden', marginBottom:8 }}>
+              {['Shares','All (31 shares)'].map((tab,i) => (
+                <div key={tab} style={{ flex:1, padding:'9px', textAlign:'center', fontFamily:f, fontSize:13, background:i===0?AME:'transparent', color:i===0?'white':'#888', borderRadius:i===0?6:0 }}>{tab}</div>
+              ))}
+            </div>
+            <Input placeholder="10" highlight style={{ textAlign:'center', fontSize:22, fontWeight:600 }} />
+            <div style={{ fontFamily:f, fontSize:11, color:'#888', textAlign:'center', marginTop:6 }}>10 of 31 shares · 21 remaining</div>
+          </div>
+
+          {/* Order type */}
+          <div>
+            <div style={{ fontFamily:f, fontSize:12, color:'#888', marginBottom:6 }}><Term label="Order type" /></div>
+            <div style={{ display:'flex', background:'rgba(0,0,0,0.04)', borderRadius:6, overflow:'hidden' }}>
+              {['Market order','Limit order'].map((tab,i) => (
+                <div key={tab} style={{ flex:1, padding:'9px', textAlign:'center', fontFamily:f, fontSize:13, background:i===0?AME:'transparent', color:i===0?'white':'#888', borderRadius:i===0?6:0 }}>{tab}</div>
+              ))}
+            </div>
+          </div>
+
+          {/* P&L preview — only on sell */}
+          <div style={{ background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, padding:'0 14px' }}>
+            <div style={{ padding:'8px 0 4px', fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.12em', color:'#888' }}>Sale preview</div>
+            <FeeRow label="10 shares × $196.90 (current)" amount="$1,969" />
+            <FeeRow label="Your cost basis (10 shares)" amount="$1,841" />
+            <FeeRow label={<Term label="Realised gain" />} amount="+$128 (+6.9%)" />
+            <FeeRow label={<Term label="Regulatory fee" />} amount="$0.01" />
+            <FeeRow label="You receive" amount="$1,968.99" highlight />
+          </div>
+
+          {/* Hero comment — surfaces before the sell decision */}
+          <HeroMsg hero={WB} text="You're up 6.9% on this lot. Before selling — is your reason for selling as clear as your reason for buying? That's the question worth asking." />
+
+          <Btn label="Sell 10 AAPL" style={{ width:'100%', padding:13, borderRadius:8 }} danger />
+          <div style={{ fontFamily:f, fontSize:11, color:'#aaa', textAlign:'center', lineHeight:1.4 }}>
+            <Term label="Capital gains tax" /> may apply. This is a simulation — no real tax consequences.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* 1B: Sell form — selling at a loss */
+  function SellFormLoss() {
+    return (
+      <div style={{ width:375, height:960, background:'#F5F5EF', display:'flex', flexDirection:'column', border:'2.5px solid #2A2A2A', borderRadius:40, overflow:'hidden' }}>
+        <StatusBar />
+        <div style={{ height:52, display:'flex', alignItems:'center', padding:'0 20px', gap:12, borderBottom:'1px solid rgba(0,0,0,0.06)', flexShrink:0 }}>
+          <div style={{ fontFamily:f, fontSize:13, color:AME }}>←</div>
+          <div style={{ flex:1, textAlign:'center', fontFamily:f, fontWeight:600, fontSize:16 }}>Sell TSLA</div>
+          <div style={{ fontFamily:f, fontSize:12, color:AQUA }}>Mkt open</div>
+        </div>
+        <div style={{ flex:1, padding:'16px 20px', display:'flex', flexDirection:'column', gap:13, overflow:'hidden' }}>
+
+          {/* Position — showing a loss */}
+          <div style={{ background:'white', border:`1px solid ${RED}33`, borderRadius:8, padding:14 }}>
+            <SL>Your position</SL>
+            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+              <div style={{ fontFamily:f, fontWeight:600, fontSize:16 }}>5 shares of TSLA</div>
+              <div style={{ fontFamily:f, fontWeight:600, fontSize:16 }}>$860</div>
+            </div>
+            <div style={{ display:'flex', justifyContent:'space-between' }}>
+              <div style={{ fontFamily:f, fontSize:12, color:'#888' }}>Avg cost: $200.00 / sh</div>
+              <div style={{ fontFamily:f, fontSize:13, color:RED }}>−$140 (−14.0%) unrealised</div>
+            </div>
+          </div>
+
+          <Input placeholder="5 (all)" style={{ textAlign:'center', fontSize:20, fontWeight:600 }} />
+
+          <div style={{ background:'white', border:`1px solid ${RED}22`, borderRadius:8, padding:'0 14px' }}>
+            <div style={{ padding:'8px 0 4px', fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.12em', color:'#888' }}>Sale preview</div>
+            <FeeRow label="5 shares × $172.00 (current)" amount="$860" />
+            <FeeRow label="Your cost basis" amount="$1,000" />
+            <div style={{ display:'flex', justifyContent:'space-between', padding:'7px 0', borderBottom:'1px solid rgba(0,0,0,0.06)' }}>
+              <div style={{ fontFamily:f, fontSize:13, color:RED }}><Term label="Realised loss" /></div>
+              <div style={{ fontFamily:f, fontSize:13, fontWeight:600, color:RED }}>−$140 (−14.0%)</div>
+            </div>
+            <FeeRow label="You receive" amount="$859.99" highlight />
+          </div>
+
+          {/* Education card — loss is a learning moment */}
+          <LearnCard
+            title="Realising a loss: what it means"
+            body="Until you sell, a loss is unrealised — it's on paper only. When you sell, the loss becomes real. This matters for tracking your performance honestly. In the real world, it also has tax implications."
+          />
+
+          <HeroMsg hero={WB} text="A loss on paper is not a loss until you sell. Before you do — ask yourself: has anything actually changed about Tesla as a business, or just the price?" />
+          <UserBubble text="The price keeps dropping. I'm scared it gets worse." />
+          <HeroMsg hero={WB} text="Fear is not a thesis. If your original reason to buy is still valid, a lower price is an opportunity, not a reason to leave. But if the thesis is broken — then selling is the right call." />
+
+          <Btn label="Sell all 5 TSLA" style={{ width:'100%', padding:13, borderRadius:8 }} danger />
+        </div>
+      </div>
+    );
+  }
+
+  /* 1C: Sell confirmation — gain */
+  function SellConfirmGain() {
+    return (
+      <div style={{ width:375, height:820, background:'#F5F5EF', display:'flex', flexDirection:'column', border:'2.5px solid #2A2A2A', borderRadius:40, overflow:'hidden' }}>
+        <StatusBar />
+        <div style={{ height:52, display:'flex', alignItems:'center', justifyContent:'center', borderBottom:'1px solid rgba(0,0,0,0.06)', flexShrink:0 }}>
+          <div style={{ fontFamily:f, fontWeight:600, fontSize:16 }}>Sale executed</div>
+        </div>
+        <div style={{ flex:1, padding:'20px 20px 12px', display:'flex', flexDirection:'column', gap:14, alignItems:'center' }}>
+          <div style={{ textAlign:'center' }}>
+            <div style={{ fontFamily:f, fontWeight:600, fontSize:22 }}>10 shares of AAPL sold</div>
+            <div style={{ fontFamily:f, fontSize:13, color:'#888' }}>at $196.88 per share</div>
+          </div>
+
+          {/* Gain highlight */}
+          <div style={{ width:'100%', background:'white', border:`2px solid ${AQUA}`, borderRadius:10, padding:20, display:'flex', flexDirection:'column', gap:10 }}>
+            <div style={{ fontFamily:f, fontSize:11, color:AQUA, textTransform:'uppercase', letterSpacing:'0.1em', fontWeight:600 }}>Realised gain</div>
+            <div style={{ fontFamily:f, fontWeight:600, fontSize:32, color:AQUA }}>+$127.80</div>
+            <div style={{ fontFamily:f, fontSize:13, color:'#888' }}>+6.94% on this lot · bought at $184.10</div>
+          </div>
+
+          <div style={{ width:'100%', background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, padding:'0 14px' }}>
+            <FeeRow label="Proceeds" amount="$1,968.80" />
+            <FeeRow label="Cost basis (10 shares)" amount="$1,841.00" />
+            <FeeRow label="Realised gain" amount="+$127.80" />
+            <FeeRow label="Regulatory fee" amount="−$0.01" />
+            <FeeRow label="Net to cash" amount="$1,968.79" highlight />
+          </div>
+
+          <LearnCard
+            title="What is a realised gain?"
+            body="The profit you actually locked in by selling. Before selling it was 'unrealised' — a number on a screen. Now it's real cash in your account. In the real world, this is when capital gains tax applies."
+          />
+
+          <HeroMsg hero={WB} text="A gain is only meaningful if you had a reason to sell. If you sold because you needed the cash or the business changed — good. If you sold because the price went up — that's worth examining." />
+          <Btn label="Back to portfolio →" style={{ width:'100%', padding:13, borderRadius:8, marginTop:4 }} />
+        </div>
+      </div>
+    );
+  }
+
+  /* 1D: Sell confirmation — loss (special teaching moment) */
+  function SellConfirmLoss() {
+    return (
+      <div style={{ width:375, height:820, background:'#F5F5EF', display:'flex', flexDirection:'column', border:'2.5px solid #2A2A2A', borderRadius:40, overflow:'hidden' }}>
+        <StatusBar />
+        <div style={{ height:52, display:'flex', alignItems:'center', justifyContent:'center', borderBottom:'1px solid rgba(0,0,0,0.06)', flexShrink:0 }}>
+          <div style={{ fontFamily:f, fontWeight:600, fontSize:16 }}>Sale executed</div>
+        </div>
+        <div style={{ flex:1, padding:'20px 20px 12px', display:'flex', flexDirection:'column', gap:14, alignItems:'center' }}>
+          <div style={{ textAlign:'center' }}>
+            <div style={{ fontFamily:f, fontWeight:600, fontSize:22 }}>5 shares of TSLA sold</div>
+            <div style={{ fontFamily:f, fontSize:13, color:'#888' }}>at $171.98 per share</div>
+          </div>
+
+          {/* Loss — honest, not dramatic */}
+          <div style={{ width:'100%', background:'white', border:`2px solid ${RED}55`, borderRadius:10, padding:20, display:'flex', flexDirection:'column', gap:10 }}>
+            <div style={{ fontFamily:f, fontSize:11, color:RED, textTransform:'uppercase', letterSpacing:'0.1em', fontWeight:600 }}>Realised loss</div>
+            <div style={{ fontFamily:f, fontWeight:600, fontSize:32, color:RED }}>−$140.10</div>
+            <div style={{ fontFamily:f, fontSize:13, color:'#888' }}>−14.01% · bought at $200.00</div>
+          </div>
+
+          <LearnCard
+            title="Taking a loss: what every investor knows"
+            body="Every investor — including every hero in your council — has taken losses. What matters is whether the decision was rational, not whether the outcome was green. A loss can be the right call." />
+
+          <HeroMsg hero={WB} text="You took a loss. That takes discipline sometimes. The question now is: what did you learn from this position? Write it down — that's how losses become tuition, not just pain." />
+
+          {/* Achievement nudge — first loss badge */}
+          <div style={{ width:'100%', background:`${GOLD}0A`, border:`1.5px dashed ${GOLD}44`, borderRadius:8, padding:'10px 14px', display:'flex', gap:10, alignItems:'center' }}>
+            <div style={{ width:32, height:32, borderRadius:6, background:`${GOLD}14`, border:`1.5px solid ${GOLD}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, flexShrink:0 }}>◻</div>
+            <div>
+              <div style={{ fontFamily:f, fontSize:11, color:GOLD, fontWeight:600 }}>Badge unlocked: First Loss</div>
+              <div style={{ fontFamily:f, fontSize:11, color:'#888' }}>You held and then made a rational decision. Resilience · Do</div>
+            </div>
+          </div>
+
+          <Btn label="Back to portfolio →" style={{ width:'100%', padding:13, borderRadius:8, marginTop:4 }} />
+        </div>
+      </div>
+    );
+  }
+
+  /* 1E: Desktop sell — split layout */
+  function SellDesktop() {
+    return (
+      <div style={{ width:1440, height:900, background:'#F5F5EF', display:'flex', flexDirection:'column' }}>
+        <NavBar>
+          <div style={{ fontFamily:f, fontWeight:600, fontSize:20 }}>simFolio</div>
+          <div style={{ flex:1, display:'flex', gap:24, fontFamily:f, fontSize:15, color:'#888' }}>
+            <span style={{ color:AME, fontWeight:600 }}>Portfolio</span><span>Markets</span><span>Achievements</span>
+          </div>
+          <Av size={34} init="J" />
+        </NavBar>
+        <div style={{ flex:1, display:'flex', minHeight:0 }}>
+          {/* Stock detail */}
+          <div style={{ flex:1, padding:'28px 40px', display:'flex', flexDirection:'column', gap:18, overflow:'hidden' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end' }}>
+              <div>
+                <div style={{ fontFamily:f, fontWeight:600, fontSize:28 }}>Apple Inc.</div>
+                <div style={{ fontFamily:f, fontSize:13, color:'#888' }}>AAPL · NASDAQ</div>
+              </div>
+              <div style={{ textAlign:'right' }}>
+                <div style={{ fontFamily:f, fontWeight:600, fontSize:28 }}>$196.90</div>
+                <div style={{ fontFamily:f, fontSize:13, color:AQUA }}>+$7.45 (+3.9%) today</div>
+              </div>
+            </div>
+            <div className="wf-img" style={{ height:200, borderRadius:8 }} />
+            {/* Position card */}
+            <div style={{ background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, padding:20 }}>
+              <SL>Your position in AAPL</SL>
+              <div style={{ display:'flex', gap:32 }}>
+                {[['31 shares held',''],['$6,104 current value',''],['$5,707 cost basis','31 × $184.10'],['Unrealised gain','+$397 (+6.9%)']].map(([label,sub],i) => (
+                  <div key={i}>
+                    <div style={{ fontFamily:f, fontWeight:600, fontSize:16 }}>{label}</div>
+                    {sub && <div style={{ fontFamily:f, fontSize:12, color:'#888' }}>{sub}</div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Sell panel */}
+          <div style={{ width:420, borderLeft:'1.5px solid rgba(0,0,0,0.09)', display:'flex', flexDirection:'column' }}>
+            <div style={{ padding:'20px 24px', borderBottom:'1.5px solid rgba(0,0,0,0.08)' }}>
+              <div style={{ display:'flex', gap:8, marginBottom:16 }}>
+                {['Buy','Sell'].map((tab,i) => (
+                  <div key={tab} style={{ flex:1, padding:'9px', textAlign:'center', fontFamily:f, fontSize:14, border:`1.5px solid ${i===1?RED:'rgba(0,0,0,0.13)'}`, borderRadius:6, background:i===1?`${RED}08`:'transparent', color:i===1?RED:'#888', fontWeight:i===1?600:400 }}>{tab}</div>
+                ))}
+              </div>
+              <div style={{ display:'flex', gap:8, marginBottom:12 }}>
+                {['Shares','Dollar amount','All shares'].map((tab,i) => (
+                  <div key={tab} style={{ flex:1, padding:'7px', textAlign:'center', fontFamily:f, fontSize:12, background:i===0?AME:'rgba(0,0,0,0.04)', color:i===0?'white':'#888', borderRadius:6 }}>{tab}</div>
+                ))}
+              </div>
+              <Input placeholder="10 shares" style={{ fontSize:18, fontWeight:600, textAlign:'center', marginBottom:12 }} />
+
+              {/* P&L preview */}
+              <div style={{ background:'white', borderRadius:8, border:'1px solid rgba(0,0,0,0.08)', padding:'0 14px', marginBottom:16 }}>
+                <FeeRow label="10 shares × $196.90" amount="$1,969" />
+                <FeeRow label="Cost basis" amount="$1,841" />
+                <FeeRow label={<Term label="Realised gain" />} amount="+$128 (+6.9%)" />
+                <FeeRow label="Regulatory fee" amount="$0.01" />
+                <FeeRow label="Net to cash" amount="$1,968.99" highlight />
+              </div>
+              <Btn label="Sell 10 AAPL" style={{ width:'100%', padding:13, borderRadius:8 }} danger />
+            </div>
+
+            {/* Hero in sidebar */}
+            <div style={{ flex:1, padding:'16px 24px', display:'flex', flexDirection:'column', gap:12, overflow:'hidden' }}>
+              <SL>Warren's take</SL>
+              <HeroMsg hero={WB} text="You're up 6.9%. Before selling — is your reason for selling as considered as your reason for buying?" />
+              <UserBubble text="I just want to lock in the profit." />
+              <HeroMsg hero={WB} text="Locking in profit feels good. But a wonderful business at a fair price is worth holding. What's changed about Apple that wasn't true when you bought it?" />
+              <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginTop:4 }}>
+                {["Nothing's changed","The price feels high","I need the cash"].map(p => (
+                  <div key={p} style={{ border:`1.5px solid ${AME}33`, borderRadius:999, padding:'5px 10px', fontFamily:f, fontSize:11, color:AME, background:`${AME}08`, cursor:'default' }}>{p}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ═══════════════════════════════════════════════════
+     SECTION 02 — SETTINGS / PROFILE
+  ═══════════════════════════════════════════════════ */
+
+  /* 2A: Settings — mobile */
+  function SettingsMobile() {
+    return (
+      <div style={{ width:375, height:920, background:'#F5F5EF', display:'flex', flexDirection:'column', border:'2.5px solid #2A2A2A', borderRadius:40, overflow:'hidden' }}>
+        <StatusBar />
+        <div style={{ height:52, display:'flex', alignItems:'center', padding:'0 20px', borderBottom:'1px solid rgba(0,0,0,0.06)', flexShrink:0 }}>
+          <div style={{ fontFamily:f, fontSize:13, color:AME }}>←</div>
+          <div style={{ flex:1, textAlign:'center', fontFamily:f, fontWeight:600, fontSize:17 }}>Profile & Settings</div>
+        </div>
+        <div style={{ flex:1, padding:'16px 0', overflow:'hidden', display:'flex', flexDirection:'column', gap:0 }}>
+          {/* Profile header */}
+          <div style={{ padding:'12px 20px 20px', display:'flex', gap:14, alignItems:'center' }}>
+            <div style={{ width:60, height:60, borderRadius:'50%', background:'rgba(138,96,235,0.12)', border:`2px solid ${AME}`, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:f, fontWeight:600, fontSize:24, color:AME }}>J</div>
+            <div>
+              <div style={{ fontFamily:f, fontWeight:600, fontSize:18 }}>Jamie</div>
+              <div style={{ fontFamily:f, fontSize:13, color:'#888' }}>Investor since today</div>
+              <div style={{ fontFamily:f, fontSize:12, color:AME, marginTop:3 }}>3 badges · 0 medals · 0 trophies</div>
+            </div>
+          </div>
+
+          {/* Virtual cash */}
+          <div style={{ margin:'0 20px 14px', background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, padding:16 }}>
+            <SL>Virtual cash balance</SL>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <div style={{ fontFamily:f, fontWeight:600, fontSize:24 }}>$9,052.39</div>
+              <Btn label="Top up" style={{ padding:'7px 16px', fontSize:12, borderRadius:6 }} />
+            </div>
+            <div style={{ fontFamily:f, fontSize:11, color:'#888', marginTop:4 }}>Started with $10,000 · simulated only</div>
+          </div>
+
+          {/* Settings groups */}
+          {[
+            { group:'Language', rows:[
+              { label:'Display language', value:'English', note:'Main UI stays in English — real platforms use English' },
+              { label:'Tooltip language', value:'繁體中文', note:'Explanations appear in Traditional Chinese' },
+            ]},
+            { group:'Your Council', rows:[
+              { label:'Warren Buffett', value:'Active advisor', hero:true },
+            ]},
+            { group:'Notifications', rows:[
+              { label:'Weekly review nudge', value:'On', toggle:true },
+              { label:'Achievement unlocked', value:'On', toggle:true },
+              { label:'Market opens (queued orders)', value:'On', toggle:true },
+              { label:'Hero has something to say', value:'Off', toggle:true },
+            ]},
+            { group:'Account', rows:[
+              { label:'Reset portfolio', value:'', danger:true },
+              { label:'Privacy policy', value:'' },
+            ]},
+          ].map(({ group, rows }) => (
+            <div key={group} style={{ marginBottom:16 }}>
+              <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.13em', color:'#888', padding:'0 20px', marginBottom:6 }}>{group}</div>
+              <div style={{ background:'white', borderTop:'1px solid rgba(0,0,0,0.07)', borderBottom:'1px solid rgba(0,0,0,0.07)' }}>
+                {rows.map(({ label, value, note, toggle, hero, danger }, i) => (
+                  <div key={label} style={{ display:'flex', alignItems:'center', padding:'12px 20px', borderBottom: i<rows.length-1 ? '1px solid rgba(0,0,0,0.06)' : 'none', gap:10 }}>
+                    {hero && <Av size={28} init="WB" color={AME} />}
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontFamily:f, fontSize:14, color: danger?RED:'#222' }}>{label}</div>
+                      {note && <div style={{ fontFamily:f, fontSize:11, color:'#aaa', lineHeight:1.3 }}>{note}</div>}
+                    </div>
+                    {toggle && (
+                      <div style={{ width:44, height:24, borderRadius:999, background: value==='On'?AME:'rgba(0,0,0,0.12)', display:'flex', alignItems:'center', padding:'0 3px', justifyContent: value==='On'?'flex-end':'flex-start', flexShrink:0 }}>
+                        <div style={{ width:18, height:18, borderRadius:'50%', background:'white' }} />
+                      </div>
+                    )}
+                    {!toggle && !hero && value && <div style={{ fontFamily:f, fontSize:13, color:'#888', flexShrink:0 }}>{value} ›</div>}
+                    {!toggle && !value && !danger && <div style={{ fontFamily:f, fontSize:13, color:'#888' }}>›</div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  /* 2B: Language settings — the key bilingual decision */
+  function LanguageSettings() {
+    return (
+      <div style={{ width:800, height:560, background:'#F5F5EF', borderRadius:8, border:'1.5px solid rgba(0,0,0,0.1)', padding:'32px 40px', display:'flex', flexDirection:'column', gap:24 }}>
+        <div>
+          <div style={{ fontFamily:f, fontWeight:600, fontSize:22, marginBottom:4 }}>Language design</div>
+          <div style={{ fontFamily:f, fontSize:13, color:'#888', lineHeight:1.5 }}>The main UI stays in English — users need to learn the English terms used in real brokerages. Only educational tooltips are bilingual.</div>
+        </div>
+        <div style={{ display:'flex', gap:28, flex:1 }}>
+          {/* Display language */}
+          <div style={{ flex:1, display:'flex', flexDirection:'column', gap:14 }}>
+            <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.14em', color:AME }}>Display language (UI)</div>
+            <div style={{ fontFamily:f, fontSize:13, color:'#888', lineHeight:1.5 }}>Always English. Stock tickers, order types, financial terms — all in English. Matches what the user will see on any real brokerage platform.</div>
+            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+              {['English (default)'].map(l => (
+                <div key={l} style={{ display:'flex', justifyContent:'space-between', padding:'10px 14px', border:`1.5px solid ${AME}`, borderRadius:6, background:'rgba(138,96,235,0.06)' }}>
+                  <div style={{ fontFamily:f, fontSize:14 }}>{l}</div>
+                  <div style={{ fontFamily:f, fontSize:13, color:AME }}>◉</div>
+                </div>
+              ))}
+              <div style={{ fontFamily:f, fontSize:12, color:'#aaa', fontStyle:'italic', padding:'4px 2px' }}>Other languages not available for main UI — by design.</div>
+            </div>
+          </div>
+
+          {/* Tooltip language */}
+          <div style={{ flex:1, display:'flex', flexDirection:'column', gap:14 }}>
+            <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.14em', color:AQUA }}>Educational tooltip language</div>
+            <div style={{ fontFamily:f, fontSize:13, color:'#888', lineHeight:1.5 }}>Explanations appear in the user's native language. They learn what the English term means, in words they fully understand.</div>
+            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+              {[['English','en',false],['繁體中文 — Traditional Chinese','zh-TW',true],['More coming soon','',false]].map(([label,code,selected]) => (
+                <div key={label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 14px', border:`1.5px solid ${selected?AQUA:'rgba(0,0,0,0.12)'}`, borderRadius:6, background:selected?'rgba(31,195,164,0.06)':'white', opacity: label==='More coming soon'?0.4:1 }}>
+                  <div style={{ fontFamily:f, fontSize:14 }}>{label}</div>
+                  <div style={{ fontFamily:f, fontSize:13, color:selected?AQUA:'#bbb' }}>{selected?'◉':'○'}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Preview */}
+          <div style={{ flex:1, display:'flex', flexDirection:'column', gap:14 }}>
+            <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.14em', color:'#888' }}>Tooltip preview (zh-TW selected)</div>
+            <div style={{ background:'white', border:`1.5px solid ${AQUA}`, borderRadius:8, padding:16, boxShadow:'0 4px 16px rgba(31,195,164,0.1)' }}>
+              <div style={{ display:'flex', gap:6, marginBottom:12 }}>
+                {['EN','中'].map((l,i) => <div key={l} style={{ padding:'3px 10px', borderRadius:4, fontFamily:f, fontSize:12, background:i===1?AQUA:'rgba(0,0,0,0.06)', color:i===1?'white':'#888' }}>{l}</div>)}
+              </div>
+              <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.14em', color:AQUA, marginBottom:6 }}>市價單 (Market Order)</div>
+              <div style={{ fontFamily:f, fontSize:13, color:'#222', lineHeight:1.5 }}>立即進行買進或賣出。您願意接受市場上目前的任何報價。成交價格可能略有不同。</div>
+              <div style={{ fontFamily:f, fontSize:11, color:'#aaa', marginTop:6 }}>Market order · English term</div>
+            </div>
+            <div style={{ fontFamily:f, fontSize:12, color:'#aaa', lineHeight:1.5 }}>The English term is always shown alongside the translation — so the user learns both simultaneously.</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* 2C: Notifications — thoughtful defaults */
+  function NotificationSettings() {
+    return (
+      <div style={{ width:800, height:520, background:'#F5F5EF', borderRadius:8, border:'1.5px solid rgba(0,0,0,0.1)', padding:'32px 40px', display:'flex', flexDirection:'column', gap:20 }}>
+        <div>
+          <div style={{ fontFamily:f, fontWeight:600, fontSize:22, marginBottom:4 }}>Notification design</div>
+          <div style={{ fontFamily:f, fontSize:13, color:'#888', lineHeight:1.5 }}>Notifications are rare and always useful. Nothing that creates anxiety. Nothing on a schedule the user didn't choose.</div>
+        </div>
+        <div style={{ display:'flex', gap:24, flex:1 }}>
+          <div style={{ flex:1, display:'flex', flexDirection:'column', gap:10 }}>
+            <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.13em', color:AQUA, marginBottom:4 }}>On by default</div>
+            {[
+              { label:'Achievement unlocked', why:'Celebrates learning — always good to know.' },
+              { label:'Queued order executed', why:"User is waiting for this — it's time-sensitive." },
+              { label:'Market opened (if queued orders pending)', why:'Only fires when there are orders waiting.' },
+            ].map(({ label, why }) => (
+              <div key={label} style={{ background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, padding:14 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
+                  <div style={{ fontFamily:f, fontWeight:600, fontSize:14 }}>{label}</div>
+                  <div style={{ width:40, height:22, borderRadius:999, background:AME, display:'flex', alignItems:'center', justifyContent:'flex-end', padding:'0 3px' }}><div style={{ width:16, height:16, borderRadius:'50%', background:'white' }} /></div>
+                </div>
+                <div style={{ fontFamily:f, fontSize:12, color:'#888', lineHeight:1.4 }}>{why}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ flex:1, display:'flex', flexDirection:'column', gap:10 }}>
+            <div style={{ fontFamily:f, fontSize:10, textTransform:'uppercase', letterSpacing:'0.13em', color:'#888', marginBottom:4 }}>Off by default — user opts in</div>
+            {[
+              { label:'Weekly portfolio review nudge', why:'Suggested, never required. User controls timing.' },
+              { label:'Hero has something to say', why:"Feels intrusive if too frequent — off by default." },
+              { label:'Significant market movement', why:"Anxiety-inducing for beginners. User must opt in." },
+            ].map(({ label, why }) => (
+              <div key={label} style={{ background:'white', border:'1px solid rgba(0,0,0,0.08)', borderRadius:8, padding:14, opacity:0.7 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
+                  <div style={{ fontFamily:f, fontWeight:600, fontSize:14 }}>{label}</div>
+                  <div style={{ width:40, height:22, borderRadius:999, background:'rgba(0,0,0,0.1)', display:'flex', alignItems:'center', justifyContent:'flex-start', padding:'0 3px' }}><div style={{ width:16, height:16, borderRadius:'50%', background:'white' }} /></div>
+                </div>
+                <div style={{ fontFamily:f, fontSize:12, color:'#888', lineHeight:1.4 }}>{why}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* 2D: Virtual cash top-up */
+  function CashTopUp() {
+    return (
+      <div style={{ width:375, height:720, background:'#F5F5EF', display:'flex', flexDirection:'column', border:'2.5px solid #2A2A2A', borderRadius:40, overflow:'hidden' }}>
+        <StatusBar />
+        <div style={{ height:52, display:'flex', alignItems:'center', padding:'0 20px', borderBottom:'1px solid rgba(0,0,0,0.06)', flexShrink:0 }}>
+          <div style={{ fontFamily:f, fontSize:13, color:AME }}>←</div>
+          <div style={{ flex:1, textAlign:'center', fontFamily:f, fontWeight:600, fontSize:17 }}>Top up cash</div>
+        </div>
+        <div style={{ flex:1, padding:'20px 20px', display:'flex', flexDirection:'column', gap:16 }}>
+          <div style={{ textAlign:'center' }}>
+            <div style={{ fontFamily:f, fontSize:13, color:'#888', marginBottom:4 }}>Current balance</div>
+            <div style={{ fontFamily:f, fontWeight:600, fontSize:32 }}>$9,052.39</div>
+            <div style={{ fontFamily:f, fontSize:12, color:'#aaa' }}>Simulated cash only — not real money</div>
+          </div>
+          <div>
+            <div style={{ fontFamily:f, fontSize:12, color:'#888', marginBottom:10 }}>Add simulated cash</div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+              {['$5,000','$10,000','$25,000','$50,000'].map((amt,i) => (
+                <div key={amt} style={{ border:`1.5px solid ${i===1?AME:'rgba(0,0,0,0.13)'}`, borderRadius:8, padding:'12px', textAlign:'center', fontFamily:f, fontSize:15, fontWeight:600, background:i===1?'rgba(138,96,235,0.07)':'white', color:i===1?AME:'#333', cursor:'default' }}>{amt}</div>
+              ))}
+            </div>
+          </div>
+          <HeroMsg hero={WB} text="Adding virtual cash is always free here. In real life, you'd need to transfer from a bank account — a process that can take 1–3 business days." />
+          <LearnCard title="Why top up?" body="Running low on virtual cash? Add more to keep practising. The goal is learning — not winning with what you have." />
+          <Btn label="Add $10,000 to balance" style={{ width:'100%', padding:13, borderRadius:8 }} />
+        </div>
+      </div>
+    );
+  }
+
+  /* 2E: Settings — desktop */
+  function SettingsDesktop() {
+    return (
+      <div style={{ width:1280, height:800, background:'#F5F5EF', display:'flex', flexDirection:'column', borderRadius:8, border:'1.5px solid rgba(0,0,0,0.1)', overflow:'hidden' }}>
+        <NavBar>
+          <div style={{ fontFamily:f, fontWeight:600, fontSize:20 }}>simFolio</div>
+          <div style={{ flex:1, display:'flex', gap:24, fontFamily:f, fontSize:15, color:'#888' }}>
+            <span style={{ color:AME, fontWeight:600 }}>Portfolio</span><span>Markets</span><span>Achievements</span>
+          </div>
+          <Av size={34} init="J" />
+        </NavBar>
+        <div style={{ flex:1, display:'flex', minHeight:0 }}>
+          {/* Left nav */}
+          <div style={{ width:220, borderRight:'1.5px solid rgba(0,0,0,0.09)', padding:'28px 22px', display:'flex', flexDirection:'column', gap:6 }}>
+            {['Profile','Language','Your Council','Notifications','Virtual Cash','Account'].map((item,i) => (
+              <div key={item} style={{ padding:'9px 14px', borderRadius:6, fontFamily:f, fontSize:14, background:i===1?'rgba(138,96,235,0.08)':'transparent', color:i===1?AME:'#555', fontWeight:i===1?600:400, cursor:'default' }}>{item}</div>
+            ))}
+          </div>
+          {/* Content: Language shown */}
+          <div style={{ flex:1, padding:'32px 48px', display:'flex', flexDirection:'column', gap:20 }}>
+            <div>
+              <div style={{ fontFamily:f, fontWeight:600, fontSize:24, marginBottom:4 }}>Language</div>
+              <div style={{ fontFamily:f, fontSize:14, color:'#888', lineHeight:1.5, maxWidth:600 }}>The main UI stays in English so you learn the vocabulary used on real trading platforms. Choose a language for educational explanations — the concepts will be explained in words you fully understand.</div>
+            </div>
+            <div style={{ display:'flex', gap:32 }}>
+              <div style={{ flex:1, maxWidth:360 }}>
+                <div style={{ fontFamily:f, fontSize:13, fontWeight:600, marginBottom:12 }}>Display language (UI) — always English</div>
+                <div style={{ background:'white', border:`1.5px solid ${AME}`, borderRadius:8, padding:'12px 16px', display:'flex', justifyContent:'space-between' }}>
+                  <div style={{ fontFamily:f, fontSize:14 }}>English</div>
+                  <div style={{ fontFamily:f, fontSize:13, color:AME }}>◉ Active</div>
+                </div>
+                <div style={{ fontFamily:f, fontSize:12, color:'#aaa', marginTop:8, lineHeight:1.4 }}>Other languages are not available for the main UI. This is intentional — the goal is to help you become comfortable with English financial terminology.</div>
+              </div>
+              <div style={{ flex:1, maxWidth:360 }}>
+                <div style={{ fontFamily:f, fontSize:13, fontWeight:600, marginBottom:12 }}>Tooltip language — choose yours</div>
+                {[['English (default)','en',false],['繁體中文','zh-TW',true]].map(([label,code,selected]) => (
+                  <div key={label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'12px 16px', border:`1.5px solid ${selected?AQUA:'rgba(0,0,0,0.12)'}`, borderRadius:8, background:selected?'rgba(31,195,164,0.06)':'white', marginBottom:8 }}>
+                    <div style={{ fontFamily:f, fontSize:14 }}>{label}</div>
+                    <div style={{ fontFamily:f, fontSize:13, color:selected?AQUA:'#bbb' }}>{selected?'◉':'○'}</div>
+                  </div>
+                ))}
+                <div style={{ fontFamily:f, fontSize:12, color:'#aaa', fontStyle:'italic' }}>More languages coming — request yours →</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ═══════════════════════════════════════════════════
+     APP
+  ═══════════════════════════════════════════════════ */
+  function App() {
+    return (
+      <DesignCanvas title="simFolio — Wireframes 06: Sell Flow + Settings">
+
+        <DCSection id="sell" title="01 — Sell flow" subtitle="Mirrors the buy flow but adds position context (cost basis, unrealised P&L) before the user commits. Hero always weighs in before the sell — asking the right question, not giving the answer. Loss sells get a special teaching moment.">
+          <DCArtboard id="s1a" label="1A — Sell form: profitable position (mobile)" width={375} height={960}><SellFormProfit /></DCArtboard>
+          <DCArtboard id="s1b" label="1B — Sell form: position at a loss (mobile)" width={375} height={960}><SellFormLoss /></DCArtboard>
+          <DCArtboard id="s1c" label="1C — Sale confirmed: gain" width={375} height={820}><SellConfirmGain /></DCArtboard>
+          <DCArtboard id="s1d" label="1D — Sale confirmed: loss + First Loss badge" width={375} height={820}><SellConfirmLoss /></DCArtboard>
+          <DCArtboard id="s1e" label="1E — Sell flow: desktop (split layout)" width={1440} height={900}><SellDesktop /></DCArtboard>
+        </DCSection>
+
+        <DCSection id="settings" title="02 — Settings & profile" subtitle="Language is the most important setting — main UI stays English by design, tooltips adapt to native language. Notifications are minimal and user-controlled. Virtual cash top-up is always available.">
+          <DCArtboard id="s2a" label="2A — Settings: mobile (full scroll)" width={375} height={920}><SettingsMobile /></DCArtboard>
+          <DCArtboard id="s2b" label="2B — Language design (rationale + UI)" width={800} height={560}><LanguageSettings /></DCArtboard>
+          <DCArtboard id="s2c" label="2C — Notification defaults (design intent)" width={800} height={520}><NotificationSettings /></DCArtboard>
+          <DCArtboard id="s2d" label="2D — Virtual cash top-up (mobile)" width={375} height={720}><CashTopUp /></DCArtboard>
+          <DCArtboard id="s2e" label="2E — Settings: desktop (Language tab)" width={1280} height={800}><SettingsDesktop /></DCArtboard>
+        </DCSection>
+
+      </DesignCanvas>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
