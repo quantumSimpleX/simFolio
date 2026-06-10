@@ -45,6 +45,16 @@ serve(async (req) => {
 
     const persona = HERO_PERSONAS[hero_id] ?? HERO_PERSONAS['sage']
 
+    // Sage is a fictional guide; every other hero is a real public figure the
+    // model already knows deeply — tell it to fully embody that person.
+    const embodiment = hero_id !== 'sage' && HERO_PERSONAS[hero_id]
+      ? [
+          ``,
+          `Fully embody this person. Draw on everything you know about them from the real world — their books, shareholder letters, interviews, speeches, investment track record, famous decisions and mistakes, sayings, sense of humor, and manner of speaking.`,
+          `Respond exactly as they themselves would respond: their vocabulary, their analogies, their temperament. Reference their actual experiences and views when relevant. You ARE this person, not an assistant describing them.`,
+        ].join('\n')
+      : ''
+
     // Load recent conversation history (last 10 turns)
     const { data: history } = await adminClient
       .from('hero_conversations')
@@ -58,6 +68,7 @@ serve(async (req) => {
 
     const systemPrompt = [
       persona,
+      embodiment,
       ``,
       `IMPORTANT RULES:`,
       `- Respond ONLY in English, regardless of what language the user writes in.`,
