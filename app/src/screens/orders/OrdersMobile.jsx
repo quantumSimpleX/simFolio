@@ -158,7 +158,7 @@ function FilledRow({ order, dimmed }) {
           {fee != null && <DetailRow label="Transaction fee" value={`${isBuy ? '+' : '−'}$${fee.toFixed(2)}`}/>}
           {net != null && <DetailRow label={isBuy ? 'Total deducted' : 'Net to cash'} value={`$${net.toFixed(2)}`} bold/>}
           <DetailRow label="Placed" value={fmtDate(order.created_at)}/>
-          {exec.created_at && <DetailRow label="Executed" value={fmtDate(exec.created_at)}/>}
+          {exec.executed_at && <DetailRow label="Filled" value={fmtDate(exec.executed_at)}/>}
           <div style={{ padding:'8px 0 2px', fontFamily:MONO, fontSize:10, color:C.ink300 }}>ORDER {order.order_id}</div>
         </div>
       )}
