@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { C, SANS } from '../../tokens'
+import { C, SANS, MONO } from '../../tokens'
 import { TermUnderline, StatusPill } from '../../components/Primitives'
 import { AppShell } from '../../components/AppShell'
 import { useOrders, useCancelOrder } from '../../hooks/useOrders'
@@ -107,16 +107,27 @@ function OrderCard({ order, onCancel }) {
 }
 
 function FilledRow({ order, dimmed }) {
+  const [expanded, setExpanded] = useState(false)
   const exec = order.executions?.[0]
   const execPrice = exec?.execution_price ? parseFloat(exec.execution_price) : null
+  const fee = exec?.fees_deducted != null ? parseFloat(exec.fees_deducted) : null
+  const qty = parseFloat(order.requested_qty)
+  const gross = execPrice != null ? qty * execPrice : null
+  const isBuy = order.side === 'BUY'
+  const net = gross != null && fee != null ? (isBuy ? gross + fee : gross - fee) : null
+  const canExpand = !!exec
+
   return (
-    <div style={{ background:C.white, border:`1px solid ${C.ink100}`, borderRadius:8, padding:'12px 16px', opacity:dimmed?0.6:1 }}>
+    <div
+      onClick={canExpand ? () => setExpanded(e => !e) : undefined}
+      style={{ background:C.white, border:`1px solid ${C.ink100}`, borderRadius:8, padding:'12px 16px', opacity:dimmed?0.6:1, cursor:canExpand?'pointer':'default' }}
+    >
       <div style={{ display:'flex', alignItems:'center', gap:10 }}>
         <div style={{ width:36, height:36, background:C.ink50, borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:SANS, fontWeight:700, fontSize:11, color:C.ink500, flexShrink:0 }}>{order.ticker}</div>
         <div style={{ flex:1 }}>
           <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:2 }}>
             <div style={{ fontFamily:SANS, fontWeight:700, fontSize:14, color:C.ink900 }}>
-              {order.side === 'BUY' ? 'Bought' : 'Sold'} {order.requested_qty} {order.ticker}
+              {isBuy ? 'Bought' : 'Sold'} {order.requested_qty} {order.ticker}
             </div>
             <StatusPill status={order.status?.toLowerCase()}/>
           </div>
@@ -127,11 +138,39 @@ function FilledRow({ order, dimmed }) {
         {execPrice && (
           <div style={{ textAlign:'right', flexShrink:0 }}>
             <div style={{ fontFamily:SANS, fontWeight:700, fontSize:14, color:C.ink900 }}>
-              ${(parseFloat(order.requested_qty) * execPrice).toFixed(2)}
+              ${gross.toFixed(2)}
             </div>
+            <div style={{ fontFamily:SANS, fontSize:11, color:C.ink300, marginTop:2 }}>{expanded ? 'Hide ▴' : 'Details ▾'}</div>
           </div>
         )}
       </div>
+
+      {expanded && exec && (
+        <div style={{ marginTop:12, paddingTop:4, borderTop:`1px solid ${C.ink100}` }}>
+          <DetailRow label="Order type" value={order.type === 'LIMIT' ? 'Limit order' : 'Market order'}/>
+          <DetailRow label="Side" value={isBuy ? 'Buy' : 'Sell'}/>
+          <DetailRow label="Filled quantity" value={`${parseFloat(exec.filled_qty)} shares`}/>
+          <DetailRow label="Execution price" value={`$${execPrice.toFixed(4)} / share`}/>
+          {order.type === 'LIMIT' && order.limit_price && (
+            <DetailRow label="Limit price" value={`$${parseFloat(order.limit_price).toFixed(2)}`}/>
+          )}
+          <DetailRow label={isBuy ? 'Gross cost' : 'Gross proceeds'} value={`$${gross.toFixed(2)}`}/>
+          {fee != null && <DetailRow label="Transaction fee" value={`${isBuy ? '+' : '−'}$${fee.toFixed(2)}`}/>}
+          {net != null && <DetailRow label={isBuy ? 'Total deducted' : 'Net to cash'} value={`$${net.toFixed(2)}`} bold/>}
+          <DetailRow label="Placed" value={fmtDate(order.created_at)}/>
+          {exec.created_at && <DetailRow label="Executed" value={fmtDate(exec.created_at)}/>}
+          <div style={{ padding:'8px 0 2px', fontFamily:MONO, fontSize:10, color:C.ink300 }}>ORDER {order.order_id}</div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function DetailRow({ label, value, bold }) {
+  return (
+    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'7px 0', borderBottom:`1px solid ${C.ink50}` }}>
+      <div style={{ fontFamily:SANS, fontSize:13, color:C.ink400 }}>{label}</div>
+      <div style={{ fontFamily:SANS, fontSize:13, fontWeight:bold?700:500, color:C.ink900 }}>{value}</div>
     </div>
   )
 }
