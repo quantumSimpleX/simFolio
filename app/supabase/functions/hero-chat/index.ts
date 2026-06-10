@@ -10,12 +10,13 @@ const cors = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Free models, tried in order — free slots are often rate-limited or retired.
+// Free US-based models, tried in order — free slots are often rate-limited or retired.
 const MODELS = [
   'meta-llama/llama-3.3-70b-instruct:free',
+  'nvidia/nemotron-3-super-120b-a12b:free',
   'openai/gpt-oss-120b:free',
-  'qwen/qwen3-next-80b-a3b-instruct:free',
-  'meta-llama/llama-3.2-3b-instruct:free',
+  'google/gemma-4-31b-it:free',
+  'poolside/laguna-m.1:free',
 ]
 
 const HERO_PERSONAS: Record<string, string> = {
@@ -74,6 +75,7 @@ serve(async (req) => {
     ]
 
     let reply: string | null = null
+    let usedModel: string | null = null
     const failures: string[] = []
     for (const model of MODELS) {
       const llmRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -88,7 +90,7 @@ serve(async (req) => {
       })
       const llmData = await llmRes.json()
       const content = llmData.choices?.[0]?.message?.content
-      if (content) { reply = content; break }
+      if (content) { reply = content; usedModel = model; break }
       const why = llmData.error?.message ?? `HTTP ${llmRes.status}`
       failures.push(`${model}: ${why}`)
       console.warn('[hero-chat] model failed —', model, why)
@@ -107,7 +109,8 @@ serve(async (req) => {
       { user_id: uid, hero_id, role: 'assistant', content: reply },
     ])
 
-    return new Response(JSON.stringify({ reply }), {
+    console.log('[hero-chat] replied with model:', usedModel)
+    return new Response(JSON.stringify({ reply, model: usedModel }), {
       headers: { ...cors, 'Content-Type': 'application/json' },
     })
   } catch (err) {
