@@ -23,37 +23,22 @@ const YF_RANGE_MAP = {
   'All': { interval: '1mo', range: '5y'  },
 }
 
+// Fetches fundamentals for one ticker from the edge function (Yahoo quoteSummary,
+// server-side — free, no CORS, no rate limit). Returns null on any failure.
 async function fetchStatsDirect(ticker) {
-  // Try Twelve Data /statistics first (most complete, costs 30 credits)
-  if (TD_KEY) {
-    try {
-      const r = await fetch(`${TD_BASE}/statistics?symbol=${ticker}&apikey=${TD_KEY}`).then(r => r.json())
-      const vm = r.statistics?.valuations_metrics ?? {}
-      const ss = r.statistics?.stock_price_summary ?? {}
-      const fi = r.statistics?.financials?.income_statement ?? {}
-      const dd = r.statistics?.dividends_and_splits ?? {}
-      const cap = vm.market_capitalization
-      if (cap) return {
-        marketCap:     cap,
-        peRatio:       vm.trailing_pe                   || 0,
-        eps:           fi.diluted_eps_ttm               || 0,
-        beta:          ss.beta                          || 0,
-        dividendYield: dd.forward_annual_dividend_yield || 0,
-      }
-    } catch {}
-  }
-  // Fallback: edge function → Yahoo Finance (avoids browser CORS block)
   try {
-    const { data, error } = await supabase.functions.invoke('market-data', { body: { symbols: [ticker] } })
+    const { data, error } = await supabase.functions.invoke('market-data', {
+      body: { fundamentals: true, symbols: [ticker] },
+    })
     if (error) return null
-    const q = data.quotes?.[0]
-    if (!q?.marketCap) return null
+    const f = data?.fundamentals?.[0]
+    if (!f?.marketCap) return null
     return {
-      marketCap:     q.marketCap     || 0,
-      peRatio:       q.peRatio       || 0,
-      eps:           q.eps           || 0,
-      beta:          q.beta          || 0,
-      dividendYield: q.dividendYield || 0,
+      marketCap:     f.marketCap,
+      peRatio:       f.peRatio,
+      eps:           f.eps,
+      beta:          f.beta,
+      dividendYield: f.dividendYield,
     }
   } catch {
     return null

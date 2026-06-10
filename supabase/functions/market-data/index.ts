@@ -1,8 +1,8 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
 const YF_BASE = 'https://query2.finance.yahoo.com'
-// Standard UA avoids bot-detection rejections from Yahoo
-const YF_HEADERS = { 'User-Agent': 'Mozilla/5.0 (compatible; SimFolio/1.0)' }
+// A real browser UA is required — Yahoo rejects generic agents on the cookie/crumb handshake
+const YF_HEADERS = { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36' }
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -17,42 +17,100 @@ const RANGE_MAP: Record<string, { interval: string; range: string }> = {
   'All': { interval: '1mo', range: '5y'  },
 }
 
-// Short dedup cache to prevent hammering YF on burst requests within one edge-function instance
-const cache = new Map<string, { data: unknown; ts: number }>()
-const CACHE_TTL_MS = 10_000
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
 
-async function getQuotes(symbols: string[]) {
-  const cacheKey = `q:${[...symbols].sort().join(',')}`
-  const cached = cache.get(cacheKey)
-  if (cached && Date.now() - cached.ts < CACHE_TTL_MS) return cached.data as object[]
+// ── Yahoo crumb + cookie handshake ────────────────────────────────────────────
+// quoteSummary requires a crumb tied to a session cookie. Fetch once and reuse;
+// refresh on expiry (401). Cached per warm edge-function instance.
+let crumbCache: { crumb: string; cookie: string; ts: number } | null = null
+const CRUMB_TTL_MS = 30 * 60 * 1000
 
-  const url = `${YF_BASE}/v7/finance/quote?symbols=${symbols.join(',')}`
-  const res = await fetch(url, { headers: YF_HEADERS })
-  if (!res.ok) throw new Error(`Yahoo Finance quote ${res.status}`)
-  const json = await res.json()
+async function getCrumb(force = false): Promise<{ crumb: string; cookie: string }> {
+  if (!force && crumbCache && Date.now() - crumbCache.ts < CRUMB_TTL_MS) {
+    return { crumb: crumbCache.crumb, cookie: crumbCache.cookie }
+  }
+  const cookieRes = await fetch('https://fc.yahoo.com', { headers: YF_HEADERS })
+  const rawCookie = cookieRes.headers.get('set-cookie') ?? ''
+  const m = rawCookie.match(/A[13]=[^;]+/)              // the session cookie Yahoo ties the crumb to
+  const cookie = m ? m[0] : rawCookie.split(';')[0]
+  const crumbRes = await fetch(`${YF_BASE}/v1/test/getcrumb`, {
+    headers: { ...YF_HEADERS, Cookie: cookie },
+  })
+  const crumb = (await crumbRes.text()).trim()
+  crumbCache = { crumb, cookie, ts: Date.now() }
+  return { crumb, cookie }
+}
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const quotes = (json.quoteResponse?.result ?? []).map((q: Record<string, any>) => ({
-    ticker:    q.symbol,
-    price:     q.regularMarketPrice     ?? 0,
-    change:    q.regularMarketChange    ?? 0,
-    pct:       q.regularMarketChangePercent ?? 0,
-    high:      q.regularMarketDayHigh   ?? 0,
-    low:       q.regularMarketDayLow    ?? 0,
-    open:      q.regularMarketOpen      ?? 0,
-    prev:      q.regularMarketPreviousClose ?? 0,
-    pos:       (q.regularMarketChange   ?? 0) >= 0,
-    name:          q.shortName || q.longName || null,
-    exchange:      q.exchange                      ?? '',
-    marketCap:     q.marketCap                     ?? 0,
-    peRatio:       q.trailingPE                    ?? 0,
-    eps:           q.epsTrailingTwelveMonths        ?? 0,
-    beta:          q.beta                          ?? 0,
-    dividendYield: q.trailingAnnualDividendYield   ?? 0,
+// Fetches one quoteSummary, transparently refreshing the crumb if it expired.
+async function quoteSummary(symbol: string, modules: string) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const { crumb, cookie } = await getCrumb(attempt > 0)
+    const url = `${YF_BASE}/v10/finance/quoteSummary/${symbol}?modules=${modules}&crumb=${encodeURIComponent(crumb)}`
+    const res = await fetch(url, { headers: { ...YF_HEADERS, Cookie: cookie } })
+    if (res.status === 401 && attempt === 0) continue  // stale crumb → force-refresh and retry once
+    if (!res.ok) return null
+    const data = await res.json()
+    return data.quoteSummary?.result?.[0] ?? null
+  }
+  return null
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const raw = (v: any) => (typeof v?.raw === 'number' ? v.raw : 0)
+
+// ── Fundamentals (marketCap, P/E, EPS, beta, dividend yield) ──────────────────
+async function getFundamentals(symbols: string[]) {
+  return Promise.all(symbols.map(async (ticker) => {
+    try {
+      const r = await quoteSummary(ticker, 'price,summaryDetail,defaultKeyStatistics')
+      if (!r) return { ticker, marketCap: 0, peRatio: 0, eps: 0, beta: 0, dividendYield: 0 }
+      const pr = r.price ?? {}, sd = r.summaryDetail ?? {}, dks = r.defaultKeyStatistics ?? {}
+      return {
+        ticker,
+        marketCap:     raw(pr.marketCap)     || raw(sd.marketCap),
+        peRatio:       raw(sd.trailingPE),
+        eps:           raw(dks.trailingEps),
+        beta:          raw(sd.beta)          || raw(dks.beta),
+        dividendYield: raw(sd.dividendYield),
+      }
+    } catch {
+      return { ticker, marketCap: 0, peRatio: 0, eps: 0, beta: 0, dividendYield: 0 }
+    }
   }))
+}
 
-  cache.set(cacheKey, { data: quotes, ts: Date.now() })
-  return quotes
+// ── Quotes (price + fundamentals in one shot) ─────────────────────────────────
+// Yahoo's old /v7/finance/quote is dead (401), so quotes also come from quoteSummary.
+async function getQuotes(symbols: string[]) {
+  return (await Promise.all(symbols.map(async (ticker) => {
+    const r = await quoteSummary(ticker, 'price,summaryDetail,defaultKeyStatistics')
+    if (!r) return null
+    const pr = r.price ?? {}, sd = r.summaryDetail ?? {}, dks = r.defaultKeyStatistics ?? {}
+    const change = raw(pr.regularMarketChange)
+    return {
+      ticker,
+      price:     raw(pr.regularMarketPrice),
+      change,
+      pct:       raw(pr.regularMarketChangePercent) * 100,
+      high:      raw(pr.regularMarketDayHigh),
+      low:       raw(pr.regularMarketDayLow),
+      open:      raw(pr.regularMarketOpen),
+      prev:      raw(pr.regularMarketPreviousClose),
+      pos:       change >= 0,
+      name:      pr.longName || pr.shortName || null,
+      exchange:  pr.exchangeName ?? '',
+      volume:    raw(pr.regularMarketVolume),
+      avgVolume: raw(sd.averageVolume) || raw(sd.averageDailyVolume10Day),
+      week52Low:  raw(sd.fiftyTwoWeekLow),
+      week52High: raw(sd.fiftyTwoWeekHigh),
+      marketCap:     raw(pr.marketCap) || raw(sd.marketCap),
+      peRatio:       raw(sd.trailingPE),
+      eps:           raw(dks.trailingEps),
+      beta:          raw(sd.beta) || raw(dks.beta),
+      dividendYield: raw(sd.dividendYield),
+    }
+  }))).filter(Boolean)
 }
 
 async function getCandles(ticker: string, range: string) {
@@ -60,40 +118,28 @@ async function getCandles(ticker: string, range: string) {
   const url = `${YF_BASE}/v8/finance/chart/${ticker}?interval=${interval}&range=${yfRange}`
   const res = await fetch(url, { headers: YF_HEADERS })
   if (!res.ok) throw new Error(`Yahoo Finance chart ${res.status}`)
-  const json = await res.json()
-
-  const result = json.chart?.result?.[0]
+  const data = await res.json()
+  const result = data.chart?.result?.[0]
   if (!result) throw new Error('No chart data')
-
   const timestamps: number[] = result.timestamp ?? []
   const closes: (number | null)[] = result.indicators?.quote?.[0]?.close ?? []
-
-  return timestamps
-    .map((t, i) => ({ t, c: closes[i] }))
-    .filter(v => v.c != null)
+  return timestamps.map((t, i) => ({ t, c: closes[i] })).filter(v => v.c != null)
 }
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
   try {
-    const { symbols, candles, range } = await req.json()
+    const { symbols, candles, range, fundamentals } = await req.json()
 
-    if (candles && symbols?.length === 1) {
-      const data = await getCandles(symbols[0], range ?? '3M')
-      return new Response(JSON.stringify({ candles: data }), {
-        headers: { ...cors, 'Content-Type': 'application/json' },
-      })
+    if (fundamentals && symbols?.length) {
+      return json({ fundamentals: await getFundamentals(symbols as string[]) })
     }
-
-    const quotes = await getQuotes(symbols as string[])
-    return new Response(JSON.stringify({ quotes }), {
-      headers: { ...cors, 'Content-Type': 'application/json' },
-    })
+    if (candles && symbols?.length === 1) {
+      return json({ candles: await getCandles(symbols[0], range ?? '3M') })
+    }
+    return json({ quotes: await getQuotes(symbols as string[]) })
   } catch (err) {
-    return new Response(JSON.stringify({ error: String(err) }), {
-      status: 500,
-      headers: { ...cors, 'Content-Type': 'application/json' },
-    })
+    return json({ error: String(err) }, 500)
   }
 })
