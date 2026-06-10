@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { C } from './tokens'
 import { useAuth } from './context/AuthContext'
 import { useMarketDataPreload } from './hooks/useMarketDataPreload'
+import { useQueuedExecution } from './hooks/useQueuedExecution'
 
 import WelcomeMobile   from './screens/auth/WelcomeMobile'
 import WelcomeDesktop  from './screens/auth/WelcomeDesktop'
@@ -61,6 +62,7 @@ export default function App() {
   const isMobile = useIsMobile()
   const { user } = useAuth()
   useMarketDataPreload(user)
+  useQueuedExecution()
 
   return (
     <BrowserRouter>
