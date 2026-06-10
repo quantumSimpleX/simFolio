@@ -3,6 +3,7 @@ import { C, SANS, DISPLAY } from '../../tokens'
 import { CTA, Eyebrow, TermUnderline } from '../../components/Primitives'
 import { AppShell } from '../../components/AppShell'
 import { usePortfolio } from '../../hooks/usePortfolio'
+import { TRANSACTION_FEE } from '../../lib/fees'
 
 export default function TradeReceipt() {
   const navigate = useNavigate()
@@ -22,8 +23,9 @@ export default function TradeReceipt() {
   const hasSlippage = !isSell && execPrice && marketPrice && Math.abs(execPrice - marketPrice) > 0.01
   const slippageAmt = hasSlippage ? Math.abs(execPrice - marketPrice) * qty : 0
 
+  const fee   = result.fee ?? TRANSACTION_FEE
   const total = (qty * execPrice).toFixed(2)
-  const net   = isSell ? (qty * execPrice - 0.01).toFixed(2) : (qty * execPrice + 0.01).toFixed(2)
+  const net   = isSell ? (qty * execPrice - fee).toFixed(2) : (qty * execPrice + fee).toFixed(2)
 
   const ts = new Date().toLocaleString('en-US', { weekday:'short', hour:'numeric', minute:'2-digit', hour12:true, timeZone:'America/New_York' }) + ' EST'
 
@@ -54,7 +56,7 @@ export default function TradeReceipt() {
                   valueColor={pnlPositive?C.aqua600:C.red}
                 />
               )}
-              <ReceiptRow label={<TermUnderline>Regulatory fee</TermUnderline>} value="−$0.01"/>
+              <ReceiptRow label={<TermUnderline>Transaction fee</TermUnderline>} value={`−$${fee.toFixed(2)}`}/>
               <ReceiptRow label="Net to cash" value={`$${net}`} bold/>
             </>
           ) : isQueued ? (
@@ -75,7 +77,7 @@ export default function TradeReceipt() {
                   valueColor={C.gold}
                 />
               )}
-              <ReceiptRow label={<TermUnderline>Regulatory fee</TermUnderline>} value="$0.01"/>
+              <ReceiptRow label={<TermUnderline>Transaction fee</TermUnderline>} value={`$${fee.toFixed(2)}`}/>
               <ReceiptRow label="Net deducted" value={`$${net}`} bold/>
             </>
           )}

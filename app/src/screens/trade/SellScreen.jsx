@@ -6,6 +6,7 @@ import { AppShell } from '../../components/AppShell'
 import { useIsMobile } from '../../hooks/useBreakpoint'
 import { usePortfolio } from '../../hooks/usePortfolio'
 import { usePlaceOrder } from '../../hooks/usePlaceOrder'
+import { TRANSACTION_FEE } from '../../lib/fees'
 
 function detectAssetType(ticker) {
   const crypto = ['BTC','ETH','SOL','DOGE','XRP','ADA','AVAX']
@@ -32,7 +33,7 @@ export default function SellScreen() {
   const gross = (qty * price).toFixed(2)
   const pnl   = qty * price - qty * costBasis
   const pnlPositive = pnl >= 0
-  const netToCash = (qty * price - 0.01).toFixed(2)
+  const netToCash = (qty * price - TRANSACTION_FEE).toFixed(2)
 
   function handleSell() {
     placeOrder({
@@ -127,7 +128,7 @@ export default function SellScreen() {
       <div style={{ background:C.white, border:`1px solid ${C.ink100}`, borderRadius:8, padding:'0 16px' }}>
         <div style={{ padding:'10px 0 4px' }}><Eyebrow>Sale preview</Eyebrow></div>
         <ReceiptRow label={`${qty} shares × $${price.toFixed(2)}`} value={`$${gross}`}/>
-        <ReceiptRow label={<TermUnderline>Regulatory fee</TermUnderline>} value="−$0.01"/>
+        <ReceiptRow label={<TermUnderline>Transaction fee</TermUnderline>} value={`−$${TRANSACTION_FEE.toFixed(2)}`}/>
         <ReceiptRow
           label={<TermUnderline>{pnlPositive ? 'Realised gain' : 'Realised loss'}</TermUnderline>}
           value={`${pnlPositive?'+':'−'}$${Math.abs(pnl).toFixed(2)}`}

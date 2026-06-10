@@ -89,7 +89,8 @@ serve(async (req) => {
       const slippagePct = (Math.random() * 0.0004 + 0.0001) * (order.side === 'BUY' ? 1 : -1)
       const execPrice = parseFloat((basePrice * (1 + slippagePct)).toFixed(4))
       const cost = parseFloat((execPrice * qty).toFixed(4))
-      const fee = 0.01
+      // Flat commission per trade — must match TRANSACTION_FEE in src/lib/fees.js
+      const fee = 1.00
 
       const { data: bal } = await adminClient
         .from('user_balances')

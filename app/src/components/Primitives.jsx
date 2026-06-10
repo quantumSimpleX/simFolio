@@ -11,6 +11,7 @@ const TERM_MAP = {
   'slippage':        'slippage',
   'cost basis':      'cost_basis',
   'regulatory fee':  'regulatory_fee',
+  'transaction fee': 'regulatory_fee',
   'p/e ratio':       'pe_ratio',
   'market cap':      'market_cap',
   'div. yield':      'dividend_yield',

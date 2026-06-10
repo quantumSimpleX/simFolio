@@ -16,8 +16,8 @@
     "zh-TW":{ "title": "持倉成本 (Cost Basis)",  "definition": "您購買目前持有股數所花費的每股平均總金額（包含手續費）。用於計算您出售時的損益。" }
   },
   "regulatory_fee": {
-    "en":   { "title": "Regulatory Fee",    "definition": "A tiny fee collected by the SEC on stock sales, fractions of a cent. Required by law, not charged by the broker." },
-    "zh-TW":{ "title": "監管費 (Regulatory Fee)", "definition": "美國證券交易委員會（SEC）對股票交易徵收的極小費用。這是法律規定，不是券商收費。" }
+    "en":   { "title": "Transaction Fee",   "definition": "A flat $1.00 commission charged on every executed trade, buy or sell. Real brokers charge fees too — factoring them in teaches you the true cost of trading." },
+    "zh-TW":{ "title": "交易手續費 (Transaction Fee)", "definition": "每筆成交的買入或賣出訂單收取固定 $1.00 美元手續費。真實券商也會收費——把手續費納入考量，才能了解交易的真實成本。" }
   },
   "pe_ratio": {
     "en":   { "title": "P/E Ratio",         "definition": "Price-to-Earnings ratio. How much investors pay for each dollar of a company's profit. A high P/E means investors expect strong future growth." },

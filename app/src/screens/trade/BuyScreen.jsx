@@ -10,6 +10,7 @@ import { useStockDetail, useCandles } from '../../hooks/useStockDetail'
 import { usePlaceOrder } from '../../hooks/usePlaceOrder'
 import { isMarketOpen } from '../../hooks/useQuotes'
 import { usePortfolio } from '../../hooks/usePortfolio'
+import { TRANSACTION_FEE } from '../../lib/fees'
 
 function detectAssetType(ticker) {
   const crypto = ['BTC','ETH','SOL','DOGE','XRP','ADA','AVAX']
@@ -37,7 +38,7 @@ export default function BuyScreen() {
 
   const price = stock?.price ?? 0
   const total = (qty * price).toFixed(2)
-  const fee = 0.01
+  const fee = TRANSACTION_FEE
   const grandTotal = (qty * price + fee).toFixed(2)
   const cashAfter = cashBalance != null ? (cashBalance - parseFloat(grandTotal)).toFixed(2) : null
 
@@ -118,7 +119,7 @@ export default function BuyScreen() {
       <div style={{ background:C.white, border:`1px solid ${C.ink100}`, borderRadius:8, padding:'0 20px' }}>
         <div style={{ padding:'12px 0 4px' }}><Eyebrow>Order summary</Eyebrow></div>
         <ReceiptRow label={`${qty} shares × $${price}`} value={`$${total}`}/>
-        <ReceiptRow label={<TermUnderline>Regulatory fee</TermUnderline>} value={`$${fee}`}/>
+        <ReceiptRow label={<TermUnderline>Transaction fee</TermUnderline>} value={`$${fee.toFixed(2)}`}/>
         <ReceiptRow label={canExec ? 'Total' : 'Total (estimated)'} value={canExec ? `$${grandTotal}` : `~$${grandTotal}`} bold/>
       </div>
     </>
