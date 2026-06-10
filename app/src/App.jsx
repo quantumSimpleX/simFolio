@@ -21,8 +21,7 @@ import SellScreen   from './screens/trade/SellScreen'
 import TradeReceipt from './screens/trade/TradeReceipt'
 import HeroHandoff  from './screens/trade/HeroHandoff'
 
-import MarketsMobile   from './screens/markets/MarketsMobile'
-import MarketsDesktop  from './screens/markets/MarketsDesktop'
+import Markets         from './screens/markets/Markets'
 import StockDetail     from './screens/markets/StockDetail'
 
 import OrdersMobile from './screens/orders/OrdersMobile'
@@ -83,7 +82,7 @@ export default function App() {
           <Route path="/sell/:ticker" element={<PrivateRoute><SellScreen/></PrivateRoute>}/>
           <Route path="/receipt"      element={<PrivateRoute><TradeReceipt/></PrivateRoute>}/>
           <Route path="/hero-handoff" element={<PrivateRoute><HeroHandoff/></PrivateRoute>}/>
-          <Route path="/markets"      element={<PrivateRoute>{isMobile ? <MarketsMobile/> : <MarketsDesktop/>}</PrivateRoute>}/>
+          <Route path="/markets"      element={<PrivateRoute><Markets/></PrivateRoute>}/>
           <Route path="/stock/:ticker" element={<PrivateRoute><StockDetail/></PrivateRoute>}/>
           <Route path="/orders"       element={<PrivateRoute><OrdersMobile/></PrivateRoute>}/>
           <Route path="/achievements" element={<PrivateRoute><AchievementsMobile/></PrivateRoute>}/>
