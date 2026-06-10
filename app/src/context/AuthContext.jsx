@@ -9,11 +9,36 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Ensures a new (anonymous) user has the rows the app needs. Onboarding will
+    // overwrite these if the user goes through it; this is the skip-onboarding floor.
+    async function ensureUserRows(userId) {
+      const { data } = await supabase
+        .from('user_balances').select('user_id').eq('user_id', userId).maybeSingle()
+      if (data) return
+      const STARTING_CAPITAL = 5000
+      await supabase.from('users').upsert({ user_id: userId, onboarding_done: false })
+      await supabase.from('user_balances').upsert({
+        user_id: userId, cash_balance: STARTING_CAPITAL, starting_capital: STARTING_CAPITAL,
+      })
+    }
+
+    async function init() {
+      let { data: { session } } = await supabase.auth.getSession()
+
+      // Skip login: if there's no session, create an anonymous one so the app
+      // works immediately and edge functions/RLS get a valid user JWT.
+      if (!session) {
+        const { data, error } = await supabase.auth.signInAnonymously()
+        if (error) console.error('Anonymous sign-in failed:', error.message)
+        session = data?.session ?? null
+      }
+
       setSession(session)
       setUser(session?.user ?? null)
+      if (session?.user) await ensureUserRows(session.user.id)
       setLoading(false)
-    })
+    }
+    init()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
