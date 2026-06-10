@@ -48,11 +48,12 @@ async function fetchOneStat(ticker) {
 // does NOT block the quote return. React Query will pick up the DB updates on next stale
 // window, or the caller can invalidate.
 async function backgroundEnrichFundamentals(tickers, queryClient) {
-  if (!TD_KEY || !tickers.length) return
+  if (!tickers.length) return
   console.log('[Quotes] Background fundamentals fetch starting for:', tickers.join(', '))
-  const INTERVAL_MS = 8_000  // 8 sec = safe under 8 req/min with quote calls also in flight
+  // TD free tier: max 8 req/min — throttle only when using TD key directly
+  const INTERVAL_MS = TD_KEY ? 8_000 : 0
   for (let i = 0; i < tickers.length; i++) {
-    if (i > 0) await new Promise(res => setTimeout(res, INTERVAL_MS))
+    if (i > 0 && INTERVAL_MS) await new Promise(res => setTimeout(res, INTERVAL_MS))
     const ticker = tickers[i]
     const fund = await fetchOneStat(ticker)
     if (!fund) { console.log(`[Quotes] No stats for ${ticker}`); continue }
