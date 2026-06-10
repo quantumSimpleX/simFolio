@@ -80,20 +80,23 @@ export async function getStoredFundamentals(tickers) {
 export async function updateFundamentals(fundMap) {
   const entries = Object.entries(fundMap)
   if (!entries.length) return
-  await Promise.allSettled(
-    entries.map(([ticker, f]) => {
-      const patch = {}
+  const results = await Promise.allSettled(
+    entries.map(async ([ticker, f]) => {
+      const patch = { ticker }
       if (f.marketCap     > 0) patch.market_cap     = f.marketCap
       if (f.peRatio       > 0) patch.pe_ratio       = f.peRatio
       if (f.eps           > 0) patch.eps            = f.eps
       if (f.beta          > 0) patch.beta           = f.beta
       if (f.dividendYield > 0) patch.dividend_yield = f.dividendYield
-      return Object.keys(patch).length
-        ? supabase.from('market_data_cache').update(patch).eq('ticker', ticker)
-        : Promise.resolve()
+      if (Object.keys(patch).length === 1) return // only ticker, nothing to write
+      const { error } = await supabase
+        .from('market_data_cache')
+        .upsert(patch, { onConflict: 'ticker', ignoreDuplicates: false })
+      if (error) console.error(`[MarketCache] Failed to write fundamentals for ${ticker}:`, error.message)
+      else       console.log(`[MarketCache] Fundamentals written for ${ticker}:`, patch)
     })
   )
-  console.log('[MarketCache] Fundamentals stored:', entries.map(([t]) => t).join(', '))
+  results.forEach(r => { if (r.status === 'rejected') console.error('[MarketCache] updateFundamentals error:', r.reason) })
 }
 
 // Returns cached quotes younger than 5 hours and the list of tickers that were not found.
