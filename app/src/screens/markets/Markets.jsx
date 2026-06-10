@@ -84,9 +84,13 @@ export default function Markets() {
   const searchResults = useSymbolSearch(search.trim())
   const showDropdown = query.length > 0
 
-  const allSymbols = [...new Set([...INDEX_SYMBOLS, ...watchlist, ...searchResults.map(r => r.symbol)])]
-  const { data: quotes } = useQuotes(allSymbols)
-  const quoteMap = Object.fromEntries((quotes ?? []).map(q => [q.ticker, q]))
+  // Indices + watchlist are intentional holdings → cached. Search results are
+  // transient and fetched display-only (never written) until the user opens one.
+  const stableSymbols = [...new Set([...INDEX_SYMBOLS, ...watchlist])]
+  const searchSymbols = searchResults.map(r => r.symbol).filter(s => !stableSymbols.includes(s))
+  const { data: stableQuotes } = useQuotes(stableSymbols)
+  const { data: searchQuotes } = useQuotes(searchSymbols, { persist: false })
+  const quoteMap = Object.fromEntries([...(stableQuotes ?? []), ...(searchQuotes ?? [])].map(q => [q.ticker, q]))
 
   return (
     <AppShell active="markets">

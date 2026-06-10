@@ -105,37 +105,42 @@ async function fetchFromAPI(symbols) {
 
 // Exported so useMarketDataPreload can reuse the same cache-aware path.
 // queryClient is optional — pass it to get live UI updates as background stats arrive.
-export async function fetchQuotes(symbols, queryClient = null) {
+// persist=false → display-only: fetch for the UI but never write to the DB cache or
+// enrich fundamentals (used for transient search results the user hasn't opened).
+export async function fetchQuotes(symbols, queryClient = null, { persist = true } = {}) {
   const { hits, misses } = await getCachedQuotes(symbols)
   let all = hits
 
   if (misses.length) {
     const fresh = await fetchFromAPI(misses)
-    await persistQuotes(fresh)  // price/volume/52W stored; fundamentals preserved if already in DB
-    // Read back any fundamentals that survived the upsert (previously stored from /statistics)
-    const preserved = await getStoredFundamentals(misses)
-    all = [...hits, ...fresh.map(q => preserved[q.ticker] ? { ...q, ...preserved[q.ticker] } : q)]
+    if (persist) {
+      await persistQuotes(fresh)  // price/volume/52W stored; fundamentals preserved if already in DB
+      const preserved = await getStoredFundamentals(misses)
+      all = [...hits, ...fresh.map(q => preserved[q.ticker] ? { ...q, ...preserved[q.ticker] } : q)]
+    } else {
+      all = [...hits, ...fresh]
+    }
   }
 
-  // Kick off background statistics fetch for tickers missing any fundamental.
-  // !marketCap → never fetched. !beta → has old partial data (only marketCap stored), needs full set.
-  // Returns immediately — UI updates ticker-by-ticker as each stat call completes.
-  const needsFund = all.filter(q => !q.marketCap || !q.beta).map(q => q.ticker)
-  if (needsFund.length) {
-    backgroundEnrichFundamentals(needsFund, queryClient).catch(() => {})
+  // Background fundamentals enrichment writes to the cache — only for the persisted path.
+  if (persist) {
+    const needsFund = all.filter(q => !q.marketCap || !q.beta).map(q => q.ticker)
+    if (needsFund.length) {
+      backgroundEnrichFundamentals(needsFund, queryClient).catch(() => {})
+    }
   }
 
   return all
 }
 
-export function useQuotes(symbols) {
+export function useQuotes(symbols, { persist = true } = {}) {
   const open = isMarketOpen()
   const queryClient = useQueryClient()
   return useQuery({
-    queryKey: ['quotes', symbols?.join(',')],
-    queryFn: () => fetchQuotes(symbols, queryClient),
+    queryKey: persist ? ['quotes', symbols?.join(',')] : ['quotes-display', symbols?.join(',')],
+    queryFn: () => fetchQuotes(symbols, queryClient, { persist }),
     enabled: !!symbols?.length,
-    refetchInterval: open ? 5 * 60_000 : false,
+    refetchInterval: open && persist ? 5 * 60_000 : false,
     staleTime: open ? 5 * 60_000 : 60 * 60_000,
   })
 }
