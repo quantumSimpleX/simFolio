@@ -22,7 +22,7 @@ export default function OrdersMobile() {
   const cancelled = (orders ?? []).filter(o => o.status === 'CANCELLED')
 
   return (
-    <AppShell active="portfolio" maxWidth={720}>
+    <AppShell active="orders" maxWidth={720}>
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', paddingBottom:14 }}>
         <div onClick={() => navigate('/portfolio')} style={{ fontFamily:SANS, fontSize:14, color:C.ame400, cursor:'pointer' }}>← Portfolio</div>
         <div style={{ fontFamily:SANS, fontWeight:700, fontSize:17, color:C.ink900 }}>Orders</div>
