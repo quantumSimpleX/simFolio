@@ -27,6 +27,17 @@ async function getQuote(ticker: string): Promise<{ current: number; open: number
   return { current: q.c ?? 0, open: q.o ?? 0 }
 }
 
+// True if the order was placed during today's market session (after 9:30 ET
+// today). Such orders fill at the current price; orders placed while the
+// market was closed fill at today's opening price.
+function placedDuringTodaySession(createdAt: string): boolean {
+  const fmt = (d: Date) => d.toLocaleString('en-US', { timeZone: 'America/New_York' })
+  const created = new Date(fmt(new Date(createdAt)))
+  const now = new Date(fmt(new Date()))
+  if (created.toDateString() !== now.toDateString()) return false
+  return created.getHours() * 60 + created.getMinutes() >= 9 * 60 + 30
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
@@ -58,16 +69,19 @@ serve(async (req) => {
       const qty = parseFloat(order.requested_qty)
       const { current, open } = await getQuote(order.ticker)
 
-      // Queued market orders fill at the day's opening price; crypto and limit
-      // orders fill at the current price.
+      // Market orders placed while the market was closed fill at the day's
+      // opening price; everything else (crypto, limit, orders placed during
+      // the session) fills at the current price.
       let basePrice: number
       if (order.type === 'LIMIT') {
         const limit = parseFloat(order.limit_price)
         const conditionMet = order.side === 'BUY' ? current > 0 && current <= limit : current >= limit
         if (!conditionMet) continue
         basePrice = current
+      } else if (isCrypto || placedDuringTodaySession(order.created_at)) {
+        basePrice = current
       } else {
-        basePrice = isCrypto ? current : (open > 0 ? open : current)
+        basePrice = open > 0 ? open : current
       }
       if (basePrice <= 0) continue
 
