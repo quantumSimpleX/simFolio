@@ -10,13 +10,11 @@ const cors = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Free US-based models, tried in order — free slots are often rate-limited or retired.
+// Single model by design (user preference): OpenAI's largest free open-weight
+// model. Fast enough for chat; bigger free models (Nemotron Ultra 550B) exceed
+// the edge function wall-clock limit.
 const MODELS = [
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'nvidia/nemotron-3-super-120b-a12b:free',
   'openai/gpt-oss-120b:free',
-  'google/gemma-4-31b-it:free',
-  'poolside/laguna-m.1:free',
 ]
 
 const HERO_PERSONAS: Record<string, string> = {
