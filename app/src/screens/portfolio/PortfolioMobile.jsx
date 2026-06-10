@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { C, SANS, DISPLAY } from '../../tokens';
-import { StatusBar, Eyebrow } from '../../components/Primitives';
+import { Eyebrow } from '../../components/Primitives';
 import { BottomNav } from '../../components/Nav';
 import { ChartPanel } from '../../components/Charts';
 import { HoldingRow } from '../../components/HoldingRow';
@@ -48,10 +48,8 @@ export default function PortfolioMobile() {
   const pnlPos = displayPnl >= 0;
 
   return (
-    <div style={{ width:390, height:844, background:C.paper, display:'flex', flexDirection:'column', overflow:'hidden' }}>
-      <StatusBar/>
-
-      <div style={{ padding:'4px 24px 0', flexShrink:0 }}>
+    <div style={{ width:'100%', height:'100dvh', background:C.paper, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+      <div style={{ padding:'18px 24px 0', flexShrink:0 }}>
         <Eyebrow>Portfolio</Eyebrow>
         <div style={{ display:'flex', alignItems:'baseline', gap:12, marginTop:6 }}>
           <div style={{ fontFamily:DISPLAY, fontWeight:700, fontSize:38, color:C.ink900, letterSpacing:'-0.02em', lineHeight:1 }}>

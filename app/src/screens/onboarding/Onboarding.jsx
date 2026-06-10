@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { C, SANS, GOALS } from '../../tokens';
-import { StatusBar, Logo, SimPill, CTA, GoalCard, ProgressDots, GuideAvatar } from '../../components/Primitives';
+import { Logo, SimPill, CTA, GoalCard, ProgressDots, GuideAvatar } from '../../components/Primitives';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -152,9 +152,8 @@ export default function Onboarding() {
   }
 
   return (
-    <div style={{ width:390, minHeight:844, background:C.paper, display:'flex', flexDirection:'column' }}>
-      <StatusBar/>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 24px 14px', flexShrink:0 }}>
+    <div style={{ width:'100%', maxWidth:480, margin:'0 auto', minHeight:'100dvh', background:C.paper, display:'flex', flexDirection:'column', boxSizing:'border-box' }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'18px 24px 14px', flexShrink:0 }}>
         <Logo size={19}/>
         <SimPill/>
       </div>
@@ -217,9 +216,8 @@ function StockInterest({ stocks, setStocks, onFinish, saving }) {
   }
 
   return (
-    <div style={{ width:390, minHeight:844, background:C.paper, display:'flex', flexDirection:'column' }}>
-      <StatusBar/>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 24px 14px', flexShrink:0 }}>
+    <div style={{ width:'100%', maxWidth:480, margin:'0 auto', minHeight:'100dvh', background:C.paper, display:'flex', flexDirection:'column', boxSizing:'border-box' }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'18px 24px 14px', flexShrink:0 }}>
         <Logo size={19}/>
         <SimPill/>
       </div>

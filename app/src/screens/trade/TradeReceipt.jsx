@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import { C, SANS, DISPLAY } from '../../tokens'
-import { StatusBar, CTA, Eyebrow, TermUnderline } from '../../components/Primitives'
+import { CTA, Eyebrow, TermUnderline } from '../../components/Primitives'
+import { AppShell } from '../../components/AppShell'
 import { usePortfolio } from '../../hooks/usePortfolio'
 
 export default function TradeReceipt() {
@@ -27,10 +28,8 @@ export default function TradeReceipt() {
   const ts = new Date().toLocaleString('en-US', { weekday:'short', hour:'numeric', minute:'2-digit', hour12:true, timeZone:'America/New_York' }) + ' EST'
 
   return (
-    <div style={{ width:390, minHeight:780, background:C.paper, display:'flex', flexDirection:'column' }}>
-      <StatusBar/>
-
-      <div style={{ flex:1, padding:'24px', display:'flex', flexDirection:'column', gap:20 }}>
+    <AppShell active="portfolio">
+      <div style={{ maxWidth:560, margin:'0 auto', display:'flex', flexDirection:'column', gap:20 }}>
         <div style={{ textAlign:'center', padding:'8px 0' }}>
           <div style={{ width:48, height:48, borderRadius:'50%', background:isQueued?C.goldBg:isSell?C.redBg:C.aqua50, border:`2px solid ${isQueued?C.gold:isSell?C.red:C.aqua400}`, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px', fontFamily:SANS, fontSize:22, color:isQueued?C.gold:isSell?C.red:C.aqua400 }}>
             {isQueued ? '⏳' : '✓'}
@@ -111,17 +110,17 @@ export default function TradeReceipt() {
             <div style={{ fontFamily:SANS, fontSize:14, fontWeight:700, color:C.ink900 }}>${cashBalance.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 })}</div>
           </div>
         )}
-      </div>
 
-      <div style={{ padding:'0 24px 32px', flexShrink:0, display:'flex', flexDirection:'column', gap:10 }}>
-        {!isSell && !isQueued && (
-          <CTA label="Continue to portfolio  →" full onClick={() => navigate('/hero-handoff')}/>
-        )}
-        {(isSell || isQueued) && (
-          <CTA label="Back to portfolio  →" full onClick={() => navigate('/portfolio')}/>
-        )}
+        <div style={{ display:'flex', flexDirection:'column', gap:10, marginTop:4 }}>
+          {!isSell && !isQueued && (
+            <CTA label="Continue to portfolio  →" full onClick={() => navigate('/hero-handoff')}/>
+          )}
+          {(isSell || isQueued) && (
+            <CTA label="Back to portfolio  →" full onClick={() => navigate('/portfolio')}/>
+          )}
+        </div>
       </div>
-    </div>
+    </AppShell>
   )
 }
 

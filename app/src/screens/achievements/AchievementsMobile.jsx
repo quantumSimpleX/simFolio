@@ -1,27 +1,27 @@
 import { useNavigate } from 'react-router-dom'
 import { C, SANS, DISPLAY } from '../../tokens'
-import { StatusBar, Eyebrow } from '../../components/Primitives'
-import { BottomNav } from '../../components/Nav'
+import { Eyebrow } from '../../components/Primitives'
+import { AppShell } from '../../components/AppShell'
+import { useIsMobile } from '../../hooks/useBreakpoint'
 import { BadgeGlyphForIndex, MedalGlyph, TrophyGlyph } from '../../components/Badges'
 import { useAchievements } from '../../hooks/useAchievements'
 
 export default function AchievementsMobile() {
   const navigate = useNavigate()
+  const mobile = useIsMobile()
   const { badges, earnedCount, medalCount, trophyCount, isLoading } = useAchievements()
 
   const toNextMedal = 10 - (earnedCount % 10)
 
   return (
-    <div style={{ width:390, minHeight:960, background:C.paper, display:'flex', flexDirection:'column' }}>
-      <StatusBar/>
-
-      <div style={{ padding:'0 24px 14px', display:'flex', alignItems:'center', justifyContent:'space-between', borderBottom:`1px solid ${C.ink100}`, flexShrink:0 }}>
+    <AppShell active="achievements" maxWidth={860}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', paddingBottom:14, borderBottom:`1px solid ${C.ink100}`, marginBottom:16 }}>
         <div onClick={() => navigate('/portfolio')} style={{ fontFamily:SANS, fontSize:14, color:C.ame400, cursor:'pointer' }}>← Portfolio</div>
         <div style={{ fontFamily:SANS, fontWeight:700, fontSize:17, color:C.ink900 }}>Achievements</div>
         <div style={{ width:40 }}/>
       </div>
 
-      <div style={{ flex:1, padding:'16px 24px', display:'flex', flexDirection:'column', gap:20, overflowY:'auto' }}>
+      <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
         {/* Progress summary */}
         <div style={{ background:C.white, border:`1px solid ${C.ink100}`, borderRadius:8, padding:'18px 20px', display:'flex', gap:20, alignItems:'center' }}>
           <div style={{ flex:1 }}>
@@ -53,7 +53,7 @@ export default function AchievementsMobile() {
         {/* Badge grid */}
         <div>
           <div style={{ marginBottom:12 }}><Eyebrow>Badges · {earnedCount} earned of {badges.length}</Eyebrow></div>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10 }}>
+          <div style={{ display:'grid', gridTemplateColumns:mobile?'1fr 1fr 1fr':'repeat(5, 1fr)', gap:10 }}>
             {badges.map((b, i) => (
               <div
                 key={b.id}
@@ -74,7 +74,7 @@ export default function AchievementsMobile() {
             <div style={{ marginBottom:12 }}><Eyebrow>Medals · {medalCount} earned</Eyebrow></div>
             <div style={{ display:'flex', gap:10 }}>
               {Array.from({ length: medalCount }, (_, i) => (
-                <div key={i} style={{ flex:1, background:C.white, border:`1px solid ${C.ink100}`, borderRadius:8, padding:'14px', display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
+                <div key={i} style={{ flex:1, maxWidth:140, background:C.white, border:`1px solid ${C.ink100}`, borderRadius:8, padding:'14px', display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
                   <MedalGlyph size={40} earned/>
                   <div style={{ fontFamily:SANS, fontWeight:600, fontSize:12, color:C.gold, textAlign:'center' }}>Medal {i + 1}</div>
                 </div>
@@ -83,8 +83,6 @@ export default function AchievementsMobile() {
           </div>
         )}
       </div>
-
-      <BottomNav active="achievements"/>
-    </div>
+    </AppShell>
   )
 }

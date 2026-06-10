@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 import { C, SANS } from '../../tokens';
-import { StatusBar } from '../../components/Primitives';
 import { BottomNav } from '../../components/Nav';
 import { HeroMessage, UserMessage } from '../../components/HeroMessage';
 import { useHeroChat, useHeroHistory } from '../../hooks/useHeroChat';
@@ -40,9 +39,8 @@ export default function AskTab() {
   const councilNames = heroes.map(h => h.name.split(' ')[0]).join(' · ');
 
   return (
-    <div style={{ width:390, height:844, background:C.paper, display:'flex', flexDirection:'column', overflow:'hidden' }}>
-      <StatusBar/>
-      <div style={{ padding:'0 24px 10px', display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
+    <div style={{ width:'100%', height:'100dvh', background:C.paper, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+      <div style={{ padding:'14px 24px 10px', display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
         <div style={{ display:'flex' }}>
           {heroes.slice(0,3).map((h, i) => (
             <div key={h.id} style={{ width:34, height:34, borderRadius:'50%', background:`${h.color}12`, border:`1.5px solid ${h.color}35`, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:SANS, fontWeight:700, fontSize:12, color:h.color, marginLeft:i>0?-8:0 }}>{h.initials}</div>

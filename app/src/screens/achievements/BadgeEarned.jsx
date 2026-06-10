@@ -1,6 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { C, SANS, DISPLAY } from '../../tokens'
-import { StatusBar } from '../../components/Primitives'
 import { BadgeGlyphForIndex, MedalGlyph, TrophyGlyph } from '../../components/Badges'
 import { ProgressRing } from '../../components/Charts'
 
@@ -56,10 +55,8 @@ export default function BadgeEarned() {
   const m = MOMENT_TYPES[type] || MOMENT_TYPES.badge
 
   return (
-    <div style={{ width:390, minHeight:740, background:C.ink900, display:'flex', flexDirection:'column' }}>
-      <StatusBar/>
-
-      <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:24, padding:'0 40px' }}>
+    <div style={{ width:'100%', minHeight:'100dvh', background:C.ink900, display:'flex', flexDirection:'column' }}>
+      <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:24, padding:'40px', width:'100%', maxWidth:480, margin:'0 auto', boxSizing:'border-box' }}>
         {/* Glyph */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'center' }}>
           {type === 'badge'  && <BadgeGlyphForIndex index={0} size={96} earned/>}
@@ -90,7 +87,7 @@ export default function BadgeEarned() {
         </div>
       </div>
 
-      <div style={{ padding:'0 24px 36px', flexShrink:0 }}>
+      <div style={{ padding:'0 24px 36px', flexShrink:0, width:'100%', maxWidth:480, margin:'0 auto', boxSizing:'border-box' }}>
         <div
           onClick={() => navigate('/portfolio')}
           style={{ height:48, background:m.ctaBg, color:m.ctaColor, borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:SANS, fontSize:15, fontWeight:700, cursor:'pointer' }}

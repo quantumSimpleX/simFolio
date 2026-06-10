@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { C, SANS, DISPLAY } from '../../tokens'
-import { StatusBar, CTA, Eyebrow, TermUnderline, MktStatus, ReceiptRow } from '../../components/Primitives'
-import { TopNav } from '../../components/Nav'
+import { CTA, Eyebrow, TermUnderline, MktStatus, ReceiptRow } from '../../components/Primitives'
+import { AppShell } from '../../components/AppShell'
+import { useIsMobile } from '../../hooks/useBreakpoint'
 import { SageMsg } from '../../components/HeroMessage'
 import { MiniChart } from '../../components/Charts'
 import { useStockDetail, useCandles } from '../../hooks/useStockDetail'
@@ -21,6 +22,7 @@ function detectAssetType(ticker) {
 export default function BuyScreen() {
   const { ticker } = useParams()
   const navigate = useNavigate()
+  const mobile = useIsMobile()
   const [qty, setQty] = useState(1)
   const [orderType, setOrderType] = useState('MARKET')
   const [limitPrice, setLimitPrice] = useState('')
@@ -31,6 +33,7 @@ export default function BuyScreen() {
   const { mutate: placeOrder, isPending } = usePlaceOrder()
   const marketOpen = isMarketOpen()
   const assetType = detectAssetType(ticker)
+  const canExec = marketOpen || assetType === 'CRYPTO'
 
   const price = stock?.price ?? 0
   const total = (qty * price).toFixed(2)
@@ -58,173 +61,123 @@ export default function BuyScreen() {
     })
   }
 
-  const isMobile = window.innerWidth < 1024
-
-  if (!isMobile) return (
-    <BuyDesktop
-      ticker={ticker} stock={stock} isLoading={isLoading} candles={candles} candlesLoading={candlesLoading} candlesError={candlesError}
-      qty={qty} setQty={setQty}
-      orderType={orderType} setOrderType={setOrderType}
-      limitPrice={limitPrice} setLimitPrice={setLimitPrice}
-      marketOpen={marketOpen} navigate={navigate}
-      total={total} grandTotal={grandTotal} cashAfter={cashAfter}
-      handleBuy={handleBuy} isPending={isPending} cashBalance={cashBalance}
-    />
-  )
-
-  return (
-    <div style={{ width:390, minHeight:844, background:C.paper, display:'flex', flexDirection:'column' }}>
-      <StatusBar/>
-      <div style={{ padding:'0 24px 14px', display:'flex', alignItems:'center', gap:14, borderBottom:`1px solid ${C.ink100}`, flexShrink:0 }}>
-        <div onClick={() => navigate(-1)} style={{ fontFamily:SANS, fontSize:14, color:C.ame400, cursor:'pointer' }}>← Back</div>
-        <div style={{ flex:1, textAlign:'center', fontFamily:SANS, fontWeight:700, fontSize:17, color:C.ink900 }}>Buy {ticker}</div>
-        <div style={{ width:40 }}/>
-      </div>
-
-      <div style={{ padding:'14px 24px', borderBottom:`1px solid ${C.ink100}`, display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0, background:C.white }}>
-        <div>
-          <div style={{ fontFamily:DISPLAY, fontWeight:700, fontSize:28, color:C.ink900, letterSpacing:'-0.02em' }}>
-            {isLoading ? '…' : `$${price.toLocaleString()}`}
-          </div>
-          <div style={{ fontFamily:SANS, fontSize:13, color:stock?.pos?C.aqua600:C.red, marginTop:2 }}>
-            {stock ? `${stock.pos?'+':''}${stock.change} · ${stock.pos?'+':''}${stock.pct}% today` : '—'}
-          </div>
-        </div>
-        <div style={{ textAlign:'right' }}>
-          <div style={{ fontFamily:SANS, fontSize:12, color:C.ink400 }}>{ticker} · {stock?.exchange ?? assetType}</div>
-          <div style={{ marginTop:4 }}><MktStatus open={marketOpen || assetType === 'CRYPTO'}/></div>
+  const priceCard = (
+    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'16px 20px', background:C.white, border:`1px solid ${C.ink100}`, borderRadius:8 }}>
+      <div>
+        <div style={{ fontFamily:DISPLAY, fontWeight:700, fontSize:mobile?28:32, color:C.ink900, letterSpacing:'-0.02em' }}>{isLoading ? '…' : `$${price.toLocaleString()}`}</div>
+        <div style={{ fontFamily:SANS, fontSize:13, color:stock?.pos?C.aqua600:C.red, marginTop:3 }}>
+          {stock ? `${stock.pos?'+':''}${stock.change?.toFixed(2)} · ${stock.pos?'+':''}${stock.pct?.toFixed(1)}% today` : '—'}
         </div>
       </div>
-
-      <div style={{ flex:1, padding:'20px 24px', display:'flex', flexDirection:'column', gap:18, overflowY:'auto' }}>
-        {!(marketOpen || assetType === 'CRYPTO') && <MarketClosedBanner/>}
-
-        <SageMsg text={(marketOpen || assetType === 'CRYPTO')
-          ? "Let's walk through this together. How many shares do you want? Even 1 is a great start."
-          : "Markets are closed right now. Your market order will be queued and execute at the next opening price — which may differ from what you see today."
-        }/>
-
-        <QtyInputBlock qty={qty} setQty={setQty}/>
-
-        <div>
-          <div style={{ fontFamily:SANS, fontSize:13, color:C.ink500, marginBottom:8 }}>Order type</div>
-          <div style={{ display:'flex', gap:8 }}>
-            <OrderTypeCard label="Market order" desc={(marketOpen || assetType==='CRYPTO') ? 'Execute now at current price' : 'Execute at next market open'} active={orderType==='MARKET'} onClick={() => setOrderType('MARKET')}/>
-            <OrderTypeCard label="Limit order" desc="Set a guaranteed max price" active={orderType==='LIMIT'} onClick={() => setOrderType('LIMIT')}/>
-          </div>
-          {orderType === 'MARKET' && (
-            <div style={{ marginTop:10, display:'flex', gap:8 }}>
-              <div style={{ width:20, height:20, borderRadius:'50%', background:C.aqua50, border:`1px solid ${C.aqua400}40`, display:'flex', alignItems:'center', justifyContent:'center', color:C.aqua400, fontSize:11, flexShrink:0 }}>◇</div>
-              <div style={{ fontFamily:SANS, fontSize:12, color:C.ink500, lineHeight:1.5, fontStyle:'italic' }}>
-                A <TermUnderline>market order</TermUnderline> fills immediately. The final price may vary slightly (<TermUnderline>slippage</TermUnderline>).
-              </div>
-            </div>
-          )}
-          {orderType === 'LIMIT' && (
-            <input
-              type="number"
-              value={limitPrice}
-              onChange={e => setLimitPrice(e.target.value)}
-              placeholder={`Max price (current: $${price})`}
-              style={{ marginTop:8, height:44, width:'100%', border:`1px solid ${C.ame400}`, borderRadius:4, padding:'0 14px', fontFamily:SANS, fontSize:14, color:C.ink900, outline:'none', background:C.white, boxSizing:'border-box' }}
-            />
-          )}
-        </div>
-
-        <div style={{ background:C.white, border:`1px solid ${C.ink100}`, borderRadius:8, padding:'0 16px' }}>
-          <ReceiptRow label={`${qty} shares × $${price}`} value={`$${total}`}/>
-          <ReceiptRow label={<TermUnderline>Regulatory fee</TermUnderline>} value={`$${fee}`}/>
-          <ReceiptRow label={(marketOpen || assetType==='CRYPTO') ? 'Total' : 'Total (estimated)'} value={(marketOpen || assetType==='CRYPTO') ? `$${grandTotal}` : `~$${grandTotal}`} bold/>
-        </div>
-      </div>
-
-      <div style={{ padding:'14px 24px 32px', borderTop:`1px solid ${C.ink100}`, flexShrink:0 }}>
-        <CTA
-          label={(marketOpen || assetType==='CRYPTO') ? `Buy ${qty} ${ticker}  →` : `Queue order for next open  →`}
-          full
-          loading={isPending}
-          disabled={cashBalance != null && cashBalance < parseFloat(grandTotal)}
-          onClick={handleBuy}
-        />
-        {cashAfter !== null && (
-          <div style={{ fontFamily:SANS, fontSize:12, color:C.ink400, textAlign:'center', marginTop:10 }}>
-            Cash after: ${cashAfter} available
-          </div>
-        )}
+      <div style={{ textAlign:'right' }}>
+        <div style={{ fontFamily:SANS, fontSize:12, color:C.ink400 }}>{ticker} · {stock?.exchange ?? assetType}</div>
+        <div style={{ marginTop:4, display:'flex', justifyContent:'flex-end' }}><MktStatus open={canExec}/></div>
       </div>
     </div>
   )
-}
 
-function BuyDesktop({ ticker, stock, isLoading, candles, candlesLoading, candlesError, qty, setQty, orderType, setOrderType, limitPrice, setLimitPrice, marketOpen, navigate, total, grandTotal, cashAfter, handleBuy, isPending, cashBalance }) {
-  const price = stock?.price ?? 0
-  const assetType = detectAssetType(ticker)
-  const canExec = marketOpen || assetType === 'CRYPTO'
+  const orderForm = (
+    <>
+      {!canExec && <MarketClosedBanner/>}
 
+      <SageMsg text={canExec
+        ? "Let's walk through this together. How many shares do you want? Even 1 is a great start."
+        : "Markets are closed right now. Your market order will be queued and execute at the next opening price — which may differ from what you see today."
+      }/>
+
+      <div>
+        <div style={{ fontFamily:SANS, fontSize:13, color:C.ink500, marginBottom:8 }}>Quantity</div>
+        <QtyInputBlock qty={qty} setQty={setQty}/>
+      </div>
+
+      <div>
+        <div style={{ fontFamily:SANS, fontSize:13, color:C.ink500, marginBottom:8 }}>Order type</div>
+        <div style={{ display:'flex', gap:10 }}>
+          <OrderTypeCard label="Market order" desc={canExec ? 'Execute now at current price' : 'Execute at next market open'} active={orderType==='MARKET'} onClick={() => setOrderType('MARKET')}/>
+          <OrderTypeCard label="Limit order" desc="Only fill if price reaches your target" active={orderType==='LIMIT'} onClick={() => setOrderType('LIMIT')}/>
+        </div>
+        {orderType === 'MARKET' && (
+          <div style={{ marginTop:10, display:'flex', gap:8 }}>
+            <div style={{ width:20, height:20, borderRadius:'50%', background:C.aqua50, border:`1px solid ${C.aqua400}40`, display:'flex', alignItems:'center', justifyContent:'center', color:C.aqua400, fontSize:11, flexShrink:0 }}>◇</div>
+            <div style={{ fontFamily:SANS, fontSize:12, color:C.ink500, lineHeight:1.5, fontStyle:'italic' }}>
+              A <TermUnderline>market order</TermUnderline> fills immediately. The final price may vary slightly (<TermUnderline>slippage</TermUnderline>).
+            </div>
+          </div>
+        )}
+        {orderType === 'LIMIT' && (
+          <input
+            type="number"
+            value={limitPrice}
+            onChange={e => setLimitPrice(e.target.value)}
+            placeholder={`Max price (current: $${price})`}
+            style={{ marginTop:8, height:44, width:'100%', border:`1px solid ${C.ame400}`, borderRadius:4, padding:'0 14px', fontFamily:SANS, fontSize:14, color:C.ink900, outline:'none', background:C.white, boxSizing:'border-box' }}
+          />
+        )}
+      </div>
+
+      <div style={{ background:C.white, border:`1px solid ${C.ink100}`, borderRadius:8, padding:'0 20px' }}>
+        <div style={{ padding:'12px 0 4px' }}><Eyebrow>Order summary</Eyebrow></div>
+        <ReceiptRow label={`${qty} shares × $${price}`} value={`$${total}`}/>
+        <ReceiptRow label={<TermUnderline>Regulatory fee</TermUnderline>} value={`$${fee}`}/>
+        <ReceiptRow label={canExec ? 'Total' : 'Total (estimated)'} value={canExec ? `$${grandTotal}` : `~$${grandTotal}`} bold/>
+      </div>
+    </>
+  )
+
+  const buyCTA = (
+    <>
+      <CTA
+        label={canExec ? `Buy ${qty} ${ticker}  →` : `Queue order for next open  →`}
+        full
+        loading={isPending}
+        disabled={cashBalance != null && cashBalance < parseFloat(grandTotal)}
+        onClick={handleBuy}
+      />
+      {cashAfter !== null && (
+        <div style={{ fontFamily:SANS, fontSize:12, color:C.ink400, textAlign:'center', marginTop:10 }}>
+          Cash after: ${cashAfter} available
+        </div>
+      )}
+    </>
+  )
+
+  // ── Mobile: single column + fixed CTA footer ───────────────────────────────
+  if (mobile) {
+    const footer = (
+      <div style={{ background:C.white, borderTop:`1px solid ${C.ink100}`, padding:'12px 16px 20px' }}>
+        {buyCTA}
+      </div>
+    )
+    return (
+      <AppShell active="portfolio" footer={footer}>
+        <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+            <div onClick={() => navigate(-1)} style={{ fontFamily:SANS, fontSize:14, color:C.ame400, cursor:'pointer' }}>← Back</div>
+            <div style={{ flex:1, textAlign:'center', fontFamily:SANS, fontWeight:700, fontSize:17, color:C.ink900 }}>Buy {ticker}</div>
+            <div style={{ width:40 }}/>
+          </div>
+          {priceCard}
+          {orderForm}
+        </div>
+      </AppShell>
+    )
+  }
+
+  // ── Desktop/tablet: order form + chart column ───────────────────────────────
   return (
-    <div style={{ width:1440, minHeight:900, background:C.paper, display:'flex', flexDirection:'column' }}>
-      <TopNav active="portfolio"/>
-      <div style={{ flex:1, display:'flex', minHeight:0 }}>
-        <div style={{ width:520, padding:'40px 48px', display:'flex', flexDirection:'column', gap:24, borderRight:`1px solid ${C.ink100}`, overflowY:'auto' }}>
+    <AppShell active="portfolio" maxWidth={1200}>
+      <div style={{ display:'flex', gap:32, alignItems:'flex-start' }}>
+        <div style={{ width:480, flexShrink:0, display:'flex', flexDirection:'column', gap:24 }}>
           <div>
-            <div onClick={() => navigate(-1)} style={{ fontFamily:SANS, fontSize:13, color:C.ame400, cursor:'pointer', marginBottom:8 }}>← Back to portfolio</div>
+            <div onClick={() => navigate(-1)} style={{ fontFamily:SANS, fontSize:13, color:C.ame400, cursor:'pointer', marginBottom:8 }}>← Back</div>
             <div style={{ fontFamily:DISPLAY, fontWeight:700, fontSize:32, color:C.ink900, letterSpacing:'-0.02em', lineHeight:1 }}>Buy {ticker}</div>
           </div>
-
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'16px 20px', background:C.white, border:`1px solid ${C.ink100}`, borderRadius:8 }}>
-            <div>
-              <div style={{ fontFamily:DISPLAY, fontWeight:700, fontSize:32, color:C.ink900, letterSpacing:'-0.02em' }}>{isLoading ? '…' : `$${price.toLocaleString()}`}</div>
-              <div style={{ fontFamily:SANS, fontSize:13, color:stock?.pos?C.aqua600:C.red, marginTop:3 }}>
-                {stock ? `${stock.pos?'+':''}${stock.change} · ${stock.pos?'+':''}${stock.pct}% today` : '—'}
-              </div>
-            </div>
-            <MktStatus open={canExec}/>
-          </div>
-
-          {!canExec && <MarketClosedBanner/>}
-
-          <div>
-            <div style={{ fontFamily:SANS, fontSize:13, color:C.ink500, marginBottom:8 }}>Quantity</div>
-            <QtyInputBlock qty={qty} setQty={setQty}/>
-          </div>
-
-          <div>
-            <div style={{ fontFamily:SANS, fontSize:13, color:C.ink500, marginBottom:8 }}>Order type</div>
-            <div style={{ display:'flex', gap:10 }}>
-              <OrderTypeCard label="Market order" desc="Execute immediately at current price" active={orderType==='MARKET'} onClick={() => setOrderType('MARKET')}/>
-              <OrderTypeCard label="Limit order" desc="Only fill if price reaches your target" active={orderType==='LIMIT'} onClick={() => setOrderType('LIMIT')}/>
-            </div>
-            {orderType === 'LIMIT' && (
-              <input
-                type="number"
-                value={limitPrice}
-                onChange={e => setLimitPrice(e.target.value)}
-                placeholder={`Max price (current: $${price})`}
-                style={{ marginTop:8, height:44, width:'100%', border:`1px solid ${C.ame400}`, borderRadius:4, padding:'0 14px', fontFamily:SANS, fontSize:14, color:C.ink900, outline:'none', background:C.white, boxSizing:'border-box' }}
-              />
-            )}
-          </div>
-
-          <div style={{ background:C.white, border:`1px solid ${C.ink100}`, borderRadius:8, padding:'0 20px' }}>
-            <div style={{ padding:'12px 0 4px' }}><Eyebrow>Order summary</Eyebrow></div>
-            <ReceiptRow label={`${qty} shares × $${price}`} value={`$${total}`}/>
-            <ReceiptRow label={<TermUnderline>Regulatory fee</TermUnderline>} value="$0.01"/>
-            <ReceiptRow label="Total" value={`$${grandTotal}`} bold/>
-          </div>
-
-          <CTA
-            label={canExec ? `Buy ${qty} ${ticker}  →` : `Queue order  →`}
-            full
-            loading={isPending}
-            disabled={cashBalance != null && cashBalance < parseFloat(grandTotal)}
-            onClick={handleBuy}
-          />
-          {cashAfter !== null && (
-            <div style={{ fontFamily:SANS, fontSize:12, color:C.ink400, textAlign:'center' }}>Cash after: ${cashAfter}</div>
-          )}
+          {priceCard}
+          {orderForm}
+          <div>{buyCTA}</div>
         </div>
 
-        <div style={{ flex:1, padding:'40px 48px', display:'flex', flexDirection:'column', gap:24, overflowY:'auto' }}>
+        <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:24, position:'sticky', top:28 }}>
           <Eyebrow>{stock?.name ?? ticker} — {ticker}</Eyebrow>
           <div style={{ background:C.white, border:`1px solid ${C.ink100}`, borderRadius:8, padding:'20px 24px' }}>
             <MiniChart candles={candles} isLoading={candlesLoading} isError={candlesError}/>
@@ -232,7 +185,7 @@ function BuyDesktop({ ticker, stock, isLoading, candles, candlesLoading, candles
           <SageMsg text={`You're buying ${qty} shares — a solid start. If you're unsure about the quantity, you can always buy more later.`}/>
         </div>
       </div>
-    </div>
+    </AppShell>
   )
 }
 

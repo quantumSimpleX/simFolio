@@ -1,21 +1,20 @@
 import { useNavigate } from 'react-router-dom'
 import { C, SANS } from '../../tokens'
-import { StatusBar, CTA, GhostCTA } from '../../components/Primitives'
+import { CTA, GhostCTA } from '../../components/Primitives'
+import { AppShell } from '../../components/AppShell'
 import { SageMsg } from '../../components/HeroMessage'
 
 export default function HeroHandoff() {
   const navigate = useNavigate()
 
   return (
-    <div style={{ width:390, minHeight:820, background:C.white, display:'flex', flexDirection:'column' }}>
-      <StatusBar/>
-
-      <div style={{ flex:1, padding:'20px 24px', display:'flex', flexDirection:'column', gap:20 }}>
+    <AppShell active="portfolio">
+      <div style={{ maxWidth:560, margin:'0 auto', display:'flex', flexDirection:'column', gap:20 }}>
         <SageMsg text="You just bought your first stock. You're officially an investor."/>
         <SageMsg text="Before you continue — there's someone I think you should meet. Warren has been following what you've shared, and has a thought about Apple."/>
 
         {/* Warren intro card */}
-        <div style={{ background:C.paper, border:`1.5px solid ${C.ame400}30`, borderRadius:8, padding:'18px 20px', display:'flex', gap:16, alignItems:'flex-start' }}>
+        <div style={{ background:C.white, border:`1.5px solid ${C.ame400}30`, borderRadius:8, padding:'18px 20px', display:'flex', gap:16, alignItems:'flex-start' }}>
           <div style={{ width:48, height:48, borderRadius:'50%', background:`${C.ame400}12`, border:`1.5px solid ${C.ame400}35`, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:SANS, fontWeight:700, fontSize:16, color:C.ame400, flexShrink:0 }}>WB</div>
           <div style={{ flex:1 }}>
             <div style={{ fontFamily:SANS, fontWeight:700, fontSize:17, color:C.ink900, marginBottom:2 }}>Warren Buffett</div>
@@ -37,12 +36,12 @@ export default function HeroHandoff() {
         <div style={{ fontFamily:SANS, fontSize:14, color:C.ink500, lineHeight:1.55 }}>
           From here, Warren will be your guide. He can discuss any trade, question your thinking, and suggest things worth reading. The Sage steps back.
         </div>
-      </div>
 
-      <div style={{ padding:'0 24px 32px', flexShrink:0, display:'flex', flexDirection:'column', gap:10 }}>
-        <CTA label="Talk to Warren  →" full onClick={() => navigate('/ask')}/>
-        <GhostCTA label="Continue buying first" onClick={() => navigate('/markets')}/>
+        <div style={{ display:'flex', flexDirection:'column', gap:10, marginTop:4 }}>
+          <CTA label="Talk to Warren  →" full onClick={() => navigate('/ask')}/>
+          <GhostCTA label="Continue buying first" onClick={() => navigate('/markets')}/>
+        </div>
       </div>
-    </div>
+    </AppShell>
   )
 }

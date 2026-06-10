@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { C, SANS } from '../../tokens'
-import { StatusBar, TermUnderline, StatusPill } from '../../components/Primitives'
+import { TermUnderline, StatusPill } from '../../components/Primitives'
+import { AppShell } from '../../components/AppShell'
 import { useOrders, useCancelOrder } from '../../hooks/useOrders'
 
 const TABS = ['Pending', 'Filled', 'Cancelled']
@@ -21,22 +22,20 @@ export default function OrdersMobile() {
   const cancelled = (orders ?? []).filter(o => o.status === 'CANCELLED')
 
   return (
-    <div style={{ width:390, minHeight:900, background:C.paper, display:'flex', flexDirection:'column' }}>
-      <StatusBar/>
-
-      <div style={{ padding:'0 24px 14px', display:'flex', alignItems:'center', justifyContent:'space-between', borderBottom:`1px solid ${C.ink100}`, flexShrink:0 }}>
+    <AppShell active="portfolio" maxWidth={720}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', paddingBottom:14 }}>
         <div onClick={() => navigate('/portfolio')} style={{ fontFamily:SANS, fontSize:14, color:C.ame400, cursor:'pointer' }}>← Portfolio</div>
         <div style={{ fontFamily:SANS, fontWeight:700, fontSize:17, color:C.ink900 }}>Orders</div>
         <div style={{ width:40 }}/>
       </div>
 
-      <div style={{ display:'flex', borderBottom:`1px solid ${C.ink100}`, flexShrink:0 }}>
+      <div style={{ display:'flex', borderBottom:`1px solid ${C.ink100}` }}>
         {TABS.map(tab => (
           <div key={tab} onClick={() => setActiveTab(tab)} style={{ flex:1, padding:'11px 0', textAlign:'center', fontFamily:SANS, fontSize:13, color:activeTab===tab?C.ink900:C.ink400, fontWeight:activeTab===tab?700:400, borderBottom:activeTab===tab?`2px solid ${C.ink900}`:'2px solid transparent', cursor:'pointer' }}>{tab}</div>
         ))}
       </div>
 
-      <div style={{ flex:1, padding:'16px 24px', display:'flex', flexDirection:'column', gap:14, overflowY:'auto' }}>
+      <div style={{ padding:'16px 0', display:'flex', flexDirection:'column', gap:14 }}>
         {isLoading && <div style={{ fontFamily:SANS, fontSize:14, color:C.ink400, paddingTop:20 }}>Loading orders…</div>}
 
         {activeTab === 'Pending' && (
@@ -65,7 +64,7 @@ export default function OrdersMobile() {
           )
         )}
       </div>
-    </div>
+    </AppShell>
   )
 }
 
