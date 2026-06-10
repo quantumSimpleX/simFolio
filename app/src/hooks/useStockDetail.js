@@ -1,11 +1,13 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { isMarketOpen } from './useQuotes'
+import { getCachedQuotes, persistQuotes, getStoredFundamentals, updateFundamentals } from '../lib/marketCache'
 
-const TD_KEY = import.meta.env.VITE_TWELVEDATA_API_KEY
+const TD_KEY  = import.meta.env.VITE_TWELVEDATA_API_KEY
 const TD_BASE = 'https://api.twelvedata.com'
+const YF_BASE = 'https://query2.finance.yahoo.com'
 
-const RANGE_MAP = {
+const TD_RANGE_MAP = {
   '1W':  { interval: '1day',   outputsize: 7  },
   '1M':  { interval: '1day',   outputsize: 30 },
   '3M':  { interval: '1day',   outputsize: 90 },
@@ -13,39 +15,140 @@ const RANGE_MAP = {
   'All': { interval: '1month', outputsize: 60 },
 }
 
-async function fetchDetail(ticker) {
+const YF_RANGE_MAP = {
+  '1W':  { interval: '1d',  range: '5d'  },
+  '1M':  { interval: '1d',  range: '1mo' },
+  '3M':  { interval: '1d',  range: '3mo' },
+  '1Y':  { interval: '1wk', range: '1y'  },
+  'All': { interval: '1mo', range: '5y'  },
+}
+
+async function fetchStatsDirect(ticker) {
+  // Try Twelve Data /statistics first (most complete, costs 30 credits)
   if (TD_KEY) {
-    const r = await fetch(`${TD_BASE}/quote?symbol=${ticker}&apikey=${TD_KEY}`).then(r => r.json())
-    if (r.status === 'error') throw new Error(r.message)
-    const price = parseFloat(r.close), prev = parseFloat(r.previous_close)
-    const change = price - prev, pct = prev > 0 ? (change / prev) * 100 : 0
-    return { ticker, price, change, pct, high: parseFloat(r.high), low: parseFloat(r.low), open: parseFloat(r.open), prev, pos: change >= 0, name: r.name ?? ticker, exchange: r.exchange ?? '', industry: '', marketCap: 0, logo: '' }
+    try {
+      const r = await fetch(`${TD_BASE}/statistics?symbol=${ticker}&apikey=${TD_KEY}`).then(r => r.json())
+      const vm = r.statistics?.valuations_metrics ?? {}
+      const ss = r.statistics?.stock_price_summary ?? {}
+      const fi = r.statistics?.financials?.income_statement ?? {}
+      const dd = r.statistics?.dividends_and_splits ?? {}
+      const cap = vm.market_capitalization
+      if (cap) return {
+        marketCap:     cap,
+        peRatio:       vm.trailing_pe                   || 0,
+        eps:           fi.diluted_eps_ttm               || 0,
+        beta:          ss.beta                          || 0,
+        dividendYield: dd.forward_annual_dividend_yield || 0,
+      }
+    } catch {}
   }
-  const { data, error } = await supabase.functions.invoke('market-data', { body: { symbols: [ticker] } })
-  if (error) throw error
-  return data.quotes?.[0] ?? null
+  // Fallback: edge function → Yahoo Finance (avoids browser CORS block)
+  try {
+    const { data, error } = await supabase.functions.invoke('market-data', { body: { symbols: [ticker] } })
+    if (error) return null
+    const q = data.quotes?.[0]
+    if (!q?.marketCap) return null
+    return {
+      marketCap:     q.marketCap     || 0,
+      peRatio:       q.peRatio       || 0,
+      eps:           q.eps           || 0,
+      beta:          q.beta          || 0,
+      dividendYield: q.dividendYield || 0,
+    }
+  } catch {
+    return null
+  }
+}
+
+async function fetchDetail(ticker, queryClient = null) {
+  const { hits, misses } = await getCachedQuotes([ticker])
+  let quote
+  if (!misses.length) {
+    quote = { ...hits[0], industry: '', logo: '' }
+  } else {
+    if (TD_KEY) {
+      const r = await fetch(`${TD_BASE}/quote?symbol=${ticker}&apikey=${TD_KEY}`).then(r => r.json())
+      if (r.status === 'error') throw new Error(r.message)
+      const price = parseFloat(r.close), prev = parseFloat(r.previous_close)
+      const change = price - prev, pct = prev > 0 ? (change / prev) * 100 : 0
+      const fw = r.fifty_two_week ?? {}
+      quote = {
+        ticker, price, change, pct,
+        high: parseFloat(r.high), low: parseFloat(r.low), open: parseFloat(r.open), prev,
+        pos: change >= 0, name: r.name || null, exchange: r.exchange ?? '',
+        volume: parseInt(r.volume) || 0, avgVolume: parseInt(r.average_volume) || 0,
+        week52Low: parseFloat(fw.low) || 0, week52High: parseFloat(fw.high) || 0,
+        marketCap: 0, peRatio: 0, eps: 0, beta: 0, dividendYield: 0,
+        industry: '', logo: '',
+      }
+    } else {
+      const { data, error } = await supabase.functions.invoke('market-data', { body: { symbols: [ticker] } })
+      if (error) throw error
+      quote = data.quotes?.[0] ? { ...data.quotes[0], industry: '', logo: '' } : null
+    }
+    if (quote) await persistQuotes([quote])
+    // Restore any previously stored fundamentals for this ticker
+    const preserved = await getStoredFundamentals([ticker])
+    if (preserved[ticker]) quote = { ...quote, ...preserved[ticker] }
+  }
+
+  // If fundamentals are missing, fetch them in the background and patch the cache when ready
+  if (quote && (!quote.marketCap || !quote.beta)) {
+    fetchStatsDirect(ticker).then(async fund => {
+      if (!fund) return
+      await updateFundamentals({ [ticker]: fund })
+      if (queryClient) {
+        queryClient.setQueryData(['stock-detail', ticker], old =>
+          old ? { ...old, ...fund } : old
+        )
+      }
+    }).catch(() => {})
+  }
+
+  return quote
+}
+
+async function fetchCandlesFromYF(ticker, range) {
+  const { interval, range: yfRange } = YF_RANGE_MAP[range] ?? YF_RANGE_MAP['3M']
+  const res = await fetch(`${YF_BASE}/v8/finance/chart/${ticker}?interval=${interval}&range=${yfRange}`)
+  if (!res.ok) throw new Error(`YF chart ${res.status}`)
+  const json = await res.json()
+  const result = json.chart?.result?.[0]
+  if (!result) throw new Error('No chart data')
+  const timestamps = result.timestamp ?? []
+  const closes = result.indicators?.quote?.[0]?.close ?? []
+  const candles = timestamps.map((t, i) => ({ t, c: closes[i] })).filter(v => v.c != null)
+  if (!candles.length) throw new Error('Empty candle data')
+  return candles
+}
+
+async function fetchCandlesFromTD(ticker, range) {
+  if (!TD_KEY) throw new Error('No TD key')
+  const { interval, outputsize } = TD_RANGE_MAP[range] ?? TD_RANGE_MAP['3M']
+  const r = await fetch(`${TD_BASE}/time_series?symbol=${ticker}&interval=${interval}&outputsize=${outputsize}&apikey=${TD_KEY}`).then(r => r.json())
+  if (r.status === 'error') throw new Error(r.message)
+  const values = (r.values ?? []).reverse()
+  if (!values.length) throw new Error('No candle data')
+  return values.map(v => ({ t: Math.floor(new Date(v.datetime).getTime() / 1000), c: parseFloat(v.close) }))
 }
 
 export async function fetchCandles(ticker, range) {
-  if (TD_KEY) {
-    const { interval, outputsize } = RANGE_MAP[range] ?? RANGE_MAP['3M']
-    const r = await fetch(`${TD_BASE}/time_series?symbol=${ticker}&interval=${interval}&outputsize=${outputsize}&apikey=${TD_KEY}`).then(r => r.json())
-    if (r.status === 'error') throw new Error(r.message)
-    const values = (r.values ?? []).reverse()
-    if (!values.length) throw new Error('No candle data')
-    return values.map(v => ({ t: Math.floor(new Date(v.datetime).getTime() / 1000), c: parseFloat(v.close) }))
+  // Try Yahoo Finance v8/chart first (no credit cost)
+  try {
+    return await fetchCandlesFromYF(ticker, range)
+  } catch (e) {
+    console.warn('[Candles] YF failed, falling back to TD:', e.message)
   }
-  const { data, error } = await supabase.functions.invoke('market-data', { body: { symbols: [ticker], candles: true, range } })
-  if (error) throw error
-  if (!data.candles?.length) throw new Error('No candle data')
-  return data.candles
+  // Reliable fallback: Twelve Data time_series (1 credit, cached 5h in React Query)
+  return fetchCandlesFromTD(ticker, range)
 }
 
 export function useStockDetail(ticker) {
   const open = isMarketOpen()
+  const queryClient = useQueryClient()
   return useQuery({
     queryKey: ['stock-detail', ticker],
-    queryFn: () => fetchDetail(ticker),
+    queryFn: () => fetchDetail(ticker, queryClient),
     enabled: !!ticker,
     staleTime: open ? 5 * 60_000 : 60 * 60_000,
   })
@@ -57,6 +160,7 @@ export function useCandles(ticker, range = '3M') {
     queryFn: () => fetchCandles(ticker, range),
     enabled: !!ticker,
     staleTime: 60_000,
-    retry: 1,
+    retry: 3,
+    retryDelay: attempt => Math.min(1000 * 2 ** attempt, 8000),
   })
 }
