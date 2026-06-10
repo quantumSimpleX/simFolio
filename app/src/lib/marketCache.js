@@ -77,15 +77,18 @@ export async function getStoredFundamentals(tickers) {
 }
 
 // Returns cached quotes younger than 5 hours and the list of tickers that were not found.
-export async function getCachedQuotes(tickers) {
+// maxAgeMs: Infinity → accept any age (stale fallback when live APIs are unreachable).
+export async function getCachedQuotes(tickers, { maxAgeMs = CACHE_MAX_AGE_MS } = {}) {
   if (!tickers?.length) return { hits: [], misses: [] }
 
-  const cutoff = new Date(Date.now() - CACHE_MAX_AGE_MS).toISOString()
-  const { data, error } = await supabase
+  let query = supabase
     .from('market_data_cache')
     .select('*')
     .in('ticker', tickers)
-    .gte('fetched_at', cutoff)
+  if (Number.isFinite(maxAgeMs)) {
+    query = query.gte('fetched_at', new Date(Date.now() - maxAgeMs).toISOString())
+  }
+  const { data, error } = await query
 
   if (error) {
     console.warn('[MarketCache] DB read error:', error.message)

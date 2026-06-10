@@ -112,13 +112,24 @@ export async function fetchQuotes(symbols, queryClient = null, { persist = true 
   let all = hits
 
   if (misses.length) {
-    const fresh = await fetchFromAPI(misses)
-    if (persist) {
-      await persistQuotes(fresh)  // price/volume/52W stored; fundamentals preserved if already in DB
-      const preserved = await getStoredFundamentals(misses)
-      all = [...hits, ...fresh.map(q => preserved[q.ticker] ? { ...q, ...preserved[q.ticker] } : q)]
+    let fresh = null
+    try {
+      fresh = await fetchFromAPI(misses)
+    } catch (e) {
+      console.warn('[Quotes] Live fetch failed — falling back to stale cache:', e.message ?? e)
+    }
+    if (fresh) {
+      if (persist) {
+        await persistQuotes(fresh)  // price/volume/52W stored; fundamentals preserved if already in DB
+        const preserved = await getStoredFundamentals(misses)
+        all = [...hits, ...fresh.map(q => preserved[q.ticker] ? { ...q, ...preserved[q.ticker] } : q)]
+      } else {
+        all = [...hits, ...fresh]
+      }
     } else {
-      all = [...hits, ...fresh]
+      // Live APIs unreachable (rate limit / no session) — stale data beats a blank page.
+      const { hits: stale } = await getCachedQuotes(misses, { maxAgeMs: Infinity })
+      all = [...hits, ...stale]
     }
   }
 

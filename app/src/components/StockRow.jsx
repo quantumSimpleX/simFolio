@@ -38,7 +38,7 @@ export function StockRow({
           {badge}
         </div>
         {subtitle && (
-          <div style={{ fontFamily: SANS, fontSize: 16, color: C.ink600, marginTop: 2 }}>{subtitle}</div>
+          <div style={{ fontFamily: SANS, fontSize: 16, color: C.ink600, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{subtitle}</div>
         )}
       </div>
 

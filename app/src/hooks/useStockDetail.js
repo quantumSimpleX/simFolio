@@ -5,7 +5,8 @@ import { getCachedQuotes, persistQuotes, getStoredFundamentals } from '../lib/ma
 
 const TD_KEY  = import.meta.env.VITE_TWELVEDATA_API_KEY
 const TD_BASE = 'https://api.twelvedata.com'
-const YF_BASE = 'https://query2.finance.yahoo.com'
+// In dev, Yahoo is reached via the Vite proxy (no CORS headers on their API).
+const YF_BASE = import.meta.env.DEV ? '/yf' : 'https://query2.finance.yahoo.com'
 
 const TD_RANGE_MAP = {
   '1W':  { interval: '1day',   outputsize: 7  },

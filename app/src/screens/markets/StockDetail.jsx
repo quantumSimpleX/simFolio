@@ -75,12 +75,16 @@ export default function StockDetail() {
   const watching = isWatching(ticker)
   const toggleWatch = () => (watching ? removeFromWatchlist(ticker) : addToWatchlist(ticker))
 
+  // Value colors match the watchlist fundamentals on the Markets page.
+  const fundamentals = s ? [
+    ['Market cap', fmtMktCap(s.marketCap),                                                  C.ink700],
+    ['P/E',        s.peRatio       ? s.peRatio.toFixed(1)                     : '—',        C.ame600],
+    ['EPS',        s.eps           ? `$${s.eps.toFixed(2)}`                   : '—',        C.aqua600],
+    ['Beta',       s.beta          ? s.beta.toFixed(2)                        : '—',        C.gold],
+    ['Div yield',  s.dividendYield ? `${(s.dividendYield * 100).toFixed(2)}%` : '—',        C.ink900],
+  ] : []
+
   const stats = s ? [
-    ['Market cap', fmtMktCap(s.marketCap)],
-    ['P/E ratio',  s.peRatio       ? s.peRatio.toFixed(1)               : '—'],
-    ['EPS (TTM)',  s.eps           ? `$${s.eps.toFixed(2)}`             : '—'],
-    ['Beta',       s.beta          ? s.beta.toFixed(2)                  : '—'],
-    ['Div. yield', s.dividendYield ? `${(s.dividendYield * 100).toFixed(2)}%` : '—'],
     ['52W range',  s.week52Low && s.week52High ? `$${s.week52Low.toFixed(0)} – $${s.week52High.toFixed(0)}` : '—'],
     ['Volume',     fmtVol(s.volume)],
     ['Avg volume', fmtVol(s.avgVolume)],
@@ -100,6 +104,20 @@ export default function StockDetail() {
         <div style={{ fontFamily: SANS, fontSize: mobile ? 15 : 18, color: s?.pos ? C.aqua600 : C.red }}>
           {s ? `${s.pos ? '+' : ''}${s.change?.toFixed(2)} (${s.pos ? '+' : ''}${s.pct?.toFixed(1)}%)${mobile ? ' today' : ''}` : '—'}
         </div>
+      </div>
+    </div>
+  )
+
+  const fundamentalsGrid = fundamentals.length > 0 && (
+    <div>
+      <div style={{ marginBottom: 12 }}><Eyebrow>Fundamentals</Eyebrow></div>
+      <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr 1fr' : 'repeat(5, 1fr)', gap: 12 }}>
+        {fundamentals.map(([label, value, color]) => (
+          <div key={label} style={{ background: C.white, border: `1px solid ${C.ink100}`, borderRadius: 8, padding: '12px 16px' }}>
+            <div style={{ fontFamily: SANS, fontSize: 12, color: C.ink400, marginBottom: 4 }}><TermUnderline>{label}</TermUnderline></div>
+            <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: mobile ? 17 : 20, color }}>{value}</div>
+          </div>
+        ))}
       </div>
     </div>
   )
@@ -138,6 +156,7 @@ export default function StockDetail() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {priceBlock}
           {chartCard}
+          {fundamentalsGrid}
           {statsGrid}
           {position && <PositionCard position={position} />}
         </div>
@@ -152,6 +171,7 @@ export default function StockDetail() {
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 24 }}>
           {priceBlock}
           {chartCard}
+          {fundamentalsGrid}
           {statsGrid}
         </div>
 

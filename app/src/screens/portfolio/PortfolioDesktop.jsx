@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { C, SANS, DISPLAY } from '../../tokens';
 import { Eyebrow } from '../../components/Primitives';
-import { TopNav } from '../../components/Nav';
+import { AppShell } from '../../components/AppShell';
 import { ChartPanel } from '../../components/Charts';
 import { HoldingRow } from '../../components/HoldingRow';
 import { HeroMessage, UserMessage } from '../../components/HeroMessage';
@@ -78,12 +78,10 @@ export default function PortfolioDesktop() {
   const councilNames = heroes.map(h => h.name.split(' ')[0]).join(' · ');
 
   return (
-    <div style={{ width:1440, height:900, background:C.paper, display:'flex', flexDirection:'column', overflow:'hidden' }}>
-      <TopNav active="portfolio"/>
-
-      <div style={{ flex:1, display:'flex', minHeight:0 }}>
+    <AppShell active="portfolio" maxWidth={1280}>
+      <div style={{ display:'flex', gap:32, alignItems:'flex-start' }}>
         {/* Left: portfolio data */}
-        <div style={{ flex:1, padding:'36px 40px', display:'flex', flexDirection:'column', gap:24, overflow:'auto' }}>
+        <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:24 }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
             <div>
               <div style={{ fontFamily:DISPLAY, fontWeight:700, fontSize:48, color:C.ink900, letterSpacing:'-0.025em', lineHeight:1 }}>
@@ -133,8 +131,8 @@ export default function PortfolioDesktop() {
           </div>
         </div>
 
-        {/* Right: hero sidebar */}
-        <div style={{ width:380, borderLeft:`1px solid ${C.ink100}`, background:C.white, display:'flex', flexDirection:'column' }}>
+        {/* Right: hero sidebar — sticky card, like the Trade sidebar on StockDetail */}
+        <div style={{ width:380, flexShrink:0, border:`1px solid ${C.ink100}`, borderRadius:8, background:C.white, display:'flex', flexDirection:'column', overflow:'hidden', position:'sticky', top:28, height:'calc(100dvh - 130px)' }}>
           <div style={{ height:52, borderBottom:`1px solid ${C.ink100}`, display:'flex', alignItems:'stretch' }}>
             {['Council', ...heroes.map(h => h.name.split(' ')[0])].slice(0,3).map(t => (
               <div key={t} onClick={() => setActiveTab(t)} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:SANS, fontSize:13, fontWeight:activeTab===t?600:400, color:activeTab===t?C.ink900:C.ink400, borderBottom:activeTab===t?`2px solid ${C.ink900}`:'2px solid transparent', cursor:'pointer' }}>{t}</div>
@@ -179,6 +177,6 @@ export default function PortfolioDesktop() {
           </div>
         </div>
       </div>
-    </div>
+    </AppShell>
   );
 }

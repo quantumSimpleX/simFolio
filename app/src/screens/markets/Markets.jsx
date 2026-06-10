@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { C, SANS } from '../../tokens'
 import { Eyebrow, MktStatus } from '../../components/Primitives'
+import { StockRow } from '../../components/StockRow'
 import { AppShell } from '../../components/AppShell'
 import { useIsMobile } from '../../hooks/useBreakpoint'
 import { useQuotes, isMarketOpen } from '../../hooks/useQuotes'
@@ -22,31 +23,37 @@ function fmtMktCap(v) {
   return null
 }
 
-function fmtSubline(q) {
+function Fundamentals({ q }) {
   if (!q) return '—'
   const cap = fmtMktCap(q.marketCap)
-  const pe  = q.peRatio > 0 ? `P/E ${q.peRatio.toFixed(1)}` : null
-  return [cap, pe].filter(Boolean).join(' · ') || '—'
+  const metrics = [
+    cap            ? { label: 'Market Cap', value: cap,                  color: C.ink700  } : null,
+    q.peRatio > 0  ? { label: 'P/E',        value: q.peRatio.toFixed(1), color: C.ame600  } : null,
+    q.eps          ? { label: 'EPS',        value: q.eps.toFixed(2),     color: C.aqua600 } : null,
+    q.beta         ? { label: 'Beta',       value: q.beta.toFixed(2),    color: C.gold    } : null,
+  ].filter(Boolean)
+  if (!metrics.length) return '—'
+  return metrics.map((m, i) => (
+    <span key={m.label}>
+      {i > 0 && <span style={{ color: C.ink200, margin: '0 6px' }}>·</span>}
+      <span style={{ color: C.ink400 }}>{m.label}: </span>
+      <span style={{ color: m.color, fontWeight: 600 }}>{m.value}</span>
+    </span>
+  ))
 }
 
 function WatchRow({ sym, q, owned, onClick }) {
   return (
-    <div onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderTop: `1px solid ${C.ink100}`, cursor: 'pointer' }}>
-      <div style={{ width: 38, height: 38, background: C.ink50, borderRadius: 4, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: SANS, fontWeight: 700, fontSize: 11, color: C.ink500 }}>{sym}</div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div style={{ fontFamily: SANS, fontWeight: 600, fontSize: 14, color: C.ink900, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{q?.name || sym}</div>
-          {owned && <div style={{ padding: '1px 6px', background: C.ame50, border: `1px solid ${C.ame100}`, borderRadius: 3, fontFamily: SANS, fontSize: 10, color: C.ame600, fontWeight: 600, flexShrink: 0 }}>Owned</div>}
-        </div>
-        <div style={{ fontFamily: SANS, fontSize: 11, color: C.ink400, marginTop: 1 }}>{fmtSubline(q)}</div>
-      </div>
-      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-        <div style={{ fontFamily: SANS, fontWeight: 600, fontSize: 14, color: C.ink900 }}>{q ? fmtPrice(q.price) : '—'}</div>
-        <div style={{ fontFamily: SANS, fontSize: 12, color: q?.pos ? C.aqua600 : C.red, marginTop: 1 }}>
-          {q ? `${q.pos ? '+' : ''}${q.change?.toFixed(2)} (${q.pos ? '+' : ''}${q.pct?.toFixed(1)}%)` : '—'}
-        </div>
-      </div>
-    </div>
+    <StockRow
+      ticker={sym}
+      name={q?.name}
+      subtitle={<Fundamentals q={q} />}
+      badge={owned && <div style={{ padding: '1px 6px', background: C.ame50, border: `1px solid ${C.ame100}`, borderRadius: 3, fontFamily: SANS, fontSize: 10, color: C.ame600, fontWeight: 600, flexShrink: 0 }}>Owned</div>}
+      rightTop={q ? fmtPrice(q.price) : '—'}
+      rightBottom={q ? `${q.pos ? '+' : ''}${q.change?.toFixed(2)} (${q.pos ? '+' : ''}${q.pct?.toFixed(1)}%)` : '—'}
+      rightBottomPos={q ? !!q.pos : null}
+      onClick={onClick}
+    />
   )
 }
 
@@ -176,7 +183,7 @@ export default function Markets() {
           Search above to add stocks to your watchlist.
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(2, 1fr)', columnGap: 40 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(2, 1fr)', columnGap: 32 }}>
           {watchlist.map(sym => (
             <WatchRow
               key={sym}
