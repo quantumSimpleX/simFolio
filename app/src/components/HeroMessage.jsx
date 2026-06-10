@@ -2,13 +2,17 @@ import { C, SANS } from '../tokens';
 import { HeroAvatar } from './Primitives';
 
 const HERO_MAP = {
+  sage:   { initials:'◇',  name:'Sage',           color:C.aqua400 },
   warren: { initials:'WB', name:'Warren Buffett', color:C.ame400 },
-  cathie:  { initials:'CW', name:'Cathie Wood',    color:C.aqua400 },
-  ray:     { initials:'RD', name:'Ray Dalio',      color:C.gold },
+  munger: { initials:'CM', name:'Charlie Munger', color:C.ame400 },
+  lynch:  { initials:'PL', name:'Peter Lynch',    color:C.aqua400 },
+  bogle:  { initials:'JB', name:'John Bogle',     color:C.gold },
+  cathie: { initials:'CW', name:'Cathie Wood',    color:C.aqua400 },
+  ray:    { initials:'RD', name:'Ray Dalio',      color:C.gold },
 };
 
 export function HeroMessage({ hero='warren', text, time, isNew=false }) {
-  const h = HERO_MAP[hero];
+  const h = HERO_MAP[hero] ?? HERO_MAP.warren;
   return (
     <div style={{ display:'flex', gap:10 }}>
       <HeroAvatar initials={h.initials} color={h.color} size={30}/>
