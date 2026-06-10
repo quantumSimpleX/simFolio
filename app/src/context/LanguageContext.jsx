@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './AuthContext'
 
-const LanguageContext = createContext(null)
+const LanguageContext = createContext({ lang: 'en', setLang: () => {} })
 
 export function LanguageProvider({ children }) {
   const { user } = useAuth()
@@ -38,4 +38,5 @@ export function LanguageProvider({ children }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useLang = () => useContext(LanguageContext)

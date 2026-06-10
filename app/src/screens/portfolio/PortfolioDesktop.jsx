@@ -136,7 +136,7 @@ export default function PortfolioDesktop() {
         {/* Right: hero sidebar */}
         <div style={{ width:380, borderLeft:`1px solid ${C.ink100}`, background:C.white, display:'flex', flexDirection:'column' }}>
           <div style={{ height:52, borderBottom:`1px solid ${C.ink100}`, display:'flex', alignItems:'stretch' }}>
-            {['Council', ...heroes.map(h => h.name.split(' ')[0])].slice(0,3).map((t,i) => (
+            {['Council', ...heroes.map(h => h.name.split(' ')[0])].slice(0,3).map(t => (
               <div key={t} onClick={() => setActiveTab(t)} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:SANS, fontSize:13, fontWeight:activeTab===t?600:400, color:activeTab===t?C.ink900:C.ink400, borderBottom:activeTab===t?`2px solid ${C.ink900}`:'2px solid transparent', cursor:'pointer' }}>{t}</div>
             ))}
           </div>

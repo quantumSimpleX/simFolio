@@ -126,12 +126,7 @@ export function Divider({ label='or with email' }) {
 }
 
 export function LangToggle() {
-  let lang = 'en', setLang = null;
-  try {
-    const ctx = useLang();
-    lang = ctx.lang;
-    setLang = ctx.setLang;
-  } catch (_) {}
+  const { lang, setLang } = useLang();
 
   const active = lang === 'zh-TW' ? 1 : 0;
   return (
@@ -144,12 +139,7 @@ export function LangToggle() {
 }
 
 export function ThemeToggle() {
-  let theme = 'light', setTheme = null;
-  try {
-    const ctx = useTheme();
-    theme = ctx.theme;
-    setTheme = ctx.setTheme;
-  } catch (_) {}
+  const { theme, setTheme } = useTheme();
 
   return (
     <div onClick={() => setTheme && setTheme(theme === 'dark' ? 'light' : 'dark')} style={{ width:36, height:20, borderRadius:999, background:theme==='dark'?C.ame400:C.ink200, cursor:'pointer', position:'relative', transition:'background 0.2s', flexShrink:0 }}>
@@ -169,8 +159,7 @@ export function Eyebrow({ children, style={} }) {
 export function TermUnderline({ children, termKey }) {
   const [show, setShow] = useState(false);
   const ref = useRef(null);
-  let lang = 'en';
-  try { lang = useLang().lang; } catch (_) {}
+  const { lang } = useLang();
 
   const key = termKey || TERM_MAP[String(children).toLowerCase()] || TERM_MAP[String(children).toLowerCase().replace(/[^a-z0-9 ]/g,'')];
   const def = key ? glossary[key] : null;

@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './AuthContext'
 
-const ThemeContext = createContext(null)
+const ThemeContext = createContext({ theme: 'light', setTheme: () => {} })
 
 export function ThemeProvider({ children }) {
   const { user } = useAuth()
@@ -43,4 +43,5 @@ export function ThemeProvider({ children }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useTheme = () => useContext(ThemeContext)

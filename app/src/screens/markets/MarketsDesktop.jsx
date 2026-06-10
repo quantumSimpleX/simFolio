@@ -13,6 +13,21 @@ const INDEX_NAMES = { SPY:'S&P 500', QQQ:'NASDAQ', DIA:'DOW' }
 
 function fmtPrice(v) { return `$${v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}` }
 
+function fmtMktCap(v) {
+  if (!v) return null
+  if (v >= 1e12) return `$${(v / 1e12).toFixed(1)}T`
+  if (v >= 1e9)  return `$${(v / 1e9).toFixed(1)}B`
+  if (v >= 1e6)  return `$${(v / 1e6).toFixed(0)}M`
+  return null
+}
+
+function fmtSubline(q) {
+  if (!q) return '—'
+  const cap = fmtMktCap(q.marketCap)
+  const pe  = q.peRatio > 0 ? `P/E ${q.peRatio.toFixed(1)}` : null
+  return [cap, pe].filter(Boolean).join(' · ') || '—'
+}
+
 function WatchRow({ sym, q, owned, onClick }) {
   return (
     <div onClick={onClick} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 0', borderTop:`1px solid ${C.ink100}`, cursor:'pointer' }}>
@@ -22,7 +37,7 @@ function WatchRow({ sym, q, owned, onClick }) {
           <div style={{ fontFamily:SANS, fontWeight:600, fontSize:14, color:C.ink900, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{q?.name || sym}</div>
           {owned && <div style={{ padding:'1px 6px', background:C.ame50, border:`1px solid ${C.ame100}`, borderRadius:3, fontFamily:SANS, fontSize:10, color:C.ame600, fontWeight:600, flexShrink:0 }}>Owned</div>}
         </div>
-        <div style={{ fontFamily:SANS, fontSize:11, color:C.ink400, marginTop:1 }}>{sym}</div>
+        <div style={{ fontFamily:SANS, fontSize:11, color:C.ink400, marginTop:1 }}>{fmtSubline(q)}</div>
       </div>
       <div style={{ textAlign:'right', flexShrink:0 }}>
         <div style={{ fontFamily:SANS, fontWeight:600, fontSize:14, color:C.ink900 }}>{q ? fmtPrice(q.price) : '—'}</div>
@@ -85,8 +100,8 @@ export default function MarketsDesktop() {
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && query) { navigate(`/stock/${query}`); setSearch('') } }}
-                placeholder="Search or add…"
+                onKeyDown={e => { if (e.key === 'Enter' && query) { const dest = searchResults[0]?.symbol ?? query; navigate(`/stock/${dest}`); setSearch('') } }}
+                placeholder="Ticker or company name…"
                 style={{ flex:1, border:'none', outline:'none', fontFamily:SANS, fontSize:14, color:C.ink900, background:'transparent' }}
               />
               {search && <div onClick={() => setSearch('')} style={{ fontFamily:SANS, fontSize:16, color:C.ink300, cursor:'pointer' }}>×</div>}
@@ -102,19 +117,28 @@ export default function MarketsDesktop() {
                     onClick={() => { navigate(`/stock/${r.symbol}`); setSearch('') }}
                   />
                 ))}
-                {searchResults.length > 0 && <div style={{ borderTop:`1px solid ${C.ink100}` }}/>}
-                {isWatching(query) ? (
-                  <div onClick={() => { removeFromWatchlist(query); setSearch('') }} style={{ padding:'8px 10px', fontFamily:SANS, fontSize:13, color:C.red, cursor:'pointer', fontWeight:600, borderBottom:`1px solid ${C.ink50}` }}>
-                    Remove {query} from watchlist
-                  </div>
-                ) : (
-                  <div onClick={() => { addToWatchlist(query); setSearch('') }} style={{ padding:'8px 10px', fontFamily:SANS, fontSize:13, color:C.ame400, cursor:'pointer', fontWeight:600, borderBottom:`1px solid ${C.ink50}` }}>
-                    + Add {query} to watchlist
+                {searchResults.length === 0 && (
+                  <div style={{ padding:'10px', fontFamily:SANS, fontSize:13, color:C.ink400 }}>
+                    No results for "{search.trim()}"
                   </div>
                 )}
-                <div onClick={() => { navigate(`/stock/${query}`); setSearch('') }} style={{ padding:'8px 10px', fontFamily:SANS, fontSize:13, color:C.ink500, cursor:'pointer' }}>
-                  Go to {query} →
-                </div>
+                {searchResults.length === 0 && query.length <= 6 && (
+                  <>
+                    <div style={{ borderTop:`1px solid ${C.ink100}` }}/>
+                    {isWatching(query) ? (
+                      <div onClick={() => { removeFromWatchlist(query); setSearch('') }} style={{ padding:'8px 10px', fontFamily:SANS, fontSize:13, color:C.red, cursor:'pointer', fontWeight:600, borderBottom:`1px solid ${C.ink50}` }}>
+                        Remove {query} from watchlist
+                      </div>
+                    ) : (
+                      <div onClick={() => { addToWatchlist(query); setSearch('') }} style={{ padding:'8px 10px', fontFamily:SANS, fontSize:13, color:C.ame400, cursor:'pointer', fontWeight:600, borderBottom:`1px solid ${C.ink50}` }}>
+                        + Add {query} to watchlist
+                      </div>
+                    )}
+                    <div onClick={() => { navigate(`/stock/${query}`); setSearch('') }} style={{ padding:'8px 10px', fontFamily:SANS, fontSize:13, color:C.ink500, cursor:'pointer' }}>
+                      Go to {query} →
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>

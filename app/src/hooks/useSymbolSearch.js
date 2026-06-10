@@ -6,7 +6,7 @@ export function useSymbolSearch(query) {
   const [results, setResults] = useState([])
 
   useEffect(() => {
-    if (!query || query.length < 1) { setResults([]); return }
+    if (!query || query.length < 1) return
 
     const timer = setTimeout(async () => {
       try {
@@ -16,7 +16,7 @@ export function useSymbolSearch(query) {
         const json = await res.json()
         setResults(
           (json.data ?? [])
-            .filter(d => (d.type === 'Common Stock' || d.type === 'ETF') && d.country === 'United States')
+            .filter(d => (d.instrument_type === 'Common Stock' || d.instrument_type === 'ETF') && d.country === 'United States')
             .slice(0, 6)
         )
       } catch {
@@ -27,5 +27,6 @@ export function useSymbolSearch(query) {
     return () => clearTimeout(timer)
   }, [query])
 
-  return results
+  // Return empty array directly when query is blank — avoids setState in effect body
+  return query && query.length >= 1 ? results : []
 }

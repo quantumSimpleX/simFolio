@@ -148,7 +148,7 @@ export default function Onboarding() {
   }
 
   if (showStock) {
-    return <StockInterest navigate={navigate} stocks={stocks} setStocks={setStocks} onFinish={handleFinish} saving={saving}/>;
+    return <StockInterest stocks={stocks} setStocks={setStocks} onFinish={handleFinish} saving={saving}/>;
   }
 
   return (
@@ -205,7 +205,7 @@ export default function Onboarding() {
   );
 }
 
-function StockInterest({ navigate, stocks, setStocks, onFinish, saving }) {
+function StockInterest({ stocks, setStocks, onFinish, saving }) {
   const [input, setInput] = useState('');
 
   function addStock() {

@@ -1,6 +1,14 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { C, SANS, DISPLAY } from '../../tokens'
+
+function fmtMktCap(v) {
+  if (!v) return '—'
+  if (v >= 1e12) return `$${(v / 1e12).toFixed(1)}T`
+  if (v >= 1e9)  return `$${(v / 1e9).toFixed(1)}B`
+  if (v >= 1e6)  return `$${(v / 1e6).toFixed(0)}M`
+  return '—'
+}
 import { StatusBar, CTA, Eyebrow, TermUnderline, MktStatus } from '../../components/Primitives'
 import { TopNav, BackHeader } from '../../components/Nav'
 import { ChartPanel } from '../../components/Charts'
@@ -30,11 +38,24 @@ export default function StockDetail() {
   const position = positions.find(p => p.ticker === ticker)
   const watching = isWatching(ticker)
 
+  function fmtVol(v) {
+    if (!v) return '—'
+    if (v >= 1e9) return `${(v / 1e9).toFixed(1)}B`
+    if (v >= 1e6) return `${(v / 1e6).toFixed(1)}M`
+    if (v >= 1e3) return `${(v / 1e3).toFixed(0)}K`
+    return v.toString()
+  }
+
   const stats = s ? [
-    ['Market cap',  s.marketCap ? `$${(s.marketCap/1000).toFixed(0)}B` : '—'],
-    ['Exchange',    s.exchange ?? '—'],
-    ['Industry',    s.industry ?? '—'],
-    ['52W high',    s.high ? `$${s.high.toFixed(2)}` : '—'],
+    ['Market cap',   fmtMktCap(s.marketCap)],
+    ['P/E ratio',    s.peRatio       ? s.peRatio.toFixed(1)                  : '—'],
+    ['EPS (TTM)',    s.eps           ? `$${s.eps.toFixed(2)}`                : '—'],
+    ['Beta',         s.beta          ? s.beta.toFixed(2)                     : '—'],
+    ['Div. yield',   s.dividendYield ? `${(s.dividendYield * 100).toFixed(2)}%` : '—'],
+    ['52W range',    s.week52Low && s.week52High ? `$${s.week52Low.toFixed(0)} – $${s.week52High.toFixed(0)}` : '—'],
+    ['Volume',       fmtVol(s.volume)],
+    ['Avg volume',   fmtVol(s.avgVolume)],
+    ['Exchange',     s.exchange ?? '—'],
   ] : []
 
   if (!isMobile) return <StockDetailDesktop ticker={ticker} s={s} isLoading={isLoading} candles={candles} candlesLoading={candlesLoading} candlesError={candlesError} activeRange={activeRange} setActiveRange={setActiveRange} navigate={navigate} stats={stats} marketOpen={marketOpen} position={position} watching={watching} onToggleWatch={() => watching ? removeFromWatchlist(ticker) : addToWatchlist(ticker)}/>

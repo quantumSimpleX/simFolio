@@ -1,8 +1,7 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { C } from './tokens'
 import { useAuth } from './context/AuthContext'
-import { supabase } from './lib/supabase'
 import { useMarketDataPreload } from './hooks/useMarketDataPreload'
 
 import WelcomeMobile   from './screens/auth/WelcomeMobile'
@@ -61,7 +60,8 @@ function OnboardingRoute({ children }) {
 
 export default function App() {
   const isMobile = useIsMobile()
-  useMarketDataPreload()
+  const { user } = useAuth()
+  useMarketDataPreload(user)
 
   return (
     <BrowserRouter>

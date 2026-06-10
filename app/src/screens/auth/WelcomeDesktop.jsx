@@ -88,8 +88,9 @@ export default function WelcomeDesktop() {
               <LangToggle/>
             </div>
           </div>
+          {error && <div style={{ fontFamily:SANS, fontSize:13, color:C.red, marginTop:12 }}>{error}</div>}
           <div style={{ marginTop:20 }}>
-            <CTA label="Create account  →" full onClick={() => navigate('/onboarding')}/>
+            <CTA label={loading ? 'Creating account…' : 'Create account  →'} full onClick={handleSubmit}/>
           </div>
           <div style={{ fontFamily:SANS, fontSize:12, color:C.ink400, textAlign:'center', marginTop:14 }}>
             By continuing you agree to our Terms of Service and Privacy Policy.

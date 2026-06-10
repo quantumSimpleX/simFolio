@@ -1,69 +1,72 @@
 import { useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { isMarketOpen } from './useQuotes'
+import { supabase } from '../lib/supabase'
+import { isMarketOpen, fetchQuotes } from './useQuotes'
 
-const TD_KEY  = import.meta.env.VITE_TWELVEDATA_API_KEY
-const TD_BASE = 'https://api.twelvedata.com'
-
-// Single source of truth for symbols — imported by markets pages to ensure cache keys match
-export const INDEX_SYMBOLS    = ['SPY', 'QQQ', 'DIA']
+export const INDEX_SYMBOLS     = ['SPY', 'QQQ', 'DIA']
 export const WATCHLIST_SYMBOLS = ['AAPL', 'NVDA', 'MSFT', 'TSLA', 'AMZN']
-export const PRELOAD_SYMBOLS  = [...INDEX_SYMBOLS, ...WATCHLIST_SYMBOLS] // 8 total — within free tier limit
+export const PRELOAD_SYMBOLS   = [...INDEX_SYMBOLS, ...WATCHLIST_SYMBOLS]
 
-function parseQuote(ticker, q) {
-  if (!q?.close) return null
-  const price = parseFloat(q.close), prev = parseFloat(q.previous_close)
-  const change = price - prev, pct = prev > 0 ? (change / prev) * 100 : 0
-  return {
-    ticker, price, change, pct,
-    high: parseFloat(q.high), low: parseFloat(q.low),
-    open: parseFloat(q.open), prev,
-    pos: change >= 0,
-    name: q.name ?? ticker, exchange: q.exchange ?? '',
-    industry: '', marketCap: 0, logo: '',
+// Fetches quotes (DB cache first, then API for misses) and seeds React Query caches.
+async function preloadAndSeed(symbols, queryClient, seedBatchKey = false) {
+  const quotes = await fetchQuotes(symbols, queryClient)
+  if (!quotes.length) return
+
+  const now = Date.now()
+  if (seedBatchKey) {
+    queryClient.setQueryData(['quotes', symbols.join(',')], quotes, { updatedAt: now })
   }
+  quotes.forEach(q => {
+    queryClient.setQueryData(['stock-detail', q.ticker], q, { updatedAt: now })
+  })
 }
 
-export function useMarketDataPreload() {
-  const queryClient = useQueryClient()
-  const fetched = useRef(false)
+// Pass the authenticated user so portfolio + watchlist tickers are preloaded on login.
+export function useMarketDataPreload(user = null) {
+  const queryClient   = useQueryClient()
+  const staticFetched = useRef(false)
+  const userFetchedId = useRef(null)
 
+  // Phase 1 — static index + default watchlist symbols, runs once per stale window
   useEffect(() => {
-    if (fetched.current || !TD_KEY) return
-    fetched.current = true
+    if (staticFetched.current) return
+    staticFetched.current = true
 
-    async function preload() {
-      try {
-        const r = await fetch(`${TD_BASE}/quote?symbol=${PRELOAD_SYMBOLS.join(',')}&apikey=${TD_KEY}`)
-          .then(res => res.json())
+    const staleMs = isMarketOpen() ? 5 * 60_000 : 60 * 60_000
 
-        if (r.code === 429) { console.warn('Market preload: rate limited'); return }
-        if (r.status === 'error') { console.warn('Market preload error:', r.message); return }
+    preloadAndSeed(PRELOAD_SYMBOLS, queryClient, true)
+      .catch(e => { console.warn('[Preload] Static symbols failed:', e); staticFetched.current = false })
+      .then(() => setTimeout(() => { staticFetched.current = false }, staleMs))
+  }, [queryClient])
 
-        // Twelve Data returns { AAPL: {...}, MSFT: {...} } for multiple symbols
-        const quotes = Object.entries(r)
-          .map(([ticker, q]) => parseQuote(ticker, q))
-          .filter(Boolean)
+  // Phase 2 — user's portfolio + watchlist tickers, runs once per login
+  useEffect(() => {
+    if (!user || userFetchedId.current === user.id) return
+    userFetchedId.current = user.id
 
-        const now = Date.now()
-        const staleMs = isMarketOpen() ? 5 * 60_000 : 60 * 60_000
+    async function preloadUserData() {
+      const { data: positions } = await supabase
+        .from('positions')
+        .select('ticker')
+        .eq('user_id', user.id)
 
-        // Seed batch cache — used by markets page useQuotes(PRELOAD_SYMBOLS)
-        queryClient.setQueryData(['quotes', PRELOAD_SYMBOLS.join(',')], quotes, { updatedAt: now })
+      const portfolioTickers = (positions ?? []).map(p => p.ticker)
 
-        // Seed individual stock-detail caches — used by stock detail + buy screens
-        quotes.forEach(q => {
-          queryClient.setQueryData(['stock-detail', q.ticker], q, { updatedAt: now })
-        })
+      const watchlistTickers = (() => {
+        try { return JSON.parse(localStorage.getItem('simfolio_watchlist') ?? '[]') }
+        catch { return [] }
+      })()
 
-        // Schedule one auto-refresh after staleMs
-        setTimeout(() => { fetched.current = false }, staleMs)
-      } catch (e) {
-        console.warn('Market preload failed:', e)
-        fetched.current = false
+      // Only fetch tickers not already covered by the static preload
+      const userTickers = [...new Set([...portfolioTickers, ...watchlistTickers])]
+        .filter(t => !PRELOAD_SYMBOLS.includes(t))
+
+      if (userTickers.length) {
+        console.log('[Preload] User tickers to warm:', userTickers.join(', '))
+        await preloadAndSeed(userTickers, queryClient, false)
       }
     }
 
-    preload()
-  }, [queryClient])
+    preloadUserData().catch(e => console.warn('[Preload] User data failed:', e))
+  }, [user, queryClient])
 }
