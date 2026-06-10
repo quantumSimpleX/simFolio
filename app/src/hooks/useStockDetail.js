@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { isMarketOpen } from './useQuotes'
-import { getCachedQuotes, persistQuotes, getStoredFundamentals, updateFundamentals } from '../lib/marketCache'
+import { getCachedQuotes, persistQuotes, getStoredFundamentals } from '../lib/marketCache'
 
 const TD_KEY  = import.meta.env.VITE_TWELVEDATA_API_KEY
 const TD_BASE = 'https://api.twelvedata.com'
@@ -85,16 +85,14 @@ async function fetchDetail(ticker, queryClient = null) {
     if (preserved[ticker]) quote = { ...quote, ...preserved[ticker] }
   }
 
-  // If fundamentals are missing, fetch them in the background and patch the cache when ready
+  // If fundamentals are missing, fetch them in the background. The edge function
+  // persists to the DB cache itself (service role); we only patch the RQ cache here.
   if (quote && (!quote.marketCap || !quote.beta)) {
-    fetchStatsDirect(ticker).then(async fund => {
-      if (!fund) return
-      await updateFundamentals({ [ticker]: fund })
-      if (queryClient) {
-        queryClient.setQueryData(['stock-detail', ticker], old =>
-          old ? { ...old, ...fund } : old
-        )
-      }
+    fetchStatsDirect(ticker).then(fund => {
+      if (!fund || !queryClient) return
+      queryClient.setQueryData(['stock-detail', ticker], old =>
+        old ? { ...old, ...fund } : old
+      )
     }).catch(() => {})
   }
 

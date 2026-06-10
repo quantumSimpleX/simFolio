@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
-import { getCachedQuotes, persistQuotes, updateFundamentals, getStoredFundamentals } from '../lib/marketCache'
+import { getCachedQuotes, persistQuotes, getStoredFundamentals } from '../lib/marketCache'
 
 const TD_KEY  = import.meta.env.VITE_TWELVEDATA_API_KEY
 const TD_BASE = 'https://api.twelvedata.com'
@@ -25,9 +25,11 @@ async function backgroundEnrichFundamentals(tickers, queryClient) {
     return
   }
 
+  // The edge function already persisted these to the DB cache (service role).
+  // Here we only patch the in-memory React Query caches for instant UI update.
   const map = {}
   for (const f of rows) {
-    if (f.marketCap > 0) {
+    if (f.marketCap > 0 || f.peRatio > 0) {
       map[f.ticker] = {
         marketCap: f.marketCap, peRatio: f.peRatio, eps: f.eps,
         beta: f.beta, dividendYield: f.dividendYield,
@@ -37,9 +39,6 @@ async function backgroundEnrichFundamentals(tickers, queryClient) {
   const got = Object.keys(map)
   if (!got.length) { console.warn('[Quotes] No fundamentals returned for:', tickers.join(', ')); return }
 
-  await updateFundamentals(map)
-
-  // Patch in-memory React Query caches so the UI updates without a full refetch
   if (queryClient) {
     queryClient.setQueriesData({ predicate: q => q.queryKey[0] === 'quotes' }, old => {
       if (!Array.isArray(old)) return old

@@ -1,4 +1,12 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+// Service-role client — writes fundamentals to the cache server-side, bypassing
+// RLS and any client-side write fragility. Env vars are injected automatically.
+const db = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+)
 
 const YF_BASE = 'https://query2.finance.yahoo.com'
 // A real browser UA is required — Yahoo rejects generic agents on the cookie/crumb handshake
@@ -60,7 +68,11 @@ async function quoteSummary(symbol: string, modules: string) {
 const raw = (v: any) => (typeof v?.raw === 'number' ? v.raw : 0)
 
 // ── Fundamentals (marketCap, P/E, EPS, beta, dividend yield) ──────────────────
-async function getFundamentals(symbols: string[]) {
+interface Fundamentals {
+  ticker: string; marketCap: number; peRatio: number; eps: number; beta: number; dividendYield: number
+}
+
+async function getFundamentals(symbols: string[]): Promise<Fundamentals[]> {
   return Promise.all(symbols.map(async (ticker) => {
     try {
       const r = await quoteSummary(ticker, 'price,summaryDetail,defaultKeyStatistics')
@@ -78,6 +90,24 @@ async function getFundamentals(symbols: string[]) {
       return { ticker, marketCap: 0, peRatio: 0, eps: 0, beta: 0, dividendYield: 0 }
     }
   }))
+}
+
+// Writes the non-zero fundamentals to the cache, one upsert covering all tickers.
+// Each field is written only when present so a missing metric never nulls a good one.
+async function persistFundamentals(rows: Fundamentals[]) {
+  const patches = rows.map((r) => {
+    const p: Record<string, unknown> = { ticker: r.ticker }
+    if (r.marketCap     > 0) p.market_cap     = r.marketCap
+    if (r.peRatio       > 0) p.pe_ratio       = r.peRatio
+    if (r.eps             )  p.eps            = r.eps
+    if (r.beta          > 0) p.beta           = r.beta
+    if (r.dividendYield > 0) p.dividend_yield = r.dividendYield
+    return p
+  }).filter((p) => Object.keys(p).length > 1)
+  if (!patches.length) return
+  const { error } = await db.from('market_data_cache').upsert(patches, { onConflict: 'ticker' })
+  if (error) console.error('[market-data] persistFundamentals error:', error.message)
+  else       console.log('[market-data] persisted fundamentals:', patches.map((p) => p.ticker).join(', '))
 }
 
 // ── Quotes (price + fundamentals in one shot) ─────────────────────────────────
@@ -133,7 +163,9 @@ serve(async (req) => {
     const { symbols, candles, range, fundamentals } = await req.json()
 
     if (fundamentals && symbols?.length) {
-      return json({ fundamentals: await getFundamentals(symbols as string[]) })
+      const data = await getFundamentals(symbols as string[])
+      await persistFundamentals(data)   // write server-side (service role) — authoritative
+      return json({ fundamentals: data })
     }
     if (candles && symbols?.length === 1) {
       return json({ candles: await getCandles(symbols[0], range ?? '3M') })
