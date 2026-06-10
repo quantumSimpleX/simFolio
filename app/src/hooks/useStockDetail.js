@@ -67,21 +67,29 @@ async function fetchDetail(ticker, queryClient = null) {
     quote = { ...hits[0], industry: '', logo: '' }
   } else {
     if (TD_KEY) {
-      const r = await fetch(`${TD_BASE}/quote?symbol=${ticker}&apikey=${TD_KEY}`).then(r => r.json())
-      if (r.status === 'error') throw new Error(r.message)
-      const price = parseFloat(r.close), prev = parseFloat(r.previous_close)
-      const change = price - prev, pct = prev > 0 ? (change / prev) * 100 : 0
-      const fw = r.fifty_two_week ?? {}
-      quote = {
-        ticker, price, change, pct,
-        high: parseFloat(r.high), low: parseFloat(r.low), open: parseFloat(r.open), prev,
-        pos: change >= 0, name: r.name || null, exchange: r.exchange ?? '',
-        volume: parseInt(r.volume) || 0, avgVolume: parseInt(r.average_volume) || 0,
-        week52Low: parseFloat(fw.low) || 0, week52High: parseFloat(fw.high) || 0,
-        marketCap: 0, peRatio: 0, eps: 0, beta: 0, dividendYield: 0,
-        industry: '', logo: '',
+      try {
+        const r = await fetch(`${TD_BASE}/quote?symbol=${ticker}&apikey=${TD_KEY}`).then(r => r.json())
+        if (r.status !== 'error' && r.code !== 429 && !(r.code >= 400)) {
+          const price = parseFloat(r.close), prev = parseFloat(r.previous_close)
+          const change = price - prev, pct = prev > 0 ? (change / prev) * 100 : 0
+          const fw = r.fifty_two_week ?? {}
+          quote = {
+            ticker, price, change, pct,
+            high: parseFloat(r.high), low: parseFloat(r.low), open: parseFloat(r.open), prev,
+            pos: change >= 0, name: r.name || null, exchange: r.exchange ?? '',
+            volume: parseInt(r.volume) || 0, avgVolume: parseInt(r.average_volume) || 0,
+            week52Low: parseFloat(fw.low) || 0, week52High: parseFloat(fw.high) || 0,
+            marketCap: 0, peRatio: 0, eps: 0, beta: 0, dividendYield: 0,
+            industry: '', logo: '',
+          }
+        } else {
+          console.warn('[StockDetail] TD rate limited or error — falling back to edge function')
+        }
+      } catch {
+        console.warn('[StockDetail] TD fetch failed — falling back to edge function')
       }
-    } else {
+    }
+    if (!quote) {
       const { data, error } = await supabase.functions.invoke('market-data', { body: { symbols: [ticker] } })
       if (error) throw error
       quote = data.quotes?.[0] ? { ...data.quotes[0], industry: '', logo: '' } : null

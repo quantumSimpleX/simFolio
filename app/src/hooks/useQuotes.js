@@ -106,15 +106,20 @@ function parseQuote(ticker, q) {
 
 async function fetchFromAPI(symbols) {
   if (TD_KEY) {
-    const r = await fetch(`${TD_BASE}/quote?symbol=${symbols.join(',')}&apikey=${TD_KEY}`).then(r => r.json())
-    if (r.code === 429) throw new Error('Rate limit — wait a minute and refresh')
-    if (r.status === 'error' || r.code >= 400) throw new Error(r.message ?? 'API error')
-    const entries = symbols.length === 1 ? [[symbols[0], r]] : Object.entries(r)
-    return entries
-      .filter(([, q]) => q && typeof q === 'object' && q.close)
-      .map(([ticker, q]) => parseQuote(ticker, q))
+    try {
+      const r = await fetch(`${TD_BASE}/quote?symbol=${symbols.join(',')}&apikey=${TD_KEY}`).then(r => r.json())
+      if (r.code !== 429 && r.status !== 'error' && !(r.code >= 400)) {
+        const entries = symbols.length === 1 ? [[symbols[0], r]] : Object.entries(r)
+        return entries
+          .filter(([, q]) => q && typeof q === 'object' && q.close)
+          .map(([ticker, q]) => parseQuote(ticker, q))
+      }
+      console.warn('[Quotes] TD rate limited or error — falling back to edge function')
+    } catch {
+      console.warn('[Quotes] TD fetch failed — falling back to edge function')
+    }
   }
-  // Edge function fallback
+  // Edge function fallback (Yahoo Finance, server-side)
   const { data, error } = await supabase.functions.invoke('market-data', { body: { symbols } })
   if (error) throw error
   return data.quotes
