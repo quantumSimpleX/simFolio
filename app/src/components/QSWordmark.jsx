@@ -11,7 +11,7 @@ export default function QSWordmark({ onDark = false, size = 44 }) {
   const fontSize = size * 0.5;
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
       <svg viewBox="0 0 392 391.3" style={{ height: size, width: size, display: 'block', flexShrink: 0 }} aria-hidden="true">
         <path fill={outerColor} d={QS_OUTER} />
         <path fill={innerColor} d={QS_INNER} />
