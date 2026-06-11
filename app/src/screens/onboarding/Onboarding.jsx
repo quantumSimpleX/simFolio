@@ -1,17 +1,43 @@
 import { useState, useEffect } from 'react';
-import { C, SANS, GOALS } from '../../tokens';
+import { C, SANS } from '../../tokens';
 import { Logo, SimPill, CTA, GoalCard, ProgressDots, GuideAvatar } from '../../components/Primitives';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { matchHeroes } from '../../data/heroes';
 
+const NONE_GOAL = 'None of the above';
+
+const GOAL_CHOICES = [
+  {
+    title: 'Beating Inflation',
+    desc: 'Historically, leaving money in a standard savings account causes it to lose purchasing power as the cost of living increases. The stock market has historically delivered average returns that outpace inflation, ensuring money actually grows in real value rather than shrinking.',
+  },
+  {
+    title: 'The Power of Compound Interest and Growth',
+    desc: 'By reinvesting earnings and dividends, investors can experience compound growth—where money earns interest on both the principal amount and the accumulated interest from previous periods. Over years or decades, this exponential growth can dramatically multiply an initial investment.',
+  },
+  {
+    title: 'Creating Wealth for Retirement',
+    desc: 'For most individuals, relying entirely on a standard pension or Social Security is rarely enough to sustain their desired lifestyle after they stop working. Tax-advantaged accounts—such as a 401(k) or an Individual Retirement Account (IRA)—make investing in the stock market the primary vehicle for building a retirement nest egg.',
+  },
+  {
+    title: 'Earning Passive Income',
+    desc: 'Many publicly traded companies regularly distribute a portion of their profits to shareholders in the form of dividends. This provides investors with a consistent stream of passive income, which can be withdrawn as cash to supplement a primary income or used to buy additional shares to accelerate portfolio growth.',
+  },
+  {
+    title: 'Achieving Major Financial Goals',
+    desc: "Beyond retirement, the stock market provides the liquidity and flexibility needed to fund major life milestones. Whether saving for a home down payment, financing a child's education, or building an emergency fund, stocks provide a higher-yield alternative to standard bank accounts for money needed in the medium-to-long term.",
+  },
+  { title: NONE_GOAL, desc: '' },
+];
+
 const BASE_QUESTIONS = [
   {
     key: 'goal',
-    q: "Good to meet you. One question to start — what's drawing you to investing right now?",
-    type: 'choice',
-    choices: GOALS,
+    q: "Good to meet you. One question to start — what's drawing you to investing right now? Select all that apply.",
+    type: 'multi',
+    choices: GOAL_CHOICES,
   },
 ];
 
@@ -95,6 +121,11 @@ export default function Onboarding() {
   }
 
   function handleContinue() {
+    if (current.type === 'multi') {
+      const { picks = [], other = '' } = selected || {};
+      advance(picks.includes(NONE_GOAL) ? (other.trim() || NONE_GOAL) : picks);
+      return;
+    }
     advance(selected);
   }
 
@@ -218,6 +249,8 @@ function OnboardingShell({ step, total, current, selected, onSelect, onContinue 
                 </div>
                 <div style={{ fontFamily: SANS, fontSize: fluid(12, 14), color: C.ink400, marginTop: 8 }}>Amount in USD · press Enter or tap Continue</div>
               </div>
+            ) : current.type === 'multi' ? (
+              <MultiGoalPicker choices={current.choices} value={selected} onChange={onSelect}/>
             ) : (
               <div style={choiceGrid}>
                 {current.choices.map((choice, i) => (
@@ -229,14 +262,86 @@ function OnboardingShell({ step, total, current, selected, onSelect, onContinue 
             )}
           </div>
 
-          {/* CTA for number inputs */}
+          {/* CTA for number and multi-select inputs */}
           {current.type !== 'choice' && (
             <div style={{ paddingLeft: isDesktop ? avatarSize + 18 : avatarSize + 10 }}>
-              <CTA label="Continue  →" full disabled={!selected} onClick={onContinue}/>
+              <CTA
+                label="Continue  →"
+                full
+                disabled={current.type === 'multi' ? !(selected?.picks?.length > 0) : !selected}
+                onClick={onContinue}
+              />
             </div>
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function MultiGoalPicker({ choices, value, onChange }) {
+  const { picks = [], other = '' } = value || {};
+  const noneSelected = picks.includes(NONE_GOAL);
+
+  function toggle(title) {
+    const isNone = title === NONE_GOAL;
+    // None of the above is exclusive with the real goals
+    if ((isNone && picks.length > 0 && !noneSelected) || (!isNone && noneSelected)) return;
+    const next = picks.includes(title) ? picks.filter(t => t !== title) : [...picks, title];
+    onChange({ picks: next, other });
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {choices.map(({ title, desc }) => {
+        const isNone = title === NONE_GOAL;
+        const checked = picks.includes(title);
+        const disabled = (isNone && picks.length > 0 && !noneSelected) || (!isNone && noneSelected);
+        return (
+          <div
+            key={title}
+            onClick={() => toggle(title)}
+            style={{
+              border: `1.5px solid ${checked ? C.ame400 : C.ink200}`,
+              borderRadius: 8,
+              background: checked ? C.ame50 : C.white,
+              padding: '14px 16px',
+              cursor: disabled ? 'default' : 'pointer',
+              opacity: disabled ? 0.4 : 1,
+              pointerEvents: disabled ? 'none' : 'auto',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{
+                width: 18, height: 18, flexShrink: 0, borderRadius: 4,
+                border: `1.5px solid ${checked ? C.ame400 : C.ink200}`,
+                background: checked ? C.ame400 : C.white,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: C.white, fontSize: 12, fontFamily: SANS, fontWeight: 700,
+              }}>{checked ? '✓' : ''}</div>
+              <div style={{ fontFamily: SANS, fontSize: fluid(15, 18), fontWeight: 600, color: C.ink900 }}>{title}</div>
+            </div>
+            {desc && (
+              <div style={{ fontFamily: SANS, fontSize: fluid(13, 15), color: C.ink400, lineHeight: 1.5, marginTop: 6, paddingLeft: 28 }}>{desc}</div>
+            )}
+          </div>
+        );
+      })}
+
+      {noneSelected && (
+        <textarea
+          value={other}
+          onChange={e => onChange({ picks, other: e.target.value })}
+          placeholder="Tell me in your own words — what's drawing you to investing?"
+          rows={3}
+          autoFocus
+          style={{
+            border: `1.5px solid ${C.ink200}`, borderRadius: 4, padding: '12px 14px',
+            fontFamily: SANS, fontSize: fluid(15, 17), color: C.ink900, background: C.white,
+            outline: 'none', resize: 'vertical',
+          }}
+        />
+      )}
     </div>
   );
 }
