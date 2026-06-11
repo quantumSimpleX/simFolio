@@ -28,6 +28,7 @@ import StockDetail     from './screens/markets/StockDetail'
 import OrdersMobile from './screens/orders/OrdersMobile'
 
 import AchievementsMobile from './screens/achievements/AchievementsMobile'
+import Profile            from './screens/profile/Profile'
 import BadgeEarned        from './screens/achievements/BadgeEarned'
 
 function useIsMobile() {
@@ -91,6 +92,7 @@ export default function App() {
           <Route path="/orders"       element={<PrivateRoute><OrdersMobile/></PrivateRoute>}/>
           <Route path="/achievements" element={<PrivateRoute><AchievementsMobile/></PrivateRoute>}/>
           <Route path="/badge-earned" element={<PrivateRoute><BadgeEarned/></PrivateRoute>}/>
+          <Route path="/profile"      element={<PrivateRoute><Profile/></PrivateRoute>}/>
         </Routes>
       </Wrapper>
     </BrowserRouter>

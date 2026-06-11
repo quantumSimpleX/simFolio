@@ -40,6 +40,12 @@ const RANDOM_QUESTIONS = [
     choices: ['Less than a year', '1 – 3 years', '3 – 10 years', '10+ years', "I haven't decided"],
   },
   {
+    key: 'frequency',
+    q: "How often do you see yourself trading or adjusting your investments?",
+    type: 'choice',
+    choices: ['Most days', 'A few times a week', 'A few times a month', 'A few times a year', 'Whenever it feels right'],
+  },
+  {
     key: 'experience',
     q: "How much experience do you have with investing or financial markets?",
     type: 'choice',
@@ -138,6 +144,10 @@ export default function Onboarding() {
   }
 
   async function completeOnboarding(stockList, heroIds) {
+    const fullAnswers = { ...answers, stocks: stockList };
+    // Always keep a local copy so the profile page works even if the DB save fails
+    try { localStorage.setItem('simfolio_onboarding_answers', JSON.stringify(fullAnswers)); } catch { /* ignore */ }
+
     if (!user) {
       if (stockList.length > 0) navigate(`/buy/${stockList[0]}`);
       else navigate('/portfolio');
@@ -154,6 +164,10 @@ export default function Onboarding() {
         theme_preference: 'light',
         onboarding_done: true,
       });
+      // Separate call so a missing onboarding_answers column can't block onboarding
+      try {
+        await supabase.from('users').update({ onboarding_answers: fullAnswers }).eq('user_id', user.id);
+      } catch { /* column may not exist yet; localStorage copy still works */ }
       await supabase.from('user_balances').upsert({
         user_id: user.id,
         cash_balance: capital,

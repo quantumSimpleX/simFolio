@@ -31,7 +31,7 @@ export function BottomNav({ active='portfolio' }) {
 export function TopNav({ active='portfolio' }) {
   const navigate = useNavigate();
   const bp = useBreakpoint();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { cashBalance } = usePortfolio();
 
   const tabs = [
@@ -54,7 +54,7 @@ export function TopNav({ active='portfolio' }) {
         <div style={{ flex:1 }}/>
         <LangToggle/>
         <ThemeToggle/>
-        <div onClick={signOut} title="Sign out" style={{ width:30, height:30, borderRadius:'50%', background:C.ink900, display:'flex', alignItems:'center', justifyContent:'center', color:C.white, fontFamily:SANS, fontSize:13, fontWeight:700, cursor:'pointer' }}>{initials}</div>
+        <div onClick={() => navigate('/profile')} title="Profile" style={{ width:30, height:30, borderRadius:'50%', background:C.ink900, display:'flex', alignItems:'center', justifyContent:'center', color:C.white, fontFamily:SANS, fontSize:13, fontWeight:700, cursor:'pointer' }}>{initials}</div>
       </div>
     );
   }
@@ -79,7 +79,7 @@ export function TopNav({ active='portfolio' }) {
         <LangToggle/>
         <ThemeToggle/>
         <div style={{ fontFamily:SANS, fontSize:14, color:C.ink500, whiteSpace:'nowrap' }}>Cash <span style={{ color:C.ink900, fontWeight:600 }}>{cashDisplay}</span></div>
-        <div onClick={signOut} title="Sign out" style={{ width:34, height:34, borderRadius:'50%', background:C.ink900, display:'flex', alignItems:'center', justifyContent:'center', color:C.white, fontFamily:SANS, fontSize:14, fontWeight:700, cursor:'pointer' }}>{initials}</div>
+        <div onClick={() => navigate('/profile')} title="Profile" style={{ width:34, height:34, borderRadius:'50%', background:C.ink900, display:'flex', alignItems:'center', justifyContent:'center', color:C.white, fontFamily:SANS, fontSize:14, fontWeight:700, cursor:'pointer' }}>{initials}</div>
       </div>
     </div>
   );
