@@ -8,10 +8,10 @@ import { useBreakpoint } from '../hooks/useBreakpoint';
 export function BottomNav({ active='portfolio' }) {
   const navigate = useNavigate();
   const tabs = [
-    { id:'portfolio',    label:'Portfolio',    icon:'▤', path:'/portfolio' },
-    { id:'markets',      label:'Markets',      icon:'◈', path:'/markets'   },
-    { id:'ask',          label:'Ask',          icon:'◉', path:'/ask'       },
-    { id:'achievements', label:'Achievements', icon:'◆', path:'/achievements' },
+    { id:'portfolio', label:'Portfolio', icon:'▤', path:'/portfolio' },
+    { id:'markets',   label:'Markets',   icon:'◈', path:'/markets'   },
+    { id:'orders',    label:'Orders',    icon:'≡', path:'/orders'    },
+    { id:'ask',       label:'Ask',       icon:'◉', path:'/ask'       },
   ];
   return (
     <div style={{ height:72, borderTop:`1px solid ${C.ink100}`, display:'flex', background:C.white, flexShrink:0 }}>
