@@ -40,7 +40,7 @@ export default function WelcomeDesktop() {
       <div style={{ width:580, background:C.ink900, padding:'64px 72px', display:'flex', flexDirection:'column' }}>
         <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
           <Logo size={32} color={C.white}/>
-          <div style={{ display:'flex', alignItems:'center', gap:6, opacity:0.3, paddingLeft:2 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:6, opacity:0.3, paddingLeft:43 }}>
             <span style={{ fontFamily:SANS, fontSize:11, color:C.white }}>by</span>
             <QSWordmark onDark={true} size={28}/>
           </div>

@@ -10,7 +10,7 @@ export default function WelcomeMobile() {
       <StatusBar/>
       <div style={{ flex:1, display:'flex', flexDirection:'column', padding:'16px 32px', gap:0 }}>
         <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:24 }}>
-          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:10 }}>
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', gap:10 }}>
             <Mark size={48}/>
             <div style={{ display:'flex', alignItems:'center', gap:6, opacity:0.35 }}>
               <span style={{ fontFamily:SANS, fontSize:11, color:C.ink500 }}>by</span>
