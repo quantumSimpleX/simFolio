@@ -39,34 +39,16 @@ const RANDOM_QUESTIONS = [
     choices: ['Less than a year', '1 – 3 years', '3 – 10 years', '10+ years', "I haven't decided"],
   },
   {
-    key: 'risk',
-    q: "If your portfolio dropped 20% in a month, what would you do?",
-    type: 'choice',
-    choices: ["Sell everything — I can't handle that", "Sell some, keep some", "Hold and wait", "Buy more — it's a discount", "Depends what caused it"],
-  },
-  {
     key: 'experience',
     q: "How much experience do you have with investing or financial markets?",
     type: 'choice',
     choices: ["None — complete beginner", "I've read about it but never traded", "I've traded a little", "I trade regularly", "I have a financial background"],
   },
   {
-    key: 'language',
-    q: "What's your primary language for reading about money and investing?",
-    type: 'choice',
-    choices: ['English', '繁體中文 (Traditional Chinese)', '日本語 (Japanese)', 'Español', 'Other'],
-  },
-  {
-    key: 'familiarity',
-    q: "How familiar are you with terms like P/E ratio, ETF, or market cap?",
-    type: 'choice',
-    choices: ["Not at all", "I've heard them but don't really know them", "I know the basics", "Pretty comfortable", "Very familiar"],
-  },
-  {
     key: 'heroMention',
-    q: "Anyone you've heard mentioned — from a book, podcast, or just people talking about them?",
+    q: "Is there a famous investor you admire — someone whose approach you'd want to learn from?",
     type: 'choice',
-    choices: ['Warren Buffett', 'Cathie Wood', 'Ray Dalio', 'Peter Lynch', "I haven't heard of specific investors"],
+    choices: ['Warren Buffett', 'Cathie Wood', 'Ray Dalio', 'Peter Lynch', "I don't follow any particular investor"],
   },
 ];
 
@@ -128,13 +110,11 @@ export default function Onboarding() {
     setSaving(true);
 
     const capital = parseInt(answers.capital) || 5000;
-    const lang = answers.language?.includes('中文') ? 'zh-TW' : 'en';
     const heroIds = matchHeroes(answers);
 
     try {
       await supabase.from('users').upsert({
         user_id: user.id,
-        language_preference: lang,
         theme_preference: 'light',
         onboarding_done: true,
       });
@@ -158,7 +138,7 @@ export default function Onboarding() {
     return <StockInterest stocks={stocks} setStocks={setStocks} onFinish={handleFinish} saving={saving}/>;
   }
 
-  return <OnboardingShell step={step} total={QUESTIONS.length} current={current} selected={selected} onSelect={handleSelect} onContinue={handleContinue}/>;
+  return <OnboardingShell step={step} total={QUESTIONS.length + 1} current={current} selected={selected} onSelect={handleSelect} onContinue={handleContinue}/>;
 }
 
 // Fluid type: scales linearly from `min`px at 480px viewport to `max`px at 1280px viewport
@@ -380,7 +360,7 @@ function StockInterest({ stocks, setStocks, onFinish, saving }) {
           gap: isDesktop ? 28 : 20,
           padding: isDesktop ? 0 : '20px 24px 32px',
         }}>
-          <ProgressDots step={8} total={8}/>
+          <ProgressDots step={QUESTIONS.length + 1} total={QUESTIONS.length + 1}/>
 
           <div style={{ display: 'flex', gap: isDesktop ? 18 : 10, alignItems: 'flex-start' }}>
             <GuideAvatar size={avatarSize}/>
@@ -417,11 +397,11 @@ function StockInterest({ stocks, setStocks, onFinish, saving }) {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {stocks.length > 0 ? (
-                <CTA label="Let's start trading  →" full loading={saving} onClick={() => onFinish(stocks)}/>
+                <CTA label="Now let's go buy some stocks  →" full loading={saving} onClick={() => onFinish(stocks)}/>
               ) : (
                 <>
-                  <CTA label="Skip — show me ideas  →" full loading={saving} onClick={() => onFinish([])}/>
-                  <div style={{ fontFamily: SANS, fontSize: fluid(13, 15), color: C.ink400, textAlign: 'center' }}>Your hero advisor will suggest some</div>
+                  <CTA label="Get advice from an advisor who matches your goals  →" full loading={saving} onClick={() => onFinish([])}/>
+                  <div style={{ fontFamily: SANS, fontSize: fluid(13, 15), color: C.ink400, textAlign: 'center' }}>We'll match you with the advisor that fits your investment goals best</div>
                 </>
               )}
             </div>

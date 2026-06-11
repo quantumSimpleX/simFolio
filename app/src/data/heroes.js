@@ -81,7 +81,7 @@ export function matchHeroes(answers) {
   const { goal, horizon, risk, heroMention } = answers
 
   // Direct mention gets highest priority
-  if (heroMention && heroMention !== "I haven't heard of specific investors") {
+  if (heroMention && heroMention !== "I don't follow any particular investor") {
     const mentioned = heroMention.toLowerCase()
     const directMatch = Object.values(HERO_DATA).find(h =>
       h.name.toLowerCase().includes(mentioned) || mentioned.includes(h.id)
