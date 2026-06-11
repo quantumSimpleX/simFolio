@@ -85,14 +85,6 @@ export default function PortfolioMobile() {
         </div>
       </div>
 
-      <div
-        onClick={() => navigate('/orders')}
-        style={{ padding:'11px 24px', borderBottom:`1px solid ${C.ink100}`, display:'flex', justifyContent:'space-between', alignItems:'center', cursor:'pointer', flexShrink:0 }}
-      >
-        <div style={{ fontFamily:SANS, fontSize:13, fontWeight:600, color:C.ink900 }}>Orders</div>
-        <div style={{ fontFamily:SANS, fontSize:13, color:C.ame400 }}>View all →</div>
-      </div>
-
       <div style={{ flex:1, padding:'20px 24px 0', overflow:'auto' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
           <Eyebrow>Holdings</Eyebrow>
