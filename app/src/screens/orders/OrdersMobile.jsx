@@ -1,8 +1,8 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { C, SANS, MONO } from '../../tokens'
 import { TermUnderline, StatusPill } from '../../components/Primitives'
-import { AppShell } from '../../components/AppShell'
-import { PageHeader } from '../../components/Nav'
+import { TopNav } from '../../components/Nav'
 import { useOrders, useCancelOrder } from '../../hooks/useOrders'
 
 const TABS = ['Pending', 'Filled', 'Cancelled']
@@ -12,6 +12,7 @@ function fmtDate(ts) {
 }
 
 export default function OrdersMobile() {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('Pending')
   const { data: orders, isLoading } = useOrders()
   const { mutate: cancelOrder } = useCancelOrder()
@@ -21,16 +22,22 @@ export default function OrdersMobile() {
   const cancelled = (orders ?? []).filter(o => o.status === 'CANCELLED')
 
   return (
-    <AppShell active="orders" maxWidth={720}>
-      <PageHeader title="Orders"/>
+    <div style={{ width:'100%', height:'100dvh', background:C.paper, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+      <TopNav active="orders"/>
 
-      <div style={{ display:'flex', borderBottom:`1px solid ${C.ink100}` }}>
+      <div style={{ padding:'0 24px 14px', display:'flex', alignItems:'center', justifyContent:'space-between', borderBottom:`1px solid ${C.ink100}`, flexShrink:0 }}>
+        <div onClick={() => navigate('/portfolio')} style={{ fontFamily:SANS, fontSize:14, color:C.ame400, cursor:'pointer', flexShrink:0 }}>← Portfolio</div>
+        <div style={{ fontFamily:SANS, fontWeight:700, fontSize:17, color:C.ink900 }}>Orders</div>
+        <div onClick={() => setActiveTab('Filled')} style={{ fontFamily:SANS, fontSize:14, color:activeTab==='Filled'?C.ink900:C.ame400, cursor:'pointer', flexShrink:0 }}>History</div>
+      </div>
+
+      <div style={{ display:'flex', borderBottom:`1px solid ${C.ink100}`, flexShrink:0 }}>
         {TABS.map(tab => (
           <div key={tab} onClick={() => setActiveTab(tab)} style={{ flex:1, padding:'11px 0', textAlign:'center', fontFamily:SANS, fontSize:13, color:activeTab===tab?C.ink900:C.ink400, fontWeight:activeTab===tab?700:400, borderBottom:activeTab===tab?`2px solid ${C.ink900}`:'2px solid transparent', cursor:'pointer' }}>{tab}</div>
         ))}
       </div>
 
-      <div style={{ padding:'16px 0', display:'flex', flexDirection:'column', gap:14 }}>
+      <div style={{ flex:1, padding:'16px 24px', display:'flex', flexDirection:'column', gap:14, overflowY:'auto', WebkitOverflowScrolling:'touch' }}>
         {isLoading && <div style={{ fontFamily:SANS, fontSize:14, color:C.ink400, paddingTop:20 }}>Loading orders…</div>}
 
         {activeTab === 'Pending' && (
@@ -59,7 +66,7 @@ export default function OrdersMobile() {
           )
         )}
       </div>
-    </AppShell>
+    </div>
   )
 }
 
