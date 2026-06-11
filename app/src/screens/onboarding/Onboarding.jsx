@@ -9,26 +9,11 @@ import { matchHeroes } from '../../data/heroes';
 const NONE_GOAL = 'None of the above';
 
 const GOAL_CHOICES = [
-  {
-    title: 'Beating Inflation',
-    desc: 'Historically, leaving money in a standard savings account causes it to lose purchasing power as the cost of living increases. The stock market has historically delivered average returns that outpace inflation, ensuring money actually grows in real value rather than shrinking.',
-  },
-  {
-    title: 'The Power of Compound Interest and Growth',
-    desc: 'By reinvesting earnings and dividends, investors can experience compound growth—where money earns interest on both the principal amount and the accumulated interest from previous periods. Over years or decades, this exponential growth can dramatically multiply an initial investment.',
-  },
-  {
-    title: 'Creating Wealth for Retirement',
-    desc: 'For most individuals, relying entirely on a standard pension or Social Security is rarely enough to sustain their desired lifestyle after they stop working. Tax-advantaged accounts—such as a 401(k) or an Individual Retirement Account (IRA)—make investing in the stock market the primary vehicle for building a retirement nest egg.',
-  },
-  {
-    title: 'Earning Passive Income',
-    desc: 'Many publicly traded companies regularly distribute a portion of their profits to shareholders in the form of dividends. This provides investors with a consistent stream of passive income, which can be withdrawn as cash to supplement a primary income or used to buy additional shares to accelerate portfolio growth.',
-  },
-  {
-    title: 'Achieving Major Financial Goals',
-    desc: "Beyond retirement, the stock market provides the liquidity and flexibility needed to fund major life milestones. Whether saving for a home down payment, financing a child's education, or building an emergency fund, stocks provide a higher-yield alternative to standard bank accounts for money needed in the medium-to-long term.",
-  },
+  { title: 'Shielding purchasing power from inflation', desc: '' },
+  { title: 'Harnessing exponential compound wealth growth', desc: '' },
+  { title: 'Generating reliable passive dividend income', desc: '' },
+  { title: 'Spreading risk through asset diversification', desc: '' },
+  { title: 'Owning pieces of profitable global corporations', desc: '' },
   { title: NONE_GOAL, desc: '' },
 ];
 
@@ -116,6 +101,10 @@ export default function Onboarding() {
   }
 
   function handleSelect(choice) {
+    if (current.type !== 'choice') {
+      setSelected(choice);
+      return;
+    }
     setSelected(choice);
     setTimeout(() => advance(choice), 180);
   }
