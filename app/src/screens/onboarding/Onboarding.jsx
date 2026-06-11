@@ -82,6 +82,28 @@ export default function Onboarding() {
     }
   }
 
+  // Rebuild the `selected` state for a question from its saved answer
+  function restoreSelected(q, saved) {
+    if (saved == null) return null;
+    if (q.type === 'multi') {
+      if (Array.isArray(saved)) return { picks: saved, other: '' };
+      return { picks: [NONE_GOAL], other: saved === NONE_GOAL ? '' : saved };
+    }
+    return saved;
+  }
+
+  function handleBack() {
+    if (showStock) {
+      setShowStock(false);
+      setSelected(restoreSelected(current, answers[current.key]));
+      return;
+    }
+    if (step === 0) return;
+    const prev = step - 1;
+    setStep(prev);
+    setSelected(restoreSelected(QUESTIONS[prev], answers[QUESTIONS[prev].key]));
+  }
+
   function handleSelect(choice) {
     if (current.type !== 'choice') {
       setSelected(choice);
@@ -135,10 +157,10 @@ export default function Onboarding() {
   }
 
   if (showStock) {
-    return <StockInterest stocks={stocks} setStocks={setStocks} onFinish={handleFinish} saving={saving}/>;
+    return <StockInterest stocks={stocks} setStocks={setStocks} onFinish={handleFinish} saving={saving} onBack={handleBack}/>;
   }
 
-  return <OnboardingShell step={step} total={QUESTIONS.length + 1} current={current} selected={selected} onSelect={handleSelect} onContinue={handleContinue}/>;
+  return <OnboardingShell step={step} total={QUESTIONS.length + 1} current={current} selected={selected} onSelect={handleSelect} onContinue={handleContinue} onBack={step > 0 ? handleBack : null}/>;
 }
 
 // Fluid type: scales linearly from `min`px at 480px viewport to `max`px at 1280px viewport
@@ -146,7 +168,18 @@ function fluid(min, max) {
   return `clamp(${min}px, calc(${min}px + ${max - min} * ((100vw - 480px) / 800)), ${max}px)`;
 }
 
-function OnboardingShell({ step, total, current, selected, onSelect, onContinue }) {
+function BackButton({ onBack }) {
+  return (
+    <div
+      onClick={onBack}
+      style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: SANS, fontSize: fluid(13, 15), fontWeight: 600, color: C.ink400 }}
+    >
+      ← Back
+    </div>
+  );
+}
+
+function OnboardingShell({ step, total, current, selected, onSelect, onContinue, onBack }) {
   const isDesktop = useIsDesktop();
   const avatarSize = isDesktop ? 48 : 34;
 
@@ -188,6 +221,7 @@ function OnboardingShell({ step, total, current, selected, onSelect, onContinue 
           padding: isDesktop ? 0 : '20px 24px 32px',
         }}>
           {/* Progress */}
+          {onBack && <BackButton onBack={onBack}/>}
           <ProgressDots step={step + 1} total={total}/>
 
           {/* Sage message */}
@@ -315,7 +349,7 @@ function MultiGoalPicker({ choices, value, onChange }) {
   );
 }
 
-function StockInterest({ stocks, setStocks, onFinish, saving }) {
+function StockInterest({ stocks, setStocks, onFinish, saving, onBack }) {
   const [input, setInput] = useState('');
   const isDesktop = useIsDesktop();
   const avatarSize = isDesktop ? 48 : 34;
@@ -360,6 +394,7 @@ function StockInterest({ stocks, setStocks, onFinish, saving }) {
           gap: isDesktop ? 28 : 20,
           padding: isDesktop ? 0 : '20px 24px 32px',
         }}>
+          {onBack && <BackButton onBack={onBack}/>}
           <ProgressDots step={QUESTIONS.length + 1} total={QUESTIONS.length + 1}/>
 
           <div style={{ display: 'flex', gap: isDesktop ? 18 : 10, alignItems: 'flex-start' }}>
