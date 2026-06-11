@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { C, SANS } from '../../tokens';
 import { Logo, SimPill, CTA, GoalCard, ProgressDots, GuideAvatar } from '../../components/Primitives';
+import BrandPanel from '../../components/BrandPanel';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -185,6 +186,49 @@ function fluid(min, max) {
   return `clamp(${min}px, calc(${min}px + ${max - min} * ((100vw - 480px) / 800)), ${max}px)`;
 }
 
+// Desktop: persistent brand panel on the left, content on the right.
+// Mobile: top nav bar with content below.
+function ScreenShell({ children }) {
+  const isDesktop = useIsDesktop();
+
+  if (isDesktop) {
+    return (
+      <div style={{ width: '100%', height: '100dvh', background: C.paper, display: 'flex', overflow: 'hidden' }}>
+        <div style={{ width: '45%', minWidth: 420, maxWidth: 620, flexShrink: 0 }}>
+          <BrandPanel/>
+        </div>
+        <div style={{ flex: 1, overflow: 'auto', display: 'flex', justifyContent: 'center', padding: '56px 48px 48px' }}>
+          <div style={{ width: '100%', maxWidth: 640, display: 'flex', flexDirection: 'column', gap: 28, height: 'fit-content' }}>
+            {children}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ minHeight: '100dvh', width: '100%', background: C.paper, display: 'flex', flexDirection: 'column' }}>
+      <div style={{
+        borderBottom: `1px solid ${C.ink100}`,
+        background: C.white,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '14px 24px',
+        flexShrink: 0,
+      }}>
+        <Logo size={19}/>
+        <SimPill/>
+      </div>
+      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', overflow: 'auto' }}>
+        <div style={{ width: '100%', maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 20, padding: '20px 24px 32px' }}>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function BackButton({ onBack }) {
   return (
     <div
@@ -205,38 +249,7 @@ function OnboardingShell({ step, total, current, selected, onSelect, onContinue,
     : { display: 'flex', flexDirection: 'column', gap: 8 };
 
   return (
-    <div style={{ minHeight: '100dvh', background: C.paper, display: 'flex', flexDirection: 'column' }}>
-      {/* Top nav */}
-      <div style={{
-        height: isDesktop ? 64 : 'auto',
-        borderBottom: `1px solid ${C.ink100}`,
-        background: C.white,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: isDesktop ? '0 48px' : '14px 24px',
-        flexShrink: 0,
-      }}>
-        <Logo size={isDesktop ? 22 : 19}/>
-        <SimPill/>
-      </div>
-
-      {/* Centered content column */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        justifyContent: 'center',
-        padding: isDesktop ? '56px 48px 48px' : '0',
-        overflow: 'auto',
-      }}>
-        <div style={{
-          width: '100%',
-          maxWidth: isDesktop ? 640 : 480,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: isDesktop ? 28 : 20,
-          padding: isDesktop ? 0 : '20px 24px 32px',
-        }}>
+    <ScreenShell>
           {/* Progress */}
           {onBack && <BackButton onBack={onBack}/>}
           <ProgressDots step={step + 1} total={total}/>
@@ -293,9 +306,7 @@ function OnboardingShell({ step, total, current, selected, onSelect, onContinue,
               />
             </div>
           )}
-        </div>
-      </div>
-    </div>
+    </ScreenShell>
   );
 }
 
@@ -372,37 +383,7 @@ function HeroSelect({ heroIds, onChoose, saving, onBack }) {
   const avatarSize = isDesktop ? 48 : 34;
 
   return (
-    <div style={{ minHeight: '100dvh', background: C.paper, display: 'flex', flexDirection: 'column' }}>
-      {/* Top nav */}
-      <div style={{
-        height: isDesktop ? 64 : 'auto',
-        borderBottom: `1px solid ${C.ink100}`,
-        background: C.white,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: isDesktop ? '0 48px' : '14px 24px',
-        flexShrink: 0,
-      }}>
-        <Logo size={isDesktop ? 22 : 19}/>
-        <SimPill/>
-      </div>
-
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        justifyContent: 'center',
-        padding: isDesktop ? '56px 48px 48px' : '0',
-        overflow: 'auto',
-      }}>
-        <div style={{
-          width: '100%',
-          maxWidth: isDesktop ? 640 : 480,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: isDesktop ? 28 : 20,
-          padding: isDesktop ? 0 : '20px 24px 32px',
-        }}>
+    <ScreenShell>
           <BackButton onBack={onBack}/>
 
           <div style={{ display: 'flex', gap: isDesktop ? 18 : 10, alignItems: 'flex-start' }}>
@@ -453,9 +434,7 @@ function HeroSelect({ heroIds, onChoose, saving, onBack }) {
             disabled={!picked}
             onClick={() => picked && onChoose(picked)}
           />
-        </div>
-      </div>
-    </div>
+    </ScreenShell>
   );
 }
 
@@ -473,37 +452,7 @@ function StockInterest({ stocks, setStocks, onFinish, saving, onBack }) {
   }
 
   return (
-    <div style={{ minHeight: '100dvh', background: C.paper, display: 'flex', flexDirection: 'column' }}>
-      {/* Top nav */}
-      <div style={{
-        height: isDesktop ? 64 : 'auto',
-        borderBottom: `1px solid ${C.ink100}`,
-        background: C.white,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: isDesktop ? '0 48px' : '14px 24px',
-        flexShrink: 0,
-      }}>
-        <Logo size={isDesktop ? 22 : 19}/>
-        <SimPill/>
-      </div>
-
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        justifyContent: 'center',
-        padding: isDesktop ? '56px 48px 48px' : '0',
-        overflow: 'auto',
-      }}>
-        <div style={{
-          width: '100%',
-          maxWidth: isDesktop ? 640 : 480,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: isDesktop ? 28 : 20,
-          padding: isDesktop ? 0 : '20px 24px 32px',
-        }}>
+    <ScreenShell>
           {onBack && <BackButton onBack={onBack}/>}
           <ProgressDots step={QUESTIONS.length + 1} total={QUESTIONS.length + 1}/>
 
@@ -548,9 +497,7 @@ function StockInterest({ stocks, setStocks, onFinish, saving, onBack }) {
               )}
             </div>
           </div>
-        </div>
-      </div>
-    </div>
+    </ScreenShell>
   );
 }
 
