@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { C, SANS } from '../../tokens';
-import { BottomNav } from '../../components/Nav';
+import { BottomNav, TopNav } from '../../components/Nav';
 import { HeroMessage, UserMessage } from '../../components/HeroMessage';
 import { useHeroChat, useHeroHistory } from '../../hooks/useHeroChat';
 import { useHeroSelections } from '../../hooks/useHeroSelections';
@@ -40,6 +40,7 @@ export default function AskTab() {
 
   return (
     <div style={{ width:'100%', height:'100dvh', background:C.paper, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+      <TopNav active="portfolio"/>
       <div style={{ padding:'14px 24px 10px', display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
         <div style={{ display:'flex' }}>
           {heroes.slice(0,3).map((h, i) => (

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { C, SANS, DISPLAY } from '../../tokens';
 import { Eyebrow } from '../../components/Primitives';
-import { BottomNav } from '../../components/Nav';
+import { BottomNav, TopNav } from '../../components/Nav';
 import { ChartPanel } from '../../components/Charts';
 import { HoldingRow } from '../../components/HoldingRow';
 import { useNavigate } from 'react-router-dom';
@@ -49,6 +49,7 @@ export default function PortfolioMobile() {
 
   return (
     <div style={{ width:'100%', height:'100dvh', background:C.paper, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+      <TopNav active="portfolio"/>
       <div style={{ padding:'18px 24px 0', flexShrink:0 }}>
         <Eyebrow>Portfolio</Eyebrow>
         <div style={{ display:'flex', alignItems:'baseline', gap:12, marginTop:6 }}>

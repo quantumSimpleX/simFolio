@@ -4,6 +4,7 @@ import { C, SANS } from '../../tokens'
 import { Eyebrow, MktStatus } from '../../components/Primitives'
 import { StockRow } from '../../components/StockRow'
 import { AppShell } from '../../components/AppShell'
+import { PageHeader } from '../../components/Nav'
 import { useIsMobile } from '../../hooks/useBreakpoint'
 import { useQuotes, isMarketOpen } from '../../hooks/useQuotes'
 import { usePortfolio } from '../../hooks/usePortfolio'
@@ -101,10 +102,7 @@ export default function Markets() {
 
   return (
     <AppShell active="markets">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 24, color: C.ink900 }}>Markets</div>
-        <MktStatus open={marketOpen} />
-      </div>
+      <PageHeader title="Markets" right={<MktStatus open={marketOpen} />} />
 
       {/* Search */}
       <div style={{ position: 'relative', maxWidth: 560, marginBottom: 24 }}>

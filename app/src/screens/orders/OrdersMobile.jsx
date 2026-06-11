@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { C, SANS, MONO } from '../../tokens'
 import { TermUnderline, StatusPill } from '../../components/Primitives'
 import { AppShell } from '../../components/AppShell'
+import { PageHeader } from '../../components/Nav'
 import { useOrders, useCancelOrder } from '../../hooks/useOrders'
 
 const TABS = ['Pending', 'Filled', 'Cancelled']
@@ -12,7 +12,6 @@ function fmtDate(ts) {
 }
 
 export default function OrdersMobile() {
-  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('Pending')
   const { data: orders, isLoading } = useOrders()
   const { mutate: cancelOrder } = useCancelOrder()
@@ -23,11 +22,7 @@ export default function OrdersMobile() {
 
   return (
     <AppShell active="orders" maxWidth={720}>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', paddingBottom:14 }}>
-        <div onClick={() => navigate('/portfolio')} style={{ fontFamily:SANS, fontSize:14, color:C.ame400, cursor:'pointer' }}>← Portfolio</div>
-        <div style={{ fontFamily:SANS, fontWeight:700, fontSize:17, color:C.ink900 }}>Orders</div>
-        <div style={{ width:40 }}/>
-      </div>
+      <PageHeader title="Orders"/>
 
       <div style={{ display:'flex', borderBottom:`1px solid ${C.ink100}` }}>
         {TABS.map(tab => (

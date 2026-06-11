@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { C, SANS, DISPLAY } from '../../tokens'
 import { Eyebrow } from '../../components/Primitives'
 import { AppShell } from '../../components/AppShell'
+import { PageHeader } from '../../components/Nav'
 import { useIsMobile } from '../../hooks/useBreakpoint'
 import { BadgeGlyphForIndex, MedalGlyph, TrophyGlyph } from '../../components/Badges'
 import { useAchievements } from '../../hooks/useAchievements'
@@ -15,11 +16,7 @@ export default function AchievementsMobile() {
 
   return (
     <AppShell active="achievements" maxWidth={860}>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', paddingBottom:14, borderBottom:`1px solid ${C.ink100}`, marginBottom:16 }}>
-        <div onClick={() => navigate('/portfolio')} style={{ fontFamily:SANS, fontSize:14, color:C.ame400, cursor:'pointer' }}>← Portfolio</div>
-        <div style={{ fontFamily:SANS, fontWeight:700, fontSize:17, color:C.ink900 }}>Achievements</div>
-        <div style={{ width:40 }}/>
-      </div>
+      <PageHeader title="Achievements"/>
 
       <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
         {/* Progress summary */}
