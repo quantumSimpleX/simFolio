@@ -141,10 +141,14 @@ export default function Onboarding() {
   return <OnboardingShell step={step} total={QUESTIONS.length} current={current} selected={selected} onSelect={handleSelect} onContinue={handleContinue}/>;
 }
 
+// Fluid type: scales linearly from `min`px at 480px viewport to `max`px at 1280px viewport
+function fluid(min, max) {
+  return `clamp(${min}px, calc(${min}px + ${max - min} * ((100vw - 480px) / 800)), ${max}px)`;
+}
+
 function OnboardingShell({ step, total, current, selected, onSelect, onContinue }) {
   const isDesktop = useIsDesktop();
   const avatarSize = isDesktop ? 48 : 34;
-  const questionSize = isDesktop ? 22 : 15;
 
   const choiceGrid = isDesktop && current.type === 'choice' && current.choices.length >= 4
     ? { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }
@@ -190,8 +194,8 @@ function OnboardingShell({ step, total, current, selected, onSelect, onContinue 
           <div style={{ display: 'flex', gap: isDesktop ? 18 : 10, alignItems: 'flex-start' }}>
             <GuideAvatar size={avatarSize}/>
             <div style={{ flex: 1, paddingTop: isDesktop ? 4 : 0 }}>
-              <div style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, color: C.ink400, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: isDesktop ? 8 : 6 }}>Sage</div>
-              <div style={{ fontFamily: SANS, fontSize: questionSize, color: C.ink600, lineHeight: 1.5 }}>{current.q}</div>
+              <div style={{ fontFamily: SANS, fontSize: fluid(11, 13), fontWeight: 600, color: C.ink400, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: isDesktop ? 8 : 6 }}>Sage</div>
+              <div style={{ fontFamily: SANS, fontSize: fluid(15, 22), color: C.ink600, lineHeight: 1.5 }}>{current.q}</div>
             </div>
           </div>
 
@@ -200,7 +204,7 @@ function OnboardingShell({ step, total, current, selected, onSelect, onContinue 
             {current.type === 'number' ? (
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', height: 52, border: `1.5px solid ${selected ? C.ink900 : C.ink200}`, borderRadius: 4, background: C.white, overflow: 'hidden' }}>
-                  <div style={{ padding: '0 14px', fontFamily: SANS, fontSize: 18, color: C.ink400, flexShrink: 0 }}>$</div>
+                  <div style={{ padding: '0 14px', fontFamily: SANS, fontSize: fluid(16, 20), color: C.ink400, flexShrink: 0 }}>$</div>
                   <input
                     type="number"
                     min="0"
@@ -209,10 +213,10 @@ function OnboardingShell({ step, total, current, selected, onSelect, onContinue 
                     onKeyDown={e => e.key === 'Enter' && selected && onContinue()}
                     placeholder="5000"
                     autoFocus
-                    style={{ flex: 1, border: 'none', outline: 'none', fontFamily: SANS, fontSize: 20, fontWeight: 600, color: C.ink900, background: 'transparent', padding: '0 14px 0 0' }}
+                    style={{ flex: 1, border: 'none', outline: 'none', fontFamily: SANS, fontSize: fluid(18, 24), fontWeight: 600, color: C.ink900, background: 'transparent', padding: '0 14px 0 0' }}
                   />
                 </div>
-                <div style={{ fontFamily: SANS, fontSize: 12, color: C.ink400, marginTop: 8 }}>Amount in USD · press Enter or tap Continue</div>
+                <div style={{ fontFamily: SANS, fontSize: fluid(12, 14), color: C.ink400, marginTop: 8 }}>Amount in USD · press Enter or tap Continue</div>
               </div>
             ) : (
               <div style={choiceGrid}>
@@ -287,8 +291,8 @@ function StockInterest({ stocks, setStocks, onFinish, saving }) {
           <div style={{ display: 'flex', gap: isDesktop ? 18 : 10, alignItems: 'flex-start' }}>
             <GuideAvatar size={avatarSize}/>
             <div style={{ flex: 1, paddingTop: isDesktop ? 4 : 0 }}>
-              <div style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, color: C.ink400, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: isDesktop ? 8 : 6 }}>Sage</div>
-              <div style={{ fontFamily: SANS, fontSize: isDesktop ? 22 : 15, color: C.ink600, lineHeight: 1.5 }}>
+              <div style={{ fontFamily: SANS, fontSize: fluid(11, 13), fontWeight: 600, color: C.ink400, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: isDesktop ? 8 : 6 }}>Sage</div>
+              <div style={{ fontFamily: SANS, fontSize: fluid(15, 22), color: C.ink600, lineHeight: 1.5 }}>
                 Any stocks, ETFs, or crypto you're curious about? Type a ticker or company name.
               </div>
             </div>
@@ -298,9 +302,9 @@ function StockInterest({ stocks, setStocks, onFinish, saving }) {
             {stocks.length > 0 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {stocks.map(s => (
-                  <div key={s} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: C.ame50, border: `1px solid ${C.ame100}`, borderRadius: 999, padding: '5px 12px', fontFamily: SANS, fontSize: 13, fontWeight: 600, color: C.ame600 }}>
+                  <div key={s} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: C.ame50, border: `1px solid ${C.ame100}`, borderRadius: 999, padding: '5px 12px', fontFamily: SANS, fontSize: fluid(13, 15), fontWeight: 600, color: C.ame600 }}>
                     {s}
-                    <div onClick={() => setStocks(prev => prev.filter(x => x !== s))} style={{ cursor: 'pointer', color: C.ame400, fontSize: 14 }}>×</div>
+                    <div onClick={() => setStocks(prev => prev.filter(x => x !== s))} style={{ cursor: 'pointer', color: C.ame400, fontSize: fluid(13, 15) }}>×</div>
                   </div>
                 ))}
               </div>
@@ -312,9 +316,9 @@ function StockInterest({ stocks, setStocks, onFinish, saving }) {
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && addStock()}
                 placeholder="e.g. AAPL, Tesla, QQQ…"
-                style={{ flex: 1, height: 48, border: `1.5px solid ${C.ink200}`, borderRadius: 4, padding: '0 14px', fontFamily: SANS, fontSize: 15, color: C.ink900, background: C.white, outline: 'none' }}
+                style={{ flex: 1, height: 48, border: `1.5px solid ${C.ink200}`, borderRadius: 4, padding: '0 14px', fontFamily: SANS, fontSize: fluid(15, 17), color: C.ink900, background: C.white, outline: 'none' }}
               />
-              <div onClick={addStock} style={{ height: 48, padding: '0 18px', background: C.ink900, color: C.white, borderRadius: 4, display: 'flex', alignItems: 'center', fontFamily: SANS, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Add</div>
+              <div onClick={addStock} style={{ height: 48, padding: '0 18px', background: C.ink900, color: C.white, borderRadius: 4, display: 'flex', alignItems: 'center', fontFamily: SANS, fontSize: fluid(14, 16), fontWeight: 600, cursor: 'pointer' }}>Add</div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -323,7 +327,7 @@ function StockInterest({ stocks, setStocks, onFinish, saving }) {
               ) : (
                 <>
                   <CTA label="Skip — show me ideas  →" full loading={saving} onClick={() => onFinish([])}/>
-                  <div style={{ fontFamily: SANS, fontSize: 13, color: C.ink400, textAlign: 'center' }}>Your hero advisor will suggest some</div>
+                  <div style={{ fontFamily: SANS, fontSize: fluid(13, 15), color: C.ink400, textAlign: 'center' }}>Your hero advisor will suggest some</div>
                 </>
               )}
             </div>
