@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { C } from './tokens'
 import { useAuth } from './context/AuthContext'
@@ -69,7 +69,9 @@ export default function App() {
       <Wrapper>
         <Routes>
           {/* Public */}
-          <Route path="/"          element={isMobile ? <WelcomeMobile/> : <WelcomeDesktop/>}/>
+          {/* TODO: remove dev redirect — skips welcome/auth, straight to onboarding */}
+          <Route path="/"          element={<Navigate to="/onboarding" replace/>}/>
+          <Route path="/welcome"   element={isMobile ? <WelcomeMobile/> : <WelcomeDesktop/>}/>
           <Route path="/sign-up"   element={<SignUp/>}/>
           <Route path="/sign-in"   element={<SignIn/>}/>
           <Route path="/returning" element={<ReturningUser/>}/>

@@ -206,10 +206,10 @@ function OnboardingShell({ step, total, current, selected, onSelect, onContinue 
                 <div style={{ display: 'flex', alignItems: 'center', height: 52, border: `1.5px solid ${selected ? C.ink900 : C.ink200}`, borderRadius: 4, background: C.white, overflow: 'hidden' }}>
                   <div style={{ padding: '0 14px', fontFamily: SANS, fontSize: fluid(16, 20), color: C.ink400, flexShrink: 0 }}>$</div>
                   <input
-                    type="number"
-                    min="0"
-                    value={selected || ''}
-                    onChange={e => onSelect(e.target.value)}
+                    type="text"
+                    inputMode="numeric"
+                    value={selected ? Number(selected).toLocaleString('en-US') : ''}
+                    onChange={e => onSelect(e.target.value.replace(/[^0-9]/g, ''))}
                     onKeyDown={e => e.key === 'Enter' && selected && onContinue()}
                     placeholder="5000"
                     autoFocus
