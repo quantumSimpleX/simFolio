@@ -434,10 +434,7 @@ function StockInterest({ stocks, setStocks, onFinish, saving, onBack }) {
               {stocks.length > 0 ? (
                 <CTA label="Now let's go buy some stocks  →" full loading={saving} onClick={() => onFinish(stocks)}/>
               ) : (
-                <>
-                  <CTA label="I have no idea  →" full loading={saving} onClick={() => onFinish([])}/>
-                  <div style={{ fontFamily: SANS, fontSize: fluid(13, 15), color: C.ink400, textAlign: 'center' }}>No problem — we'll match you with the advisor that fits your investment goals best</div>
-                </>
+                <CTA label="I have no idea  →" full loading={saving} onClick={() => onFinish([])}/>
               )}
             </div>
           </div>
