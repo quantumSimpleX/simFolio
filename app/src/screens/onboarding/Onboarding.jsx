@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { C, SANS, GOALS } from '../../tokens';
 import { Logo, SimPill, CTA, GoalCard, ProgressDots, GuideAvatar } from '../../components/Primitives';
 import { useNavigate } from 'react-router-dom';
@@ -6,8 +6,6 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { matchHeroes } from '../../data/heroes';
 
-
-// Q1 is always first; Q2–Q8 are randomized each session
 const BASE_QUESTIONS = [
   {
     key: 'goal',
@@ -61,7 +59,6 @@ const RANDOM_QUESTIONS = [
   },
 ];
 
-// Shuffle Q2–Q8 once per session
 function buildQuestions() {
   const shuffled = [...RANDOM_QUESTIONS].sort(() => Math.random() - 0.5);
   return [...BASE_QUESTIONS, ...shuffled];
@@ -102,7 +99,6 @@ export default function Onboarding() {
   }
 
   async function handleFinish(stockList) {
-    // TODO: restore — temporarily bypassing auth for UI testing
     if (!user) {
       if (stockList.length > 0) navigate(`/buy/${stockList[0]}`);
       else navigate('/portfolio');
@@ -116,31 +112,22 @@ export default function Onboarding() {
     const heroIds = matchHeroes(answers);
 
     try {
-      // Create user row
       await supabase.from('users').upsert({
         user_id: user.id,
         language_preference: lang,
         theme_preference: 'light',
         onboarding_done: true,
       });
-
-      // Create balance row
       await supabase.from('user_balances').upsert({
         user_id: user.id,
         cash_balance: capital,
         starting_capital: capital,
       });
-
-      // Persist hero selections (first match only for now; others introduced organically)
       await supabase.from('hero_selections').upsert(
         heroIds.slice(0, 1).map(id => ({ user_id: user.id, hero_id: id }))
       );
-
-      if (stockList.length > 0) {
-        navigate(`/buy/${stockList[0]}`);
-      } else {
-        navigate('/portfolio');
-      }
+      if (stockList.length > 0) navigate(`/buy/${stockList[0]}`);
+      else navigate('/portfolio');
     } catch (err) {
       console.error('Onboarding save error:', err);
       setSaving(false);
@@ -151,61 +138,109 @@ export default function Onboarding() {
     return <StockInterest stocks={stocks} setStocks={setStocks} onFinish={handleFinish} saving={saving}/>;
   }
 
+  return <OnboardingShell step={step} total={QUESTIONS.length} current={current} selected={selected} onSelect={handleSelect} onContinue={handleContinue}/>;
+}
+
+function OnboardingShell({ step, total, current, selected, onSelect, onContinue }) {
+  const isDesktop = useIsDesktop();
+  const avatarSize = isDesktop ? 48 : 34;
+  const questionSize = isDesktop ? 22 : 15;
+
+  const choiceGrid = isDesktop && current.type === 'choice' && current.choices.length >= 4
+    ? { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }
+    : { display: 'flex', flexDirection: 'column', gap: 8 };
+
   return (
-    <div style={{ width:'100%', maxWidth:480, margin:'0 auto', minHeight:'100dvh', background:C.paper, display:'flex', flexDirection:'column', boxSizing:'border-box' }}>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'18px 24px 14px', flexShrink:0 }}>
-        <Logo size={19}/>
+    <div style={{ minHeight: '100dvh', background: C.paper, display: 'flex', flexDirection: 'column' }}>
+      {/* Top nav */}
+      <div style={{
+        height: isDesktop ? 64 : 'auto',
+        borderBottom: `1px solid ${C.ink100}`,
+        background: C.white,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: isDesktop ? '0 48px' : '14px 24px',
+        flexShrink: 0,
+      }}>
+        <Logo size={isDesktop ? 22 : 19}/>
         <SimPill/>
       </div>
-      <div style={{ padding:'0 24px 20px', flexShrink:0 }}>
-        <ProgressDots step={step+1} total={8}/>
-      </div>
-      <div style={{ flex:1, padding:'0 24px', display:'flex', flexDirection:'column', gap:20, overflow:'auto' }}>
-        <div style={{ display:'flex', gap:10 }}>
-          <GuideAvatar size={34}/>
-          <div style={{ flex:1 }}>
-            <div style={{ fontFamily:SANS, fontSize:11, fontWeight:600, color:C.ink400, letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:6 }}>Sage</div>
-            <div style={{ fontFamily:SANS, fontSize:15, color:C.ink600, lineHeight:1.55 }}>{current.q}</div>
-          </div>
-        </div>
 
-        {current.type === 'number' ? (
-          <div style={{ paddingLeft:46 }}>
-            <div style={{ display:'flex', alignItems:'center', height:52, border:`1.5px solid ${selected ? C.ink900 : C.ink200}`, borderRadius:4, background:C.white, overflow:'hidden' }}>
-              <div style={{ padding:'0 14px', fontFamily:SANS, fontSize:18, color:C.ink400, flexShrink:0 }}>$</div>
-              <input
-                type="number"
-                min="0"
-                value={selected || ''}
-                onChange={e => setSelected(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && selected && handleContinue()}
-                placeholder="5000"
-                autoFocus
-                style={{ flex:1, border:'none', outline:'none', fontFamily:SANS, fontSize:20, fontWeight:600, color:C.ink900, background:'transparent', padding:'0 14px 0 0' }}
-              />
+      {/* Centered content column */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        justifyContent: 'center',
+        padding: isDesktop ? '56px 48px 48px' : '0',
+        overflow: 'auto',
+      }}>
+        <div style={{
+          width: '100%',
+          maxWidth: isDesktop ? 640 : 480,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: isDesktop ? 28 : 20,
+          padding: isDesktop ? 0 : '20px 24px 32px',
+        }}>
+          {/* Progress */}
+          <ProgressDots step={step + 1} total={total}/>
+
+          {/* Sage message */}
+          <div style={{ display: 'flex', gap: isDesktop ? 18 : 10, alignItems: 'flex-start' }}>
+            <GuideAvatar size={avatarSize}/>
+            <div style={{ flex: 1, paddingTop: isDesktop ? 4 : 0 }}>
+              <div style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, color: C.ink400, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: isDesktop ? 8 : 6 }}>Sage</div>
+              <div style={{ fontFamily: SANS, fontSize: questionSize, color: C.ink600, lineHeight: 1.5 }}>{current.q}</div>
             </div>
-            <div style={{ fontFamily:SANS, fontSize:12, color:C.ink400, marginTop:8 }}>Amount in USD · press Enter or tap Continue</div>
           </div>
-        ) : (
-          <div style={{ paddingLeft:46, display:'flex', flexDirection:'column', gap:8 }}>
-            {current.choices.map(choice => (
-              <GoalCard key={choice} label={choice} selected={selected===choice} onClick={() => handleSelect(choice)}/>
-            ))}
-          </div>
-        )}
-      </div>
 
-      {current.type !== 'choice' && (
-        <div style={{ padding:'16px 24px 32px', borderTop:`1px solid ${C.ink100}`, flexShrink:0 }}>
-          <CTA label="Continue  →" full disabled={!selected} onClick={handleContinue}/>
+          {/* Answer area */}
+          <div style={{ paddingLeft: isDesktop ? avatarSize + 18 : avatarSize + 10 }}>
+            {current.type === 'number' ? (
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', height: 52, border: `1.5px solid ${selected ? C.ink900 : C.ink200}`, borderRadius: 4, background: C.white, overflow: 'hidden' }}>
+                  <div style={{ padding: '0 14px', fontFamily: SANS, fontSize: 18, color: C.ink400, flexShrink: 0 }}>$</div>
+                  <input
+                    type="number"
+                    min="0"
+                    value={selected || ''}
+                    onChange={e => onSelect(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && selected && onContinue()}
+                    placeholder="5000"
+                    autoFocus
+                    style={{ flex: 1, border: 'none', outline: 'none', fontFamily: SANS, fontSize: 20, fontWeight: 600, color: C.ink900, background: 'transparent', padding: '0 14px 0 0' }}
+                  />
+                </div>
+                <div style={{ fontFamily: SANS, fontSize: 12, color: C.ink400, marginTop: 8 }}>Amount in USD · press Enter or tap Continue</div>
+              </div>
+            ) : (
+              <div style={choiceGrid}>
+                {current.choices.map((choice, i) => (
+                  <div key={choice} style={isDesktop && current.choices.length % 2 !== 0 && i === current.choices.length - 1 ? { gridColumn: '1 / span 2' } : undefined}>
+                    <GoalCard label={choice} selected={selected === choice} onClick={() => onSelect(choice)}/>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* CTA for number inputs */}
+          {current.type !== 'choice' && (
+            <div style={{ paddingLeft: isDesktop ? avatarSize + 18 : avatarSize + 10 }}>
+              <CTA label="Continue  →" full disabled={!selected} onClick={onContinue}/>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
 function StockInterest({ stocks, setStocks, onFinish, saving }) {
   const [input, setInput] = useState('');
+  const isDesktop = useIsDesktop();
+  const avatarSize = isDesktop ? 48 : 34;
 
   function addStock() {
     const val = input.trim().toUpperCase();
@@ -216,57 +251,96 @@ function StockInterest({ stocks, setStocks, onFinish, saving }) {
   }
 
   return (
-    <div style={{ width:'100%', maxWidth:480, margin:'0 auto', minHeight:'100dvh', background:C.paper, display:'flex', flexDirection:'column', boxSizing:'border-box' }}>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'18px 24px 14px', flexShrink:0 }}>
-        <Logo size={19}/>
+    <div style={{ minHeight: '100dvh', background: C.paper, display: 'flex', flexDirection: 'column' }}>
+      {/* Top nav */}
+      <div style={{
+        height: isDesktop ? 64 : 'auto',
+        borderBottom: `1px solid ${C.ink100}`,
+        background: C.white,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: isDesktop ? '0 48px' : '14px 24px',
+        flexShrink: 0,
+      }}>
+        <Logo size={isDesktop ? 22 : 19}/>
         <SimPill/>
       </div>
-      <div style={{ padding:'0 24px 20px', flexShrink:0 }}>
-        <ProgressDots step={8} total={8}/>
-      </div>
-      <div style={{ flex:1, padding:'0 24px', display:'flex', flexDirection:'column', gap:20 }}>
-        <div style={{ display:'flex', gap:10 }}>
-          <GuideAvatar size={34}/>
-          <div style={{ flex:1 }}>
-            <div style={{ fontFamily:SANS, fontSize:11, fontWeight:600, color:C.ink400, letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:6 }}>Sage</div>
-            <div style={{ fontFamily:SANS, fontSize:15, color:C.ink600, lineHeight:1.55 }}>
-              Any stocks, ETFs, or crypto you're curious about? Type a ticker or company name.
+
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        justifyContent: 'center',
+        padding: isDesktop ? '56px 48px 48px' : '0',
+        overflow: 'auto',
+      }}>
+        <div style={{
+          width: '100%',
+          maxWidth: isDesktop ? 640 : 480,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: isDesktop ? 28 : 20,
+          padding: isDesktop ? 0 : '20px 24px 32px',
+        }}>
+          <ProgressDots step={8} total={8}/>
+
+          <div style={{ display: 'flex', gap: isDesktop ? 18 : 10, alignItems: 'flex-start' }}>
+            <GuideAvatar size={avatarSize}/>
+            <div style={{ flex: 1, paddingTop: isDesktop ? 4 : 0 }}>
+              <div style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, color: C.ink400, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: isDesktop ? 8 : 6 }}>Sage</div>
+              <div style={{ fontFamily: SANS, fontSize: isDesktop ? 22 : 15, color: C.ink600, lineHeight: 1.5 }}>
+                Any stocks, ETFs, or crypto you're curious about? Type a ticker or company name.
+              </div>
+            </div>
+          </div>
+
+          <div style={{ paddingLeft: avatarSize + (isDesktop ? 18 : 10), display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {stocks.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {stocks.map(s => (
+                  <div key={s} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: C.ame50, border: `1px solid ${C.ame100}`, borderRadius: 999, padding: '5px 12px', fontFamily: SANS, fontSize: 13, fontWeight: 600, color: C.ame600 }}>
+                    {s}
+                    <div onClick={() => setStocks(prev => prev.filter(x => x !== s))} style={{ cursor: 'pointer', color: C.ame400, fontSize: 14 }}>×</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && addStock()}
+                placeholder="e.g. AAPL, Tesla, QQQ…"
+                style={{ flex: 1, height: 48, border: `1.5px solid ${C.ink200}`, borderRadius: 4, padding: '0 14px', fontFamily: SANS, fontSize: 15, color: C.ink900, background: C.white, outline: 'none' }}
+              />
+              <div onClick={addStock} style={{ height: 48, padding: '0 18px', background: C.ink900, color: C.white, borderRadius: 4, display: 'flex', alignItems: 'center', fontFamily: SANS, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Add</div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {stocks.length > 0 ? (
+                <CTA label="Let's start trading  →" full loading={saving} onClick={() => onFinish(stocks)}/>
+              ) : (
+                <>
+                  <CTA label="Skip — show me ideas  →" full loading={saving} onClick={() => onFinish([])}/>
+                  <div style={{ fontFamily: SANS, fontSize: 13, color: C.ink400, textAlign: 'center' }}>Your hero advisor will suggest some</div>
+                </>
+              )}
             </div>
           </div>
         </div>
-        {stocks.length > 0 && (
-          <div style={{ paddingLeft:46, display:'flex', flexWrap:'wrap', gap:8 }}>
-            {stocks.map(s => (
-              <div key={s} style={{ display:'inline-flex', alignItems:'center', gap:6, background:C.ame50, border:`1px solid ${C.ame100}`, borderRadius:999, padding:'5px 12px', fontFamily:SANS, fontSize:13, fontWeight:600, color:C.ame600 }}>
-                {s}
-                <div onClick={() => setStocks(prev => prev.filter(x=>x!==s))} style={{ cursor:'pointer', color:C.ame400, fontSize:14 }}>×</div>
-              </div>
-            ))}
-          </div>
-        )}
-        <div style={{ paddingLeft:46 }}>
-          <div style={{ display:'flex', gap:8 }}>
-            <input
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key==='Enter' && addStock()}
-              placeholder="e.g. AAPL, Tesla, QQQ…"
-              style={{ flex:1, height:48, border:`1.5px solid ${C.ink200}`, borderRadius:4, padding:'0 14px', fontFamily:SANS, fontSize:15, color:C.ink900, background:C.white, outline:'none' }}
-            />
-            <div onClick={addStock} style={{ height:48, padding:'0 18px', background:C.ink900, color:C.white, borderRadius:4, display:'flex', alignItems:'center', fontFamily:SANS, fontSize:14, fontWeight:600, cursor:'pointer' }}>Add</div>
-          </div>
-        </div>
-      </div>
-      <div style={{ padding:'16px 24px 32px', borderTop:`1px solid ${C.ink100}`, flexShrink:0, display:'flex', flexDirection:'column', gap:10 }}>
-        {stocks.length > 0 ? (
-          <CTA label="Let's start trading  →" full loading={saving} onClick={() => onFinish(stocks)}/>
-        ) : (
-          <>
-            <CTA label="Skip — show me ideas  →" full loading={saving} onClick={() => onFinish([])}/>
-            <div style={{ fontFamily:SANS, fontSize:13, color:C.ink400, textAlign:'center' }}>Your hero advisor will suggest some</div>
-          </>
-        )}
       </div>
     </div>
   );
+}
+
+function useIsDesktop() {
+  const [wide, setWide] = useState(() => window.innerWidth >= 768);
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)');
+    const handler = e => setWide(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+  return wide;
 }
