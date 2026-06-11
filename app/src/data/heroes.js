@@ -63,6 +63,26 @@ export const HERO_DATA = {
     matchFor: ['Build long-term wealth', 'Beat my savings account'],
     knownFor: 'All-Weather Portfolio: stocks, bonds, gold, commodities',
   },
+  graham: {
+    id: 'graham',
+    initials: 'BG',
+    name: 'Benjamin Graham',
+    color: 'var(--ink-400)',
+    philosophy: 'Buy securities trading well below their intrinsic value. Always demand a margin of safety. The market is a voting machine short-term, a weighing machine long-term.',
+    bio: 'The father of value investing. Buffett\'s teacher at Columbia. Author of "The Intelligent Investor" and "Security Analysis".',
+    style: 'Deep value · margin of safety · defensive',
+    knownFor: 'Net-nets, Mr. Market, the margin of safety principle',
+  },
+  soros: {
+    id: 'soros',
+    initials: 'GS',
+    name: 'George Soros',
+    color: 'var(--ame-600)',
+    philosophy: 'Markets are driven by reflexivity — prices influence the fundamentals they are supposed to reflect. Find the flaw in the consensus and bet big when you are right.',
+    bio: 'Founder of the Quantum Fund. Famous for "breaking the Bank of England" in 1992. Pioneer of global macro investing.',
+    style: 'Global macro · reflexivity · bold contrarian bets',
+    knownFor: 'Shorting the British pound, currency and macro trades',
+  },
   cathie: {
     id: 'cathie',
     initials: 'CW',
@@ -74,6 +94,34 @@ export const HERO_DATA = {
     matchFor: ['Build long-term wealth', 'Just exploring for now'],
     knownFor: 'Tesla, CRISPR, blockchain — transformative technologies',
   },
+}
+
+// Affinity of each hero to the onboarding goal choices (order = strength)
+const GOAL_AFFINITY = {
+  'Shielding purchasing power from inflation': ['bogle', 'ray', 'warren', 'graham'],
+  'Harnessing exponential compound wealth growth': ['warren', 'munger', 'cathie', 'bogle'],
+  'Generating reliable passive dividend income': ['bogle', 'warren', 'graham', 'ray'],
+  'Spreading risk through asset diversification': ['ray', 'bogle', 'soros'],
+  'Owning pieces of profitable global corporations': ['warren', 'munger', 'lynch', 'graham'],
+}
+
+const HORIZON_AFFINITY = {
+  'Less than a year': ['lynch', 'soros', 'cathie'],
+  '1 – 3 years': ['lynch', 'graham', 'ray'],
+  '3 – 10 years': ['warren', 'bogle', 'munger'],
+  '10+ years': ['warren', 'bogle', 'munger', 'cathie'],
+}
+
+// Ranked hero ids for the onboarding selection grid.
+// Warren Buffett is always included; the rest are ordered by goal + horizon fit.
+export function rankHeroesForSelection(answers, count = 8) {
+  const goals = Array.isArray(answers.goal) ? answers.goal : [answers.goal]
+  const score = {}
+  Object.keys(HERO_DATA).filter(id => id !== 'sage').forEach(id => { score[id] = 0 })
+  goals.forEach(g => (GOAL_AFFINITY[g] || []).forEach((id, i) => { score[id] += 4 - i * 0.5 }))
+  ;(HORIZON_AFFINITY[answers.horizon] || []).forEach((id, i) => { score[id] += 3 - i * 0.5 })
+  const rest = Object.keys(score).filter(id => id !== 'warren').sort((a, b) => score[b] - score[a])
+  return ['warren', ...rest].slice(0, count)
 }
 
 // Match algorithm: returns hero ids ranked by interview answers

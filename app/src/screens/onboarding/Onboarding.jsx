@@ -4,7 +4,7 @@ import { Logo, SimPill, CTA, GoalCard, ProgressDots, GuideAvatar } from '../../c
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
-import { matchHeroes } from '../../data/heroes';
+import { matchHeroes, rankHeroesForSelection, HERO_DATA } from '../../data/heroes';
 
 const NONE_GOAL = 'None of the above';
 
@@ -66,6 +66,7 @@ export default function Onboarding() {
   const [selected, setSelected] = useState(null);
   const [answers, setAnswers] = useState({});
   const [showStock, setShowStock] = useState(false);
+  const [showHeroes, setShowHeroes] = useState(false);
   const [stocks, setStocks] = useState([]);
   const [saving, setSaving] = useState(false);
 
@@ -122,7 +123,20 @@ export default function Onboarding() {
     advance(selected);
   }
 
-  async function handleFinish(stockList) {
+  function handleFinish(stockList) {
+    if (stockList.length === 0) {
+      // No stock ideas — let the user pick an expert to ask
+      setShowHeroes(true);
+      return;
+    }
+    completeOnboarding(stockList, matchHeroes(answers));
+  }
+
+  function handleHeroChosen(heroId) {
+    completeOnboarding([], [heroId]);
+  }
+
+  async function completeOnboarding(stockList, heroIds) {
     if (!user) {
       if (stockList.length > 0) navigate(`/buy/${stockList[0]}`);
       else navigate('/portfolio');
@@ -132,7 +146,6 @@ export default function Onboarding() {
     setSaving(true);
 
     const capital = parseInt(answers.capital) || 5000;
-    const heroIds = matchHeroes(answers);
 
     try {
       await supabase.from('users').upsert({
@@ -154,6 +167,10 @@ export default function Onboarding() {
       console.error('Onboarding save error:', err);
       setSaving(false);
     }
+  }
+
+  if (showHeroes) {
+    return <HeroSelect heroIds={rankHeroesForSelection(answers)} onChoose={handleHeroChosen} saving={saving} onBack={() => setShowHeroes(false)}/>;
   }
 
   if (showStock) {
@@ -345,6 +362,99 @@ function MultiGoalPicker({ choices, value, onChange }) {
           }}
         />
       )}
+    </div>
+  );
+}
+
+function HeroSelect({ heroIds, onChoose, saving, onBack }) {
+  const [picked, setPicked] = useState(null);
+  const isDesktop = useIsDesktop();
+  const avatarSize = isDesktop ? 48 : 34;
+
+  return (
+    <div style={{ minHeight: '100dvh', background: C.paper, display: 'flex', flexDirection: 'column' }}>
+      {/* Top nav */}
+      <div style={{
+        height: isDesktop ? 64 : 'auto',
+        borderBottom: `1px solid ${C.ink100}`,
+        background: C.white,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: isDesktop ? '0 48px' : '14px 24px',
+        flexShrink: 0,
+      }}>
+        <Logo size={isDesktop ? 22 : 19}/>
+        <SimPill/>
+      </div>
+
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        justifyContent: 'center',
+        padding: isDesktop ? '56px 48px 48px' : '0',
+        overflow: 'auto',
+      }}>
+        <div style={{
+          width: '100%',
+          maxWidth: isDesktop ? 640 : 480,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: isDesktop ? 28 : 20,
+          padding: isDesktop ? 0 : '20px 24px 32px',
+        }}>
+          <BackButton onBack={onBack}/>
+
+          <div style={{ display: 'flex', gap: isDesktop ? 18 : 10, alignItems: 'flex-start' }}>
+            <GuideAvatar size={avatarSize}/>
+            <div style={{ flex: 1, paddingTop: isDesktop ? 4 : 0 }}>
+              <div style={{ fontFamily: SANS, fontSize: fluid(11, 13), fontWeight: 600, color: C.ink400, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: isDesktop ? 8 : 6 }}>Sage</div>
+              <div style={{ fontFamily: SANS, fontSize: fluid(15, 22), color: C.ink600, lineHeight: 1.5 }}>
+                Maybe you can ask some of these experts to help you?
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            {heroIds.map(id => {
+              const h = HERO_DATA[id];
+              const isPicked = picked === id;
+              return (
+                <div
+                  key={id}
+                  onClick={() => setPicked(id)}
+                  style={{
+                    border: `1.5px solid ${isPicked ? C.ame400 : C.ink200}`,
+                    borderRadius: 8,
+                    background: isPicked ? C.ame50 : C.white,
+                    padding: '14px 14px 12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 8,
+                  }}
+                >
+                  <div style={{
+                    width: 36, height: 36, borderRadius: '50%', background: h.color,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: C.white, fontFamily: SANS, fontSize: 14, fontWeight: 700,
+                  }}>{h.initials}</div>
+                  <div style={{ fontFamily: SANS, fontSize: fluid(15, 17), fontWeight: 600, color: C.ink900 }}>{h.name}</div>
+                  <div style={{ fontFamily: SANS, fontSize: fluid(12, 14), color: C.ink400, lineHeight: 1.4 }}>{h.style}</div>
+                </div>
+              );
+            })}
+          </div>
+
+          <CTA
+            label={picked ? `Ask ${HERO_DATA[picked].name}  →` : 'Pick an expert to continue'}
+            full
+            loading={saving}
+            disabled={!picked}
+            onClick={() => picked && onChoose(picked)}
+          />
+        </div>
+      </div>
     </div>
   );
 }
