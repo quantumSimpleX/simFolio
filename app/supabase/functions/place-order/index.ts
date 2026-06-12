@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { isMarketOpen, priceExecution } from '../_shared/execution.ts'
 
 const FINNHUB_KEY     = Deno.env.get('FINNHUB_API_KEY') ?? ''
 const SUPABASE_URL    = Deno.env.get('SUPABASE_URL') ?? ''
@@ -8,16 +9,6 @@ const SERVICE_ROLE_KEY = Deno.env.get('APP_SERVICE_ROLE_KEY') ?? ''
 const cors = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-function isMarketOpen() {
-  const now = new Date()
-  const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }))
-  const day = et.getDay()
-  if (day === 0 || day === 6) return false
-  const h = et.getHours(), m = et.getMinutes()
-  const mins = h * 60 + m
-  return mins >= 9 * 60 + 30 && mins < 16 * 60
 }
 
 async function getLivePrice(ticker: string): Promise<number> {
@@ -46,14 +37,22 @@ serve(async (req) => {
 
   try {
     const body = await req.json()
-    const { ticker, asset_type, side, type: orderType, requested_qty, limit_price } = body
+    const { ticker, asset_type, side, type: orderType, requested_qty, limit_price, time_in_force } = body
 
-    // Insert order as QUEUED
-    const { data: order, error: orderErr } = await userClient
+    // Insert order as QUEUED. Falls back without time_in_force if the column
+    // hasn't been added yet (ALTER TABLE orders ADD COLUMN time_in_force ...).
+    let { data: order, error: orderErr } = await userClient
       .from('orders')
-      .insert({ user_id: uid, ticker, asset_type, side, type: orderType, requested_qty, limit_price, status: 'QUEUED' })
+      .insert({ user_id: uid, ticker, asset_type, side, type: orderType, requested_qty, limit_price, status: 'QUEUED', time_in_force: time_in_force ?? 'GTC' })
       .select()
       .single()
+    if (orderErr && String(orderErr.message).includes('time_in_force')) {
+      ;({ data: order, error: orderErr } = await userClient
+        .from('orders')
+        .insert({ user_id: uid, ticker, asset_type, side, type: orderType, requested_qty, limit_price, status: 'QUEUED' })
+        .select()
+        .single())
+    }
     if (orderErr) throw new Error(orderErr.message)
 
     const marketOpen = isMarketOpen() || asset_type === 'CRYPTO'
@@ -61,9 +60,18 @@ serve(async (req) => {
     if (orderType === 'MARKET' && marketOpen) {
       // Execute immediately
       const rawPrice = await getLivePrice(ticker)
-      // Inject 0.01%–0.05% slippage for buys; negative for sells
-      const slippagePct = (Math.random() * 0.0004 + 0.0001) * (side === 'BUY' ? 1 : -1)
-      const execPrice = parseFloat((rawPrice * (1 + slippagePct)).toFixed(4))
+      // Liquidity stats for spread/slippage realism (best effort)
+      const { data: liq } = await userClient
+        .from('market_data_cache')
+        .select('avg_volume, high, low')
+        .eq('ticker', ticker)
+        .single()
+      const pricing = priceExecution(rawPrice, side, parseFloat(requested_qty), {
+        avgVolume: parseFloat(liq?.avg_volume ?? 0),
+        high: parseFloat(liq?.high ?? 0),
+        low: parseFloat(liq?.low ?? 0),
+      })
+      const execPrice = pricing.execPrice
       const cost = parseFloat((execPrice * requested_qty).toFixed(4))
       // Flat commission per trade — must match TRANSACTION_FEE in src/lib/fees.js
       const fee = 1.00
@@ -128,6 +136,9 @@ serve(async (req) => {
         execution_price: execPrice,
         filled_qty: requested_qty,
         slippage: Math.abs(execPrice - rawPrice),
+        slippage_component: pricing.slippageAmt,
+        spread_component: pricing.spreadAmt,
+        spread_bps: pricing.spreadBps,
         market_price: rawPrice,
         fee,
       }), { headers: { ...cors, 'Content-Type': 'application/json' } })

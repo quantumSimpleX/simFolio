@@ -27,6 +27,7 @@ export default function BuyScreen() {
   const [qty, setQty] = useState(1)
   const [orderType, setOrderType] = useState('MARKET')
   const [limitPrice, setLimitPrice] = useState('')
+  const [tif, setTif] = useState('GTC')
 
   const { data: stock, isLoading } = useStockDetail(ticker)
   const { data: candles, isLoading: candlesLoading, isError: candlesError } = useCandles(ticker, '1M')
@@ -50,7 +51,7 @@ export default function BuyScreen() {
       type: orderType,
       requested_qty: qty,
       execution_price: price,
-      ...(orderType === 'LIMIT' && limitPrice ? { limit_price: parseFloat(limitPrice) } : {}),
+      ...(orderType === 'LIMIT' && limitPrice ? { limit_price: parseFloat(limitPrice), time_in_force: tif } : {}),
     }
     placeOrder(params, {
       onSuccess: (result) => {
@@ -106,13 +107,16 @@ export default function BuyScreen() {
           </div>
         )}
         {orderType === 'LIMIT' && (
-          <input
-            type="number"
-            value={limitPrice}
-            onChange={e => setLimitPrice(e.target.value)}
-            placeholder={`Max price (current: $${price})`}
-            style={{ marginTop:8, height:44, width:'100%', border:`1px solid ${C.ame400}`, borderRadius:4, padding:'0 14px', fontFamily:SANS, fontSize:14, color:C.ink900, outline:'none', background:C.white, boxSizing:'border-box' }}
-          />
+          <>
+            <input
+              type="number"
+              value={limitPrice}
+              onChange={e => setLimitPrice(e.target.value)}
+              placeholder={`Max price (current: $${price})`}
+              style={{ marginTop:8, height:44, width:'100%', border:`1px solid ${C.ame400}`, borderRadius:4, padding:'0 14px', fontFamily:SANS, fontSize:14, color:C.ink900, outline:'none', background:C.white, boxSizing:'border-box' }}
+            />
+            <TifToggle tif={tif} setTif={setTif}/>
+          </>
         )}
       </div>
 
@@ -220,7 +224,20 @@ function QtyInputBlock({ qty, setQty }) {
   )
 }
 
-function OrderTypeCard({ label, desc, active, onClick }) {
+export function TifToggle({ tif, setTif }) {
+  return (
+    <div style={{ marginTop:8, display:'flex', alignItems:'center', gap:8 }}>
+      <div style={{ fontFamily:SANS, fontSize:12, color:C.ink400 }}>Good until</div>
+      {[['GTC','Cancelled'], ['DAY','End of day']].map(([val, label]) => (
+        <div key={val} onClick={() => setTif(val)} style={{ padding:'3px 10px', border:`1px solid ${tif===val?C.ame400:C.ink100}`, borderRadius:999, background:tif===val?C.ame50:C.white, fontFamily:SANS, fontSize:12, fontWeight:tif===val?600:400, color:tif===val?C.ame600:C.ink500, cursor:'pointer', userSelect:'none' }}>
+          {label}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export function OrderTypeCard({ label, desc, active, onClick }) {
   return (
     <div onClick={onClick} style={{ flex:1, padding:'12px 14px', border:`${active?2:1}px solid ${active?C.ame400:C.ink100}`, borderRadius:4, background:active?C.ame50:C.white, cursor:'pointer' }}>
       <div style={{ fontFamily:SANS, fontSize:14, fontWeight:active?700:500, color:active?C.ame600:C.ink700, marginBottom:3 }}>{label}</div>

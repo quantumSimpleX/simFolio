@@ -77,6 +77,13 @@ export default function TradeReceipt() {
                   valueColor={C.gold}
                 />
               )}
+              {result.spread_component > 0 && (
+                <ReceiptRow
+                  label={<TermUnderline>Bid-ask spread</TermUnderline>}
+                  value={`$${(result.spread_component * qty).toFixed(2)} (${result.spread_bps ?? '—'} bps)`}
+                  valueColor={C.gold}
+                />
+              )}
               <ReceiptRow label={<TermUnderline>Transaction fee</TermUnderline>} value={`$${fee.toFixed(2)}`}/>
               <ReceiptRow label="Net deducted" value={`$${net}`} bold/>
             </>

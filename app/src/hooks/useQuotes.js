@@ -50,11 +50,19 @@ async function backgroundEnrichFundamentals(tickers, queryClient) {
   }
 }
 
+// NYSE full-day holidays, 2026 — must match supabase/functions/_shared/execution.ts
+const MARKET_HOLIDAYS = new Set([
+  '2026-01-01', '2026-01-19', '2026-02-16', '2026-04-03', '2026-05-25',
+  '2026-06-19', '2026-07-03', '2026-09-07', '2026-11-26', '2026-12-25',
+])
+
 export function isMarketOpen() {
   const now = new Date()
   const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }))
   const day = et.getDay()
   if (day === 0 || day === 6) return false
+  const iso = `${et.getFullYear()}-${String(et.getMonth() + 1).padStart(2, '0')}-${String(et.getDate()).padStart(2, '0')}`
+  if (MARKET_HOLIDAYS.has(iso)) return false
   const h = et.getHours(), m = et.getMinutes()
   const mins = h * 60 + m
   return mins >= 9 * 60 + 30 && mins < 16 * 60

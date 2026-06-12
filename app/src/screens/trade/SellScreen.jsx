@@ -7,6 +7,7 @@ import { useIsMobile } from '../../hooks/useBreakpoint'
 import { usePortfolio } from '../../hooks/usePortfolio'
 import { usePlaceOrder } from '../../hooks/usePlaceOrder'
 import { TRANSACTION_FEE } from '../../lib/fees'
+import { OrderTypeCard, TifToggle } from './BuyScreen'
 
 function detectAssetType(ticker) {
   const crypto = ['BTC','ETH','SOL','DOGE','XRP','ADA','AVAX']
@@ -29,6 +30,9 @@ export default function SellScreen() {
   const costBasis = pos ? parseFloat(pos.average_cost_basis) : 0
 
   const [qty, setQty] = useState(1)
+  const [orderType, setOrderType] = useState('MARKET')
+  const [limitPrice, setLimitPrice] = useState('')
+  const [tif, setTif] = useState('GTC')
 
   const gross = (qty * price).toFixed(2)
   const pnl   = qty * price - qty * costBasis
@@ -40,8 +44,9 @@ export default function SellScreen() {
       ticker,
       asset_type: detectAssetType(ticker),
       side: 'SELL',
-      type: 'MARKET',
+      type: orderType,
       requested_qty: qty,
+      ...(orderType === 'LIMIT' && limitPrice ? { limit_price: parseFloat(limitPrice), time_in_force: tif } : {}),
     }, {
       onSuccess: (result) => {
         navigate('/receipt', { state: { result, ticker, qty, side:'sell', pnl, pnlPositive } })
@@ -66,7 +71,7 @@ export default function SellScreen() {
   const sellCTAs = (
     <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
       <div onClick={!isPending ? handleSell : undefined} style={{ height:48, background:C.red, color:C.white, borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:SANS, fontSize:15, fontWeight:600, cursor:isPending?'default':'pointer', opacity:isPending?0.6:1 }}>
-        {isPending ? 'Selling…' : `Sell ${qty} ${ticker}  →`}
+        {isPending ? 'Selling…' : orderType === 'LIMIT' ? `Place limit sell for ${qty} ${ticker}  →` : `Sell ${qty} ${ticker}  →`}
       </div>
       <GhostCTA label="Ask your council first" onClick={() => navigate('/ask')}/>
     </div>
@@ -123,6 +128,26 @@ export default function SellScreen() {
             <div onClick={() => setQty(maxQty)} style={{ flex:1, height:36, border:`1px solid ${qty===maxQty?C.red:C.ink100}`, borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:SANS, fontSize:13, color:qty===maxQty?C.red:C.ink500, background:qty===maxQty?C.redBg:C.white, cursor:'pointer', fontWeight:qty===maxQty?600:400 }}>All</div>
           )}
         </div>
+      </div>
+
+      <div>
+        <div style={{ fontFamily:SANS, fontSize:13, color:C.ink500, marginBottom:8 }}>Order type</div>
+        <div style={{ display:'flex', gap:10 }}>
+          <OrderTypeCard label="Market order" desc="Sell now at current price" active={orderType==='MARKET'} onClick={() => setOrderType('MARKET')}/>
+          <OrderTypeCard label="Limit order" desc="Only fill if price reaches your target" active={orderType==='LIMIT'} onClick={() => setOrderType('LIMIT')}/>
+        </div>
+        {orderType === 'LIMIT' && (
+          <>
+            <input
+              type="number"
+              value={limitPrice}
+              onChange={e => setLimitPrice(e.target.value)}
+              placeholder={`Min price (current: $${price.toFixed(2)})`}
+              style={{ marginTop:8, height:44, width:'100%', border:`1px solid ${C.ame400}`, borderRadius:4, padding:'0 14px', fontFamily:SANS, fontSize:14, color:C.ink900, outline:'none', background:C.white, boxSizing:'border-box' }}
+            />
+            <TifToggle tif={tif} setTif={setTif}/>
+          </>
+        )}
       </div>
 
       <div style={{ background:C.white, border:`1px solid ${C.ink100}`, borderRadius:8, padding:'0 16px' }}>

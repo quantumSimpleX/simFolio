@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { isMarketOpen, placedBeforeToday, priceExecution, fillQuantity } from '../_shared/execution.ts'
 
 const FINNHUB_KEY      = Deno.env.get('FINNHUB_API_KEY') ?? ''
 const SUPABASE_URL     = Deno.env.get('SUPABASE_URL') ?? ''
@@ -8,16 +9,6 @@ const SERVICE_ROLE_KEY = Deno.env.get('APP_SERVICE_ROLE_KEY') ?? ''
 const cors = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-function isMarketOpen() {
-  const now = new Date()
-  const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }))
-  const day = et.getDay()
-  if (day === 0 || day === 6) return false
-  const h = et.getHours(), m = et.getMinutes()
-  const mins = h * 60 + m
-  return mins >= 9 * 60 + 30 && mins < 16 * 60
 }
 
 // Finnhub quote: c = current, o = today's open
@@ -64,20 +55,48 @@ serve(async (req) => {
 
     for (const order of queued ?? []) {
       const isCrypto = order.asset_type === 'CRYPTO'
+
+      // DAY limit orders expire if they were placed on a previous trading day
+      if (order.type === 'LIMIT' && order.time_in_force === 'DAY' && placedBeforeToday(order.created_at)) {
+        await adminClient.from('orders').update({ status: 'CANCELLED' }).eq('order_id', order.order_id)
+        results.push({ order_id: order.order_id, ticker: order.ticker, status: 'CANCELLED', reason: 'Day order expired' })
+        continue
+      }
+
       if (!marketOpen && !isCrypto) continue
 
-      const qty = parseFloat(order.requested_qty)
+      let qty = parseFloat(order.requested_qty)
       const { current, open } = await getQuote(order.ticker)
+
+      // Liquidity stats for spread/slippage/partial-fill realism (best effort)
+      const { data: liqRow } = await adminClient
+        .from('market_data_cache')
+        .select('avg_volume, high, low')
+        .eq('ticker', order.ticker)
+        .single()
+      const liq = {
+        avgVolume: parseFloat(liqRow?.avg_volume ?? 0),
+        high: parseFloat(liqRow?.high ?? 0),
+        low: parseFloat(liqRow?.low ?? 0),
+      }
 
       // Market orders placed while the market was closed fill at the day's
       // opening price; everything else (crypto, limit, orders placed during
       // the session) fills at the current price.
       let basePrice: number
+      let partialRemainder = 0
       if (order.type === 'LIMIT') {
         const limit = parseFloat(order.limit_price)
         const conditionMet = order.side === 'BUY' ? current > 0 && current <= limit : current >= limit
         if (!conditionMet) continue
         basePrice = current
+        // Large limit orders may only partially fill this sweep
+        const participation = liq.avgVolume > 0 ? qty / liq.avgVolume : 0
+        const fillQty = fillQuantity(qty, participation)
+        if (fillQty < qty) {
+          partialRemainder = parseFloat((qty - fillQty).toFixed(4))
+          qty = fillQty
+        }
       } else if (isCrypto || placedDuringTodaySession(order.created_at)) {
         basePrice = current
       } else {
@@ -85,9 +104,13 @@ serve(async (req) => {
       }
       if (basePrice <= 0) continue
 
-      // 0.01%–0.05% slippage — against the user on both sides
-      const slippagePct = (Math.random() * 0.0004 + 0.0001) * (order.side === 'BUY' ? 1 : -1)
-      const execPrice = parseFloat((basePrice * (1 + slippagePct)).toFixed(4))
+      const pricing = priceExecution(basePrice, order.side, qty, liq)
+      let execPrice = pricing.execPrice
+      // Limit orders never fill worse than the limit price
+      if (order.type === 'LIMIT') {
+        const limit = parseFloat(order.limit_price)
+        execPrice = order.side === 'BUY' ? Math.min(execPrice, limit) : Math.max(execPrice, limit)
+      }
       const cost = parseFloat((execPrice * qty).toFixed(4))
       // Flat commission per trade — must match TRANSACTION_FEE in src/lib/fees.js
       const fee = 1.00
@@ -123,7 +146,12 @@ serve(async (req) => {
         .insert({ order_id: order.order_id, user_id: uid, filled_qty: qty, execution_price: execPrice, fees_deducted: fee })
       if (execErr) throw new Error(execErr.message)
 
-      await adminClient.from('orders').update({ status: 'FILLED' }).eq('order_id', order.order_id)
+      if (partialRemainder > 0) {
+        // Partial fill — remainder stays queued
+        await adminClient.from('orders').update({ requested_qty: partialRemainder }).eq('order_id', order.order_id)
+      } else {
+        await adminClient.from('orders').update({ status: 'FILLED' }).eq('order_id', order.order_id)
+      }
 
       const delta = order.side === 'BUY' ? -(cost + fee) : (cost - fee)
       await adminClient
@@ -151,11 +179,14 @@ serve(async (req) => {
       results.push({
         order_id: order.order_id,
         ticker: order.ticker,
-        status: 'FILLED',
+        status: partialRemainder > 0 ? 'PARTIAL' : 'FILLED',
         execution_price: execPrice,
         market_price: basePrice,
         slippage: Math.abs(execPrice - basePrice),
+        slippage_component: pricing.slippageAmt,
+        spread_component: pricing.spreadAmt,
         filled_qty: qty,
+        remaining_qty: partialRemainder,
         fee,
       })
     }
