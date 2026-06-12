@@ -46,7 +46,13 @@ export function MiniChart({ height=280, candles=[], isLoading=false, isError=fal
     return longRange ? `${y}/${m}/${day}` : `${d.getMonth()+1}/${d.getDate()}`
   }
   const fmtPrice = v => `$${v.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 })}`
-  const fmtYLbl  = v => v >= 1000 ? `$${(v/1000).toFixed(1)}k` : `$${v.toFixed(2)}`
+  // 3 significant digits keeps the y gutter narrow
+  const fmtYLbl  = v => {
+    const sig = n => String(Number(n.toPrecision(3)))
+    if (v >= 1e6) return `$${sig(v/1e6)}M`
+    if (v >= 1e3) return `$${sig(v/1e3)}k`
+    return `$${sig(v)}`
+  }
 
   // Chart geometry — only computed when data is available
   const padR = 8, padT = 8, padB = longRange ? 26 : 20
