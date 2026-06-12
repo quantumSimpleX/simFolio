@@ -28,10 +28,10 @@ function Fundamentals({ q }) {
   if (!q) return '—'
   const cap = fmtMktCap(q.marketCap)
   const metrics = [
-    cap            ? { label: 'Market Cap', value: cap,                  color: C.ink700  } : null,
-    q.peRatio > 0  ? { label: 'P/E',        value: q.peRatio.toFixed(1), color: C.ame600  } : null,
-    q.eps          ? { label: 'EPS',        value: q.eps.toFixed(2),     color: C.aqua600 } : null,
-    q.beta         ? { label: 'Beta',       value: q.beta.toFixed(2),    color: C.gold    } : null,
+    cap            ? { label: 'Mkt Cap', value: cap,                  color: C.ink700  } : null,
+    q.peRatio > 0  ? { label: 'P/E',     value: q.peRatio.toFixed(1), color: C.ame600  } : null,
+    q.eps          ? { label: 'EPS',     value: q.eps.toFixed(2),     color: C.aqua600 } : null,
+    q.beta         ? { label: 'β',       value: q.beta.toFixed(2),    color: C.gold    } : null,
   ].filter(Boolean)
   if (!metrics.length) return '—'
   return metrics.map((m, i) => (
