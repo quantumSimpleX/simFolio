@@ -50,7 +50,7 @@ export default function PortfolioMobile() {
   return (
     <div style={{ width:'100%', height:'100dvh', background:C.paper, display:'flex', flexDirection:'column', overflow:'hidden' }}>
       <TopNav active="portfolio"/>
-      <div style={{ padding:'8px 24px 0', flexShrink:0 }}>
+      <div style={{ padding:'8px 10px 0', flexShrink:0 }}>
         <div style={{ display:'flex', alignItems:'flex-end', gap:12 }}>
           <div style={{ fontFamily:DISPLAY, fontWeight:700, fontSize:38, color:C.ink900, letterSpacing:'-0.02em', lineHeight:1 }}>
             {loading ? '…' : `$${fmt(displayTotal)}`}
@@ -76,7 +76,7 @@ export default function PortfolioMobile() {
         />
       </div>
 
-      <div style={{ padding:'16px 24px 0', flexShrink:0 }}>
+      <div style={{ padding:'16px 10px 0', flexShrink:0 }}>
         <div style={{ display:'flex' }}>
           {[['Cash', `$${fmt(displayCash)}`], ['Positions', String(displayHoldings.length)], ['All-time', `${pnlPos?'+':''}${displayPct.toFixed(1)}%`]].map(([label,value],i,arr) => (
             <div key={label} style={{ flex:1, borderRight:i<arr.length-1?`1px solid ${C.ink100}`:'none', paddingRight:i<arr.length-1?16:0, paddingLeft:i>0?16:0 }}>
@@ -87,7 +87,7 @@ export default function PortfolioMobile() {
         </div>
       </div>
 
-      <div style={{ flex:1, padding:'20px 24px 0', overflow:'auto' }}>
+      <div style={{ flex:1, padding:'20px 10px 0', overflow:'auto' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
           <Eyebrow>Holdings</Eyebrow>
           <div onClick={() => navigate('/markets')} style={{ fontFamily:SANS, fontSize:13, color:C.ame400, cursor:'pointer' }}>+ Add</div>

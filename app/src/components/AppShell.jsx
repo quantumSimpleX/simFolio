@@ -19,7 +19,7 @@ export function AppShell({ active, children, maxWidth = 1100, pad = true, footer
             maxWidth,
             margin: '0 auto',
             boxSizing: 'border-box',
-            padding: pad ? (mobile ? '16px 16px 96px' : '28px 32px 40px') : (mobile ? '0 0 96px' : 0),
+            padding: pad ? (mobile ? '16px 10px 96px' : '28px 32px 40px') : (mobile ? '0 0 96px' : 0),
           }}
         >
           {children}
