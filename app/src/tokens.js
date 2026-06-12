@@ -24,7 +24,9 @@ export const C = {
   redBg:    'var(--red-bg)',
   gold:     'var(--gold)',
   goldBg:   'var(--gold-bg)',
-  goldLight:'var(--gold-light)',
+  goldLight:   'var(--gold-light)',
+  queuedBg:    'var(--queued-bg)',
+  queuedColor: 'var(--queued-color)',
 };
 
 export const SANS    = "'Barlow Condensed','Helvetica Neue',system-ui,sans-serif";

@@ -203,7 +203,7 @@ export function TermUnderline({ children, termKey }) {
 export function StatusPill({ status }) {
   const map = {
     pending:   { bg:C.goldBg,  color:C.gold,    dot:C.gold    },
-    queued:    { bg:'#EFF6FF', color:'#2563EB',  dot:'#2563EB' },
+    queued:    { bg:C.queuedBg, color:C.queuedColor, dot:C.queuedColor },
     filled:    { bg:C.aqua50,  color:C.aqua600, dot:C.aqua400 },
     cancelled: { bg:C.ink50,   color:C.ink500,  dot:C.ink400  },
     partial:   { bg:C.goldBg,  color:C.gold,    dot:C.goldLight },

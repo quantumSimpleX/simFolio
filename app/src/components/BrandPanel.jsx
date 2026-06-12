@@ -5,7 +5,7 @@ import QSWordmark from './QSWordmark';
 const HEROES = [
   { initials:'WB', name:'Warren Buffett',  style:'Value investing · long-term',  color:C.ame400, quote:'"Price is what you pay. Value is what you get."' },
   { initials:'CW', name:'Cathie Wood',      style:'Disruptive technology · growth', color:C.aqua400, quote:'"Innovation solves problems. Invest in the future."' },
-  { initials:'RD', name:'Ray Dalio',        style:'Macro · diversification',        color:'#B5860A',  quote:'"Diversify well and you will do well."' },
+  { initials:'RD', name:'Ray Dalio',        style:'Macro · diversification',        color:C.gold,    quote:'"Diversify well and you will do well."' },
 ];
 
 // Dark branding panel shared by the desktop welcome and onboarding layouts

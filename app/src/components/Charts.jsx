@@ -164,7 +164,7 @@ export function Sparkline({ positive=true, width=40, height=20 }) {
   );
 }
 
-export function ProgressRing({ value=1, total=10, size=52, color='#8A60EB' }) {
+export function ProgressRing({ value=1, total=10, size=52, color=C.ame400 }) {
   const r = size/2 - 5;
   const circ = 2*Math.PI*r;
   const dash = (value/total)*circ;
