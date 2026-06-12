@@ -95,7 +95,7 @@ export default function StockDetail() {
     <div>
       <div onClick={() => navigate('/markets')} style={{ fontFamily: SANS, fontSize: 13, color: C.ame400, cursor: 'pointer', marginBottom: 10 }}>← Markets</div>
       <div style={{ fontFamily: SANS, fontSize: 14, color: C.ink400, marginBottom: 4 }}>
-        {isLoading ? '…' : `${s?.name ?? ticker} · ${s?.exchange ?? '—'}`}
+        {isLoading ? '…' : [ticker, s?.name, s?.exchange].filter(Boolean).join(' · ')}
       </div>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: mobile ? 8 : 14 }}>
         <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: mobile ? 34 : 48, color: C.ink900, letterSpacing: '-0.025em', lineHeight: 1, whiteSpace: 'nowrap' }}>
