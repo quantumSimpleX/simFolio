@@ -49,9 +49,9 @@ export function MiniChart({ height=280, candles=[], isLoading=false, isError=fal
   const fmtYLbl  = v => v >= 1000 ? `$${(v/1000).toFixed(1)}k` : `$${v.toFixed(2)}`
 
   // Chart geometry — only computed when data is available
-  const padL = 44, padR = 6, padT = 8, padB = longRange ? 26 : 20
-  const plotW = w - padL - padR
+  const padR = 6, padT = 8, padB = longRange ? 26 : 20
   const plotH = height - padT - padB
+  let padL = 44, plotW = w - padL - padR
 
   let prices, timestamps, min, max, priceRange, color, px, py, points, yLines, xLabels, overlayPoints
   if (hasData && w > 0) {
@@ -60,12 +60,15 @@ export function MiniChart({ height=280, candles=[], isLoading=false, isError=fal
     min        = Math.min(...prices)
     max        = Math.max(...prices)
     priceRange = max - min || 1
+    yLines     = Array.from({ length:6 }, (_, i) => min + priceRange * (i / 5))
+    // Gutter hugs the widest y label (Barlow Condensed 11px ≈ 5.2px/char)
+    padL       = 4 + Math.max(...yLines.map(v => fmtYLbl(v).length)) * 5.2
+    plotW      = w - padL - padR
     color      = prices[prices.length-1] >= prices[0] ? C.aqua400 : C.red
     px         = i => padL + (i / (prices.length - 1)) * plotW
     py         = v => padT + plotH - ((v - min) / priceRange) * plotH
     points     = prices.map((v, i) => `${px(i)},${py(v)}`).join(' ')
     const X_COUNT = w < 400 ? 3 : w < 650 ? 5 : 10
-    yLines     = Array.from({ length:6 }, (_, i) => min + priceRange * (i / 5))
     xLabels    = Array.from({ length:X_COUNT }, (_, i) => {
       const idx = Math.round(i * (prices.length - 1) / (X_COUNT - 1))
       return { x:px(idx), t:timestamps[idx], anchor: i===0?'start':i===X_COUNT-1?'end':'middle' }
