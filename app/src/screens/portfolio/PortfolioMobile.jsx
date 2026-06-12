@@ -64,7 +64,7 @@ export default function PortfolioMobile() {
 
       <div style={{ padding:'12px 24px 0', flexShrink:0, background:C.white, borderBottom:`1px solid ${C.ink100}` }}>
         <ChartPanel
-          height={280}
+          height={168}
           candles={candles}
           isLoading={loading || candlesLoading}
           isError={candlesError}
