@@ -97,12 +97,12 @@ export default function StockDetail() {
       <div style={{ fontFamily: SANS, fontSize: 14, color: C.ink400, marginBottom: 4 }}>
         {isLoading ? '…' : `${s?.name ?? ticker} · ${s?.exchange ?? '—'}`}
       </div>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14, flexWrap: 'wrap' }}>
-        <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: mobile ? 40 : 48, color: C.ink900, letterSpacing: '-0.025em', lineHeight: 1 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: mobile ? 8 : 14 }}>
+        <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: mobile ? 34 : 48, color: C.ink900, letterSpacing: '-0.025em', lineHeight: 1, whiteSpace: 'nowrap' }}>
           {isLoading ? '…' : s?.price ? `$${s.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—'}
         </div>
-        <div style={{ fontFamily: SANS, fontSize: mobile ? 15 : 18, color: s?.pos ? C.aqua600 : C.red, lineHeight: 1.1 }}>
-          {s ? `${s.pos ? '+' : ''}${s.change?.toFixed(2)} (${s.pos ? '+' : ''}${s.pct?.toFixed(1)}%)${mobile ? ' today' : ''}` : '—'}
+        <div style={{ fontFamily: SANS, fontSize: mobile ? 13 : 18, color: s?.pos ? C.aqua600 : C.red, lineHeight: 1.1, whiteSpace: 'nowrap' }}>
+          {s ? `${s.pos ? '+' : ''}${s.change?.toFixed(2)} (${s.pos ? '+' : ''}${s.pct?.toFixed(1)}%)` : '—'}
         </div>
         <div style={{ marginLeft: 'auto' }}>
           <RangeButtons range={activeRange} onRangeChange={setActiveRange}/>
