@@ -144,12 +144,12 @@ export function MiniChart({ height=280, candles=[], isLoading=false, isError=fal
 export function ChartPanel({ height, candles, isLoading, isError, range='All', onRangeChange, overlayCandles=null }) {
   return (
     <div>
-      <MiniChart height={height} candles={candles} isLoading={isLoading} isError={isError} range={range} overlayCandles={overlayCandles}/>
-      <div style={{ display:'flex', gap:6, marginTop:10, paddingBottom:12 }}>
+      <div style={{ display:'flex', justifyContent:'flex-end', gap:6, marginBottom:8 }}>
         {RANGES.map(r => (
           <div key={r} onClick={() => onRangeChange?.(r)} style={{ padding:'4px 10px', background:r===range?C.ink900:'transparent', border:`1px solid ${r===range?C.ink900:C.ink100}`, borderRadius:4, fontFamily:SANS, fontSize:12, fontWeight:r===range?600:400, color:r===range?C.white:C.ink500, cursor:'pointer', userSelect:'none' }}>{r}</div>
         ))}
       </div>
+      <MiniChart height={height} candles={candles} isLoading={isLoading} isError={isError} range={range} overlayCandles={overlayCandles}/>
     </div>
   )
 }
