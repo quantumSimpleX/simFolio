@@ -54,6 +54,8 @@
   --gold:     #B5860A;
   --gold-bg:  #FBF5E6;
   --gold-light:#E8C84A;
+  --queued-bg:    #EFF6FF;
+  --queued-color: #2563EB;
 
   --sans:    'Barlow Condensed', 'Helvetica Neue', system-ui, sans-serif;
   --display: 'MOMCAKE', 'Helvetica Neue', system-ui, sans-serif;
@@ -63,16 +65,16 @@
 [data-theme="dark"] {
   --paper:    #0A0E14;
   --white:    #161B23;
-  --ink-900:  #F4F5F7;
-  --ink-800:  #E6E9ED;
-  --ink-700:  #CDD2D9;
-  --ink-600:  #A6ADB7;
-  --ink-500:  #7E8794;
-  --ink-400:  #5A6573;
-  --ink-300:  #3A434F;
+  --ink-900:  #FFFFFF;   /* 21:1  — headings, prices, CTAs */
+  --ink-800:  #EDEEF2;   /* 14:1  — was #E6E9ED */
+  --ink-700:  #D4D8DE;   /*  9:1  — was #CDD2D9 */
+  --ink-600:  #B8BEC7;   /* 10:1  — was #A6ADB7 */
+  --ink-500:  #9BA3AE;   /*  8.6:1 — was #7E8794 (light-mode value, too dim) */
+  --ink-400:  #848D99;   /*  6.1:1 — muted labels, secondary text */
+  --ink-300:  #6E7885;   /*  4.7:1 — timestamps, eyebrows, very muted */
   --ink-200:  #242B35;
   --ink-100:  #1A2030;
-  --ink-50:   #161B23;
+  --ink-50:   #13181F;
   --ame-400:  #9D78F0;
   --ame-500:  #8A60EB;
   --ame-600:  #B99AF5;
@@ -87,6 +89,8 @@
   --gold:     #D4A017;
   --gold-bg:  #2A2008;
   --gold-light:#E8C84A;
+  --queued-bg:    #0D1A2E;
+  --queued-color: #60A5FA;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

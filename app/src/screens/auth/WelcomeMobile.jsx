@@ -24,7 +24,7 @@ export default function WelcomeMobile() {
           </div>
           <SimPill/>
           <div style={{ display:'flex', gap:0 }}>
-            {[['WB',C.ame400],['CW',C.aqua400],['RD','#B5860A']].map(([init,color],i) => (
+            {[['WB',C.ame400],['CW',C.aqua400],['RD',C.gold]].map(([init,color],i) => (
               <div key={init} style={{ width:44, height:44, borderRadius:'50%', background:`${color}10`, border:`2px solid ${C.white}`, marginLeft:i>0?-10:0, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:SANS, fontWeight:700, fontSize:13, color, zIndex:3-i }}>
                 {i<2?init:'?'}
               </div>
