@@ -49,7 +49,7 @@ export function MiniChart({ height=280, candles=[], isLoading=false, isError=fal
   const fmtYLbl  = v => v >= 1000 ? `$${(v/1000).toFixed(1)}k` : `$${v.toFixed(2)}`
 
   // Chart geometry — only computed when data is available
-  const padR = 6, padT = 8, padB = longRange ? 26 : 20
+  const padR = 2, padT = 8, padB = longRange ? 26 : 20
   const plotH = height - padT - padB
   let padL = 44, plotW = w - padL - padR
 
@@ -62,7 +62,7 @@ export function MiniChart({ height=280, candles=[], isLoading=false, isError=fal
     priceRange = max - min || 1
     yLines     = Array.from({ length:6 }, (_, i) => min + priceRange * (i / 5))
     // Gutter hugs the widest y label (Barlow Condensed 11px ≈ 5.2px/char)
-    padL       = 4 + Math.max(...yLines.map(v => fmtYLbl(v).length)) * 5.2
+    padL       = 2 + Math.max(...yLines.map(v => fmtYLbl(v).length)) * 5.2
     plotW      = w - padL - padR
     color      = prices[prices.length-1] >= prices[0] ? C.aqua400 : C.red
     px         = i => padL + (i / (prices.length - 1)) * plotW

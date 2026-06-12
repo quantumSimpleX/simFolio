@@ -97,14 +97,14 @@ export default function StockDetail() {
       <div style={{ fontFamily: SANS, fontSize: 14, color: C.ink400, marginBottom: 4 }}>
         {isLoading ? '…' : `${s?.name ?? ticker} · ${s?.exchange ?? '—'}`}
       </div>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14, flexWrap: 'wrap' }}>
         <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: mobile ? 40 : 48, color: C.ink900, letterSpacing: '-0.025em', lineHeight: 1 }}>
           {isLoading ? '…' : s?.price ? `$${s.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—'}
         </div>
-        <div style={{ fontFamily: SANS, fontSize: mobile ? 15 : 18, color: s?.pos ? C.aqua600 : C.red }}>
+        <div style={{ fontFamily: SANS, fontSize: mobile ? 15 : 18, color: s?.pos ? C.aqua600 : C.red, lineHeight: 1.1 }}>
           {s ? `${s.pos ? '+' : ''}${s.change?.toFixed(2)} (${s.pos ? '+' : ''}${s.pct?.toFixed(1)}%)${mobile ? ' today' : ''}` : '—'}
         </div>
-        <div style={{ marginLeft: 'auto', alignSelf: 'center' }}>
+        <div style={{ marginLeft: 'auto' }}>
           <RangeButtons range={activeRange} onRangeChange={setActiveRange}/>
         </div>
       </div>
@@ -126,7 +126,7 @@ export default function StockDetail() {
   )
 
   const chartCard = (
-    <div style={{ background: C.white, border: `1px solid ${C.ink100}`, borderRadius: 8, padding: mobile ? '12px 10px 6px' : '20px 20px 8px' }}>
+    <div style={{ background: C.white, border: `1px solid ${C.ink100}`, borderRadius: 8, padding: mobile ? '12px 4px 6px' : '20px 8px 8px' }}>
       <ChartPanel height={mobile ? 150 : 300} candles={candles} isLoading={candlesLoading} isError={candlesError} range={activeRange} onRangeChange={setActiveRange} />
     </div>
   )

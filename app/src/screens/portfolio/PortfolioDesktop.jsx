@@ -94,7 +94,7 @@ export default function PortfolioDesktop() {
             <RangeButtons range={activeRange} onRangeChange={setActiveRange}/>
           </div>
 
-          <div style={{ background:C.white, border:`1px solid ${C.ink100}`, borderRadius:8, padding:'20px 24px 8px' }}>
+          <div style={{ background:C.white, border:`1px solid ${C.ink100}`, borderRadius:8, padding:'20px 8px 8px' }}>
             <ChartPanel
               height={300}
               candles={candles}

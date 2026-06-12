@@ -52,20 +52,20 @@ export default function PortfolioMobile() {
       <TopNav active="portfolio"/>
       <div style={{ padding:'18px 24px 0', flexShrink:0 }}>
         <Eyebrow>Portfolio</Eyebrow>
-        <div style={{ display:'flex', alignItems:'baseline', gap:12, marginTop:6 }}>
+        <div style={{ display:'flex', alignItems:'flex-end', gap:12, marginTop:6 }}>
           <div style={{ fontFamily:DISPLAY, fontWeight:700, fontSize:38, color:C.ink900, letterSpacing:'-0.02em', lineHeight:1 }}>
             {loading ? '…' : `$${fmt(displayTotal)}`}
           </div>
-          <div style={{ fontFamily:SANS, fontSize:14, color:pnlPos?C.aqua600:C.red, fontWeight:500 }}>
+          <div style={{ fontFamily:SANS, fontSize:14, color:pnlPos?C.aqua600:C.red, fontWeight:500, lineHeight:1.1 }}>
             {pnlPos?'+':''}{fmt(displayPnl)} ({pnlPos?'+':''}{displayPct.toFixed(1)}%)
           </div>
-          <div style={{ marginLeft:'auto', alignSelf:'center' }}>
+          <div style={{ marginLeft:'auto' }}>
             <RangeButtons range={activeRange} onRangeChange={setActiveRange}/>
           </div>
         </div>
       </div>
 
-      <div style={{ padding:'12px 24px 0', flexShrink:0, background:C.white, borderBottom:`1px solid ${C.ink100}` }}>
+      <div style={{ padding:'12px 6px 0', flexShrink:0, background:C.white, borderBottom:`1px solid ${C.ink100}` }}>
         <ChartPanel
           height={168}
           candles={candles}
