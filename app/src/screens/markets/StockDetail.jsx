@@ -123,8 +123,8 @@ export default function StockDetail() {
   )
 
   const chartCard = (
-    <div style={{ background: C.white, border: `1px solid ${C.ink100}`, borderRadius: 8, padding: '20px 20px 8px' }}>
-      <ChartPanel height={mobile ? 220 : 300} candles={candles} isLoading={candlesLoading} isError={candlesError} range={activeRange} onRangeChange={setActiveRange} />
+    <div style={{ background: C.white, border: `1px solid ${C.ink100}`, borderRadius: 8, padding: mobile ? '12px 10px 6px' : '20px 20px 8px' }}>
+      <ChartPanel height={mobile ? 150 : 300} candles={candles} isLoading={candlesLoading} isError={candlesError} range={activeRange} onRangeChange={setActiveRange} />
     </div>
   )
 

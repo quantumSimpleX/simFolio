@@ -49,7 +49,7 @@ export function MiniChart({ height=280, candles=[], isLoading=false, isError=fal
   const fmtYLbl  = v => v >= 1000 ? `$${(v/1000).toFixed(1)}k` : `$${v.toFixed(2)}`
 
   // Chart geometry — only computed when data is available
-  const padL = 58, padR = 12, padT = 12, padB = longRange ? 30 : 24
+  const padL = 44, padR = 6, padT = 8, padB = longRange ? 26 : 20
   const plotW = w - padL - padR
   const plotH = height - padT - padB
 
@@ -114,7 +114,7 @@ export function MiniChart({ height=280, candles=[], isLoading=false, isError=fal
         {yLines.map((v, i) => (
           <g key={i}>
             <line x1={padL} x2={padL+plotW} y1={py(v)} y2={py(v)} stroke={C.ink100} strokeWidth={1}/>
-            <text x={padL-6} y={py(v)} textAnchor="end" dominantBaseline="middle" fontSize={11} fontFamily={font} fill={C.ink400}>{fmtYLbl(v)}</text>
+            <text x={padL-4} y={py(v)} textAnchor="end" dominantBaseline="middle" fontSize={11} fontFamily={font} fill={C.ink400}>{fmtYLbl(v)}</text>
           </g>
         ))}
         <polyline points={points} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"/>
