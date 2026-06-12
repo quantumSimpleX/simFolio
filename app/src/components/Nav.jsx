@@ -35,10 +35,9 @@ export function TopNav({ active='portfolio' }) {
   const { cashBalance } = usePortfolio();
 
   const tabs = [
-    { id:'portfolio',    label:'Portfolio',    path:'/portfolio'    },
-    { id:'markets',      label:'Markets',      path:'/markets'      },
-    { id:'orders',       label:'Orders',       path:'/orders'       },
-    { id:'achievements', label:'Achievements', path:'/achievements' },
+    { id:'portfolio', label:'Portfolio', path:'/portfolio' },
+    { id:'markets',   label:'Markets',   path:'/markets'   },
+    { id:'orders',    label:'Orders',    path:'/orders'    },
   ];
 
   const initials = user?.user_metadata?.first_name?.[0]?.toUpperCase() ?? 'U';
