@@ -126,7 +126,10 @@ export default function StockDetail() {
   )
 
   const chartCard = (
-    <div style={{ background: C.white, border: `1px solid ${C.ink100}`, borderRadius: 8, padding: mobile ? '12px 4px 6px' : '20px 8px 8px' }}>
+    // Mobile: full-bleed past the AppShell's 16px gutters, tucked up under the price row
+    <div style={mobile
+      ? { background: C.white, borderTop: `1px solid ${C.ink100}`, borderBottom: `1px solid ${C.ink100}`, margin: '-14px -16px 0', padding: '8px 2px 6px' }
+      : { background: C.white, border: `1px solid ${C.ink100}`, borderRadius: 8, padding: '20px 8px 8px' }}>
       <ChartPanel height={mobile ? 150 : 300} candles={candles} isLoading={candlesLoading} isError={candlesError} range={activeRange} onRangeChange={setActiveRange} />
     </div>
   )

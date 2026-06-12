@@ -50,7 +50,7 @@ export default function PortfolioMobile() {
   return (
     <div style={{ width:'100%', height:'100dvh', background:C.paper, display:'flex', flexDirection:'column', overflow:'hidden' }}>
       <TopNav active="portfolio"/>
-      <div style={{ padding:'18px 24px 0', flexShrink:0 }}>
+      <div style={{ padding:'8px 24px 0', flexShrink:0 }}>
         <div style={{ display:'flex', alignItems:'flex-end', gap:12 }}>
           <div style={{ fontFamily:DISPLAY, fontWeight:700, fontSize:38, color:C.ink900, letterSpacing:'-0.02em', lineHeight:1 }}>
             {loading ? '…' : `$${fmt(displayTotal)}`}
