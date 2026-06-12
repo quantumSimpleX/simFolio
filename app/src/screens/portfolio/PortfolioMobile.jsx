@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { C, SANS, DISPLAY } from '../../tokens';
 import { Eyebrow } from '../../components/Primitives';
 import { BottomNav, TopNav } from '../../components/Nav';
-import { ChartPanel } from '../../components/Charts';
+import { ChartPanel, RangeButtons } from '../../components/Charts';
 import { HoldingRow } from '../../components/HoldingRow';
 import { useNavigate } from 'react-router-dom';
 import { usePortfolio } from '../../hooks/usePortfolio';
@@ -58,6 +58,9 @@ export default function PortfolioMobile() {
           </div>
           <div style={{ fontFamily:SANS, fontSize:14, color:pnlPos?C.aqua600:C.red, fontWeight:500 }}>
             {pnlPos?'+':''}{fmt(displayPnl)} ({pnlPos?'+':''}{displayPct.toFixed(1)}%)
+          </div>
+          <div style={{ marginLeft:'auto', alignSelf:'center' }}>
+            <RangeButtons range={activeRange} onRangeChange={setActiveRange}/>
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { C, SANS, DISPLAY } from '../../tokens';
 import { Eyebrow } from '../../components/Primitives';
 import { AppShell } from '../../components/AppShell';
-import { ChartPanel } from '../../components/Charts';
+import { ChartPanel, RangeButtons } from '../../components/Charts';
 import { HoldingRow } from '../../components/HoldingRow';
 import { HeroMessage, UserMessage } from '../../components/HeroMessage';
 import { useNavigate } from 'react-router-dom';
@@ -91,6 +91,7 @@ export default function PortfolioDesktop() {
                 {pnlPos?'+':''}{fmt(displayPnl)} · {pnlPos?'+':''}{displayPct.toFixed(1)}% all time
               </div>
             </div>
+            <RangeButtons range={activeRange} onRangeChange={setActiveRange}/>
           </div>
 
           <div style={{ background:C.white, border:`1px solid ${C.ink100}`, borderRadius:8, padding:'20px 24px 8px' }}>

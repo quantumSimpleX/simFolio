@@ -4,7 +4,7 @@ import { C, SANS, DISPLAY } from '../../tokens'
 import { CTA, Eyebrow, TermUnderline, MktStatus } from '../../components/Primitives'
 import { AppShell } from '../../components/AppShell'
 import { useIsMobile } from '../../hooks/useBreakpoint'
-import { ChartPanel } from '../../components/Charts'
+import { ChartPanel, RangeButtons } from '../../components/Charts'
 import { useStockDetail, useCandles } from '../../hooks/useStockDetail'
 import { isMarketOpen } from '../../hooks/useQuotes'
 import { usePortfolio } from '../../hooks/usePortfolio'
@@ -103,6 +103,9 @@ export default function StockDetail() {
         </div>
         <div style={{ fontFamily: SANS, fontSize: mobile ? 15 : 18, color: s?.pos ? C.aqua600 : C.red }}>
           {s ? `${s.pos ? '+' : ''}${s.change?.toFixed(2)} (${s.pos ? '+' : ''}${s.pct?.toFixed(1)}%)${mobile ? ' today' : ''}` : '—'}
+        </div>
+        <div style={{ marginLeft: 'auto', alignSelf: 'center' }}>
+          <RangeButtons range={activeRange} onRangeChange={setActiveRange}/>
         </div>
       </div>
     </div>
