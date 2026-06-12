@@ -13,6 +13,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Desktop: scale the whole UI up — component styles use fixed px sized for mobile */
+@media (min-width: 1024px) {
+  body { zoom: 1.25; }
+}
+
 #root {
   display: flex;
   flex-direction: column;
