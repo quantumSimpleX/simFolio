@@ -19,10 +19,13 @@ designSys/    — Quantum Simplex design system assets (fonts, brand tokens, CSS
 All commands run from the `app/` directory:
 
 ```bash
-npm run dev       # start dev server (Vite HMR)
-npm run build     # production build
-npm run preview   # preview production build locally
-npm run lint      # ESLint
+npm run dev              # start dev server (Vite HMR)
+npm run build            # production build
+npm run preview          # preview production build locally
+npm run lint             # ESLint
+npm run test             # Vitest (run once)
+npm run test:coverage    # Vitest with v8 coverage (enforces 80%+ line coverage)
+npx vitest run src/test/execution.test.js   # run a single test file
 ```
 
 ## Tech Stack
@@ -30,7 +33,48 @@ npm run lint      # ESLint
 - **React 19** with JSX (no TypeScript)
 - **React Router DOM v7** for routing
 - **Vite 8** as bundler
-- No test framework configured yet
+- **TanStack React Query v5** — all server state; query keys are `['portfolio']`, `['orders']`, `['quotes', ticker]`, `['hero-history', userId, heroId]`
+- **Supabase** — Postgres DB + Auth + Edge Functions (Deno/TypeScript)
+- **Vitest + Testing Library** — 11 test files in `app/src/test/`
+
+## Supabase Edge Functions
+
+Live in `app/supabase/functions/`. Each is a standalone Deno module deployed separately:
+
+| Function | Purpose |
+|---|---|
+| `place-order` | Validates + executes a trade; calls `_shared/execution.ts` for realistic fill pricing |
+| `execute-queued` | Cron-like handler that fills queued orders at market open |
+| `hero-chat` | Proxies messages to the LLM via OpenRouter; persists to `hero_conversations` |
+| `market-data` | Fetches live quotes + candles from Yahoo Finance; writes to `market_data_cache` |
+| `_shared/execution.ts` | Shared spread/slippage/partial-fill model; also used by `execute-queued` |
+
+Edge functions require a logged-in user JWT (`session.access_token`) in the `Authorization` header — they return 401/422 otherwise.
+
+## Key Patterns
+
+**Tokens** — always import colors and font stacks from `src/tokens.js`, not from CSS directly:
+```js
+import { C, SANS, DISPLAY, MONO } from '../../tokens'
+// C.ink900, C.ame400, C.aqua400, C.red, C.gold …
+```
+
+**Breakpoints** — three tiers, single source of truth in `src/hooks/useBreakpoint.js`:
+- `mobile` < 768px · `tablet` 768–1023px · `desktop` ≥ 1024px
+- Use `useBreakpoint()` or `useIsMobile()`; `App.jsx` also has a local `useIsMobile` for route switching
+
+**Responsive zoom** — `body { zoom }` is applied in `src/index.css` (1.12 tablet / 1.28 desktop / 1.38 wide). Viewport-relative calcs inside zoomed elements must divide by `var(--zoom)`:
+```css
+height: calc(100dvh / var(--zoom) - 100px)
+```
+
+**Market data cache** — quotes are stored in `market_data_cache` (Supabase table) with a 5-hour TTL. `src/lib/marketCache.js` handles DB reads/writes. Fundamentals (P/E, market cap, etc.) are persisted separately and survive quote refreshes.
+
+## Active Dev Shortcuts (TODO stubs to restore before production)
+
+- `/` redirects straight to `/onboarding` — bypasses welcome/auth screens
+- `PrivateRoute` and `OnboardingRoute` in `App.jsx` are transparent (no auth check)
+- `usePlaceOrder` falls back to a no-op if `session` is null
 
 ## Design System (QSXC / Quantum Simplex)
 
