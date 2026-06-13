@@ -96,9 +96,9 @@ Move every one-off inline block into `src/components/`, built on `ui/*`, then co
 - [x] **3.5** `HeroChatPanel` (message list + composer) ← `PortfolioDesktop.jsx` / `AskTab.jsx`,
       reusing `HeroMessage`/`UserMessage`/`SageMsg` inside `ui/scroll-area` + `ui/card`.
 - [x] **3.6** Recompose `AppShell.jsx` and `Nav.jsx` (`TopNav`/`BottomNav`/`PageHeader`/`BackHeader`) on `ui/*`.
-- [~] **3.7** Recompose `StockRow.jsx`, `HoldingRow.jsx`, `Badges.jsx`, `HeroMessage.jsx`, `BrandPanel.jsx`, `QSWordmark.jsx`.
-      DONE: StockRow, HoldingRow, HeroMessage, BrandPanel. `QSWordmark` left inline (dynamic SVG geometry — justified exception).
-      **GAP: `Badges.jsx` was NOT recomposed** (Dev B skipped it) → route to QA/fix loop.
+- [x] **3.7** Recompose `StockRow.jsx`, `HoldingRow.jsx`, `Badges.jsx`, `HeroMessage.jsx`, `BrandPanel.jsx`, `QSWordmark.jsx`.
+      DONE: StockRow, HoldingRow, HeroMessage, BrandPanel. `QSWordmark` AND `Badges.jsx` left inline —
+      both are pure dynamic SVG geometry (justified exception, same class as Charts; QA2 R1 confirmed not a defect).
 - [x] **3.8 Verify:** `orders.test.jsx`, `trade.test.jsx`, `misc.test.jsx`, `screens.smoke.test.jsx` green (114 tests pass on merged `main` 47ace9d).
 
 ---
@@ -137,3 +137,35 @@ Move every one-off inline block into `src/components/`, built on `ui/*`, then co
 **not** the coverage gate), `src/components/*`, `src/screens/**/*`, `src/test/*`.
 **Untouched:** `tokens.js`, `tokens.css`, `src/hooks/*`, `src/context/*`, `src/data/*`,
 `supabase/functions/*`.
+
+---
+
+## QA Findings — Round 1 (merged `main` @ 707ccfe)
+
+Sources: `qa-round1-automated.md` (QA1), `qa-round1-design.md` (QA2).
+Baseline: 114/114 tests pass, build + lint clean. Two fix workstreams (assigned to 2 dev agents, disjoint files):
+
+### Workstream T (TESTS) — clears the coverage gate, targets ~90%  → owner: Fix Agent T (new test files only)
+- [ ] **T1 BLOCKER** `npm run test:coverage` = **78.88% lines < 80% gate**. Add the missing suites from `unittest.md` §B:
+  - `src/test/ui.test.jsx` — `components/ui/*` is 49.6% (7 primitives at 0%). Highest-leverage.
+  - `src/test/hooks.test.jsx` — `hooks/*` at 68.8% (useBreakpoint, useWatchlist, useOrders, usePlaceOrder, useAchievements, useHeroSelections, useSymbolSearch).
+  - `src/test/context.test.jsx` — Auth/Theme/Language providers.
+  - `src/test/fees.test.js`, `src/test/marketCache.test.js` — `lib/*` at 70.8%.
+  - Acceptance: `npm run test:coverage` exits 0, lines ≥ 90% (gate 80% comfortably cleared), all tests green.
+
+### Workstream D (DESIGN) — locked-rule fixes  → owner: Fix Agent D (source + onboarding.flow.test.jsx)
+- [ ] **D1 (M1) off-spec radii** → only `0/4/8/999` allowed. Fix: 6px in `Primitives.jsx:~289` (GoalCard);
+  3px progress bars in `Profile.jsx`, `AchievementsMobile.jsx`; 3px chips in `SearchResultRow.jsx`, `WatchRow.jsx`;
+  `rounded-sm`(2px) in `ReturningUser.jsx:41`; 3px ProgressDots; 2px corner in `HeroMessage.jsx` user bubble. Snap each to nearest allowed token.
+- [ ] **D2 (M2) eyebrow letter-spacing drift** → locked = `0.14em`. Replace ad-hoc 0.10/0.12/0.16em uppercase labels
+  in `BadgeEarned.jsx`, `HeroMessage.jsx`, `Onboarding.jsx`, `BuyScreen.jsx`, `SellScreen.jsx`, `TradeReceipt.jsx`,
+  `PortfolioMobile.jsx` (prefer reusing the canonical `<Eyebrow>` where applicable).
+- [ ] **D3 (N1)** `onboarding.flow.test.jsx:26` selects `div[style*="border-radius: 6px"]` — passes only because of the D1
+  6px violation. Re-anchor to a stable role/text/test-id (no style/class assertion) when fixing D1.
+
+### Deferred — needs user decision (not assigned)
+- **N2** MOMCAKE display font appears **twice** on Buy/Sell screens (price + qty). CLAUDE.md locks "one number per
+  screen". QA2 notes it matches pre-refactor intent. → awaiting user confirmation before changing.
+
+### Resolved / non-issues
+- **Badges.jsx** "not recomposed" — reclassified as justified dynamic-SVG exception (QA2). Task 3.7 marked done.
