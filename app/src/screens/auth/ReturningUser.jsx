@@ -1,47 +1,48 @@
-import { C, SANS, DISPLAY } from '../../tokens';
 import { StatusBar, CTA } from '../../components/Primitives';
 import { useNavigate } from 'react-router-dom';
+import { cn } from '../../lib/utils';
 
 export default function ReturningUser() {
   const navigate = useNavigate();
+  const rows = [
+    { label:'Portfolio value', value:'$28,340' },
+    { label:'Pending orders',  value:'2' },
+    { label:'Last visited',    value:'3 days ago' },
+  ];
   return (
-    <div style={{ width:390, background:C.paper, display:'flex', flexDirection:'column', minHeight:680 }}>
+    <div className="flex min-h-[680px] w-[390px] flex-col bg-paper">
       <StatusBar/>
-      <div style={{ display:'flex', flexDirection:'column', gap:24, padding:'28px 28px' }}>
-        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-          <div style={{ fontFamily:DISPLAY, fontWeight:700, fontSize:30, color:C.ink900, letterSpacing:'-0.02em' }}>Welcome back, Jamie.</div>
-          <div style={{ fontFamily:SANS, fontSize:16, color:C.ink500, lineHeight:1.5 }}>
-            Your portfolio is up <span style={{ color:C.aqua600, fontWeight:600 }}>+$1,120</span> since your last visit.
+      <div className="flex flex-col gap-6 px-7 py-7">
+        <div className="flex flex-col gap-2">
+          <div className="font-display text-[30px] font-bold tracking-[-0.02em] text-ink-900">Welcome back, Jamie.</div>
+          <div className="font-sans text-base leading-snug text-ink-500">
+            Your portfolio is up <span className="font-semibold text-aqua-600">+$1,120</span> since your last visit.
           </div>
         </div>
 
-        <div style={{ background:C.white, border:`1px solid ${C.ink100}`, borderRadius:8, padding:'0 20px' }}>
-          {[
-            { label:'Portfolio value', value:'$28,340' },
-            { label:'Pending orders',  value:'2' },
-            { label:'Last visited',    value:'3 days ago' },
-          ].map(({ label, value }, i, arr) => (
-            <div key={label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'14px 0', borderBottom:i<arr.length-1?`1px solid ${C.ink100}`:'none' }}>
-              <div style={{ fontFamily:SANS, fontSize:14, color:C.ink500 }}>{label}</div>
-              <div style={{ fontFamily:SANS, fontSize:14, fontWeight:600, color:C.ink900 }}>{value}</div>
+        <div className="rounded-card border border-ink-100 bg-white px-5">
+          {rows.map(({ label, value }, i) => (
+            <div key={label} className={cn('flex items-center justify-between py-3.5', i < rows.length - 1 && 'border-b border-ink-100')}>
+              <div className="font-sans text-sm text-ink-500">{label}</div>
+              <div className="font-sans text-sm font-semibold text-ink-900">{value}</div>
             </div>
           ))}
         </div>
 
-        <div style={{ display:'flex', gap:10, padding:'12px 16px', background:C.ame50, border:`1px solid ${C.ame100}`, borderRadius:8 }}>
-          <div style={{ width:30, height:30, borderRadius:'50%', background:`${C.ame400}12`, border:`1.5px solid ${C.ame400}35`, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:SANS, fontWeight:700, fontSize:11, color:C.ame400, flexShrink:0 }}>WB</div>
-          <div style={{ fontFamily:SANS, fontSize:13, color:C.ink600, fontStyle:'italic', lineHeight:1.5 }}>
+        <div className="flex gap-2.5 rounded-card border border-ame-100 bg-ame-50 px-4 py-3">
+          <div className="flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-pill border-[1.5px] border-ame-400/35 bg-ame-400/[0.12] font-sans text-[11px] font-bold text-ame-400">WB</div>
+          <div className="font-sans text-[13px] italic leading-normal text-ink-600">
             "The market is a device for transferring money from the impatient to the patient. How are you feeling about your TSLA position?"
           </div>
         </div>
 
-        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-          <div style={{ height:48, border:`1px solid ${C.ink200}`, borderRadius:4, display:'flex', alignItems:'center', gap:12, padding:'0 18px', background:C.white, cursor:'pointer' }}>
-            <div style={{ width:20, height:20, background:C.ink100, borderRadius:2, flexShrink:0 }}/>
-            <div style={{ fontFamily:SANS, fontSize:14, fontWeight:500, color:C.ink700 }}>Sign in with Face ID</div>
+        <div className="flex flex-col gap-2.5">
+          <div className="flex h-12 cursor-pointer items-center gap-3 rounded-input border border-ink-200 bg-white px-[18px]">
+            <div className="h-5 w-5 flex-shrink-0 rounded-sm bg-ink-100"/>
+            <div className="font-sans text-sm font-medium text-ink-700">Sign in with Face ID</div>
           </div>
           <CTA label="Go to my portfolio  →" full onClick={() => navigate('/portfolio')}/>
-          <div style={{ fontFamily:SANS, fontSize:13, color:C.ink400, textAlign:'center', cursor:'pointer' }}>Sign out</div>
+          <div className="cursor-pointer text-center font-sans text-[13px] text-ink-400">Sign out</div>
         </div>
       </div>
     </div>

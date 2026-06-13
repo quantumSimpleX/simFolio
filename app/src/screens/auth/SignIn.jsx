@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { C, SANS } from '../../tokens';
 import { StatusBar, CTA, SocialBtn, Divider, Field } from '../../components/Primitives';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -27,15 +26,15 @@ export default function SignIn() {
   }
 
   return (
-    <div style={{ width:390, background:C.paper, display:'flex', flexDirection:'column', minHeight:720 }}>
+    <div className="flex min-h-[720px] w-[390px] flex-col bg-paper">
       <StatusBar/>
-      <div style={{ display:'flex', alignItems:'center', gap:14, padding:'0 24px 14px', borderBottom:`1px solid ${C.ink100}` }}>
-        <div onClick={() => navigate(-1)} style={{ fontFamily:SANS, fontSize:14, color:C.ame400, cursor:'pointer' }}>← Back</div>
-        <div style={{ flex:1, textAlign:'center', fontFamily:SANS, fontSize:17, fontWeight:700, color:C.ink900 }}>Sign in</div>
-        <div style={{ width:40 }}/>
+      <div className="flex items-center gap-3.5 border-b border-ink-100 px-6 pb-3.5">
+        <div onClick={() => navigate(-1)} className="cursor-pointer font-sans text-sm text-ame-400">← Back</div>
+        <div className="flex-1 text-center font-sans text-[17px] font-bold text-ink-900">Sign in</div>
+        <div className="w-10"/>
       </div>
-      <div style={{ display:'flex', flexDirection:'column', gap:16, padding:'28px 24px' }}>
-        <div style={{ display:'flex', gap:8 }}>
+      <div className="flex flex-col gap-4 px-6 py-7">
+        <div className="flex gap-2">
           <SocialBtn provider="Google"/>
           <SocialBtn provider="Apple"/>
         </div>
@@ -43,14 +42,14 @@ export default function SignIn() {
         <Field label="Email address" placeholder="jamie@example.com" value={email} onChange={e => setEmail(e.target.value)}/>
         <div>
           <Field label="Password" placeholder="••••••••••" type="password" value={password} onChange={e => setPassword(e.target.value)}/>
-          <div style={{ display:'flex', justifyContent:'flex-end', marginTop:8 }}>
-            <div style={{ fontFamily:SANS, fontSize:13, color:C.ame400, cursor:'pointer' }}>Forgot password?</div>
+          <div className="mt-2 flex justify-end">
+            <div className="cursor-pointer font-sans text-[13px] text-ame-400">Forgot password?</div>
           </div>
         </div>
-        {error && <div style={{ fontFamily:SANS, fontSize:13, color:C.red }}>{error}</div>}
+        {error && <div className="font-sans text-[13px] text-red">{error}</div>}
         <CTA label="Sign in  →" full loading={loading} onClick={handleSubmit}/>
-        <div style={{ fontFamily:SANS, fontSize:14, color:C.ink500, textAlign:'center' }}>
-          New here? <span style={{ color:C.ame400, cursor:'pointer' }} onClick={() => navigate('/sign-up')}>Create an account</span>
+        <div className="text-center font-sans text-sm text-ink-500">
+          New here? <span className="cursor-pointer text-ame-400" onClick={() => navigate('/sign-up')}>Create an account</span>
         </div>
       </div>
     </div>

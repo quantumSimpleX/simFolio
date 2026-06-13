@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { C, SANS } from '../../tokens';
 import { Logo, SimPill, CTA, GoalCard, ProgressDots, GuideAvatar } from '../../components/Primitives';
 import BrandPanel from '../../components/BrandPanel';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { matchHeroes, rankHeroesForSelection, HERO_DATA } from '../../data/heroes';
+import { cn } from '../../lib/utils';
 
 const NONE_GOAL = 'None of the above';
 
@@ -207,12 +207,12 @@ function ScreenShell({ children }) {
 
   if (isDesktop) {
     return (
-      <div style={{ width: '100%', height: '100dvh', background: C.paper, display: 'flex', overflow: 'hidden' }}>
-        <div style={{ width: '45%', minWidth: 420, maxWidth: 620, flexShrink: 0 }}>
+      <div className="flex h-[100dvh] w-full overflow-hidden bg-paper">
+        <div className="w-[45%] min-w-[420px] max-w-[620px] flex-shrink-0">
           <BrandPanel/>
         </div>
-        <div style={{ flex: 1, overflow: 'auto', display: 'flex', justifyContent: 'center', padding: '56px 48px 48px' }}>
-          <div style={{ width: '100%', maxWidth: 640, display: 'flex', flexDirection: 'column', gap: 28, height: 'fit-content' }}>
+        <div className="flex flex-1 justify-center overflow-auto px-12 pb-12 pt-14">
+          <div className="flex h-fit w-full max-w-[640px] flex-col gap-7">
             {children}
           </div>
         </div>
@@ -221,21 +221,13 @@ function ScreenShell({ children }) {
   }
 
   return (
-    <div style={{ minHeight: '100dvh', width: '100%', background: C.paper, display: 'flex', flexDirection: 'column' }}>
-      <div style={{
-        borderBottom: `1px solid ${C.ink100}`,
-        background: C.white,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '14px 24px',
-        flexShrink: 0,
-      }}>
+    <div className="flex min-h-[100dvh] w-full flex-col bg-paper">
+      <div className="flex flex-shrink-0 items-center justify-between border-b border-ink-100 bg-white px-6 py-3.5">
         <Logo size={19}/>
         <SimPill/>
       </div>
-      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', overflow: 'auto' }}>
-        <div style={{ width: '100%', maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 20, padding: '20px 24px 32px' }}>
+      <div className="flex flex-1 justify-center overflow-auto">
+        <div className="flex w-full max-w-[480px] flex-col gap-5 px-6 pb-8 pt-5">
           {children}
         </div>
       </div>
@@ -247,9 +239,25 @@ function BackButton({ onBack }) {
   return (
     <div
       onClick={onBack}
-      style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: SANS, fontSize: fluid(13, 15), fontWeight: 600, color: C.ink400 }}
+      className="flex cursor-pointer items-center gap-1.5 self-start font-sans font-semibold text-ink-400"
+      style={{ fontSize: fluid(13, 15) }}
     >
       ← Back
+    </div>
+  );
+}
+
+function SageHeader({ avatarSize, isDesktop, children }) {
+  return (
+    <div className="flex items-start" style={{ gap: isDesktop ? 18 : 10 }}>
+      <GuideAvatar size={avatarSize}/>
+      <div className={cn('flex-1', isDesktop && 'pt-1')}>
+        <div
+          className="font-sans font-semibold uppercase tracking-[0.12em] text-ink-400"
+          style={{ fontSize: fluid(11, 13), marginBottom: isDesktop ? 8 : 6 }}
+        >Sage</div>
+        <div className="font-sans leading-normal text-ink-600" style={{ fontSize: fluid(15, 22) }}>{children}</div>
+      </div>
     </div>
   );
 }
@@ -257,69 +265,61 @@ function BackButton({ onBack }) {
 function OnboardingShell({ step, total, current, selected, onSelect, onContinue, onBack }) {
   const isDesktop = useIsDesktop();
   const avatarSize = isDesktop ? 48 : 34;
+  const answerPad = avatarSize + (isDesktop ? 18 : 10);
 
-  const choiceGrid = isDesktop && current.type === 'choice' && current.choices.length >= 4
-    ? { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }
-    : { display: 'flex', flexDirection: 'column', gap: 8 };
+  const isGridChoice = isDesktop && current.type === 'choice' && current.choices.length >= 4;
 
   return (
     <ScreenShell>
-          {/* Progress */}
-          {onBack && <BackButton onBack={onBack}/>}
-          <ProgressDots step={step + 1} total={total}/>
+      {onBack && <BackButton onBack={onBack}/>}
+      <ProgressDots step={step + 1} total={total}/>
 
-          {/* Sage message */}
-          <div style={{ display: 'flex', gap: isDesktop ? 18 : 10, alignItems: 'flex-start' }}>
-            <GuideAvatar size={avatarSize}/>
-            <div style={{ flex: 1, paddingTop: isDesktop ? 4 : 0 }}>
-              <div style={{ fontFamily: SANS, fontSize: fluid(11, 13), fontWeight: 600, color: C.ink400, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: isDesktop ? 8 : 6 }}>Sage</div>
-              <div style={{ fontFamily: SANS, fontSize: fluid(15, 22), color: C.ink600, lineHeight: 1.5 }}>{current.q}</div>
-            </div>
-          </div>
+      <SageHeader avatarSize={avatarSize} isDesktop={isDesktop}>{current.q}</SageHeader>
 
-          {/* Answer area */}
-          <div style={{ paddingLeft: isDesktop ? avatarSize + 18 : avatarSize + 10 }}>
-            {current.type === 'number' ? (
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', height: 52, border: `1.5px solid ${selected ? C.ink900 : C.ink200}`, borderRadius: 4, background: C.white, overflow: 'hidden' }}>
-                  <div style={{ padding: '0 14px', fontFamily: SANS, fontSize: fluid(16, 20), color: C.ink400, flexShrink: 0 }}>$</div>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={selected ? Number(selected).toLocaleString('en-US') : ''}
-                    onChange={e => onSelect(e.target.value.replace(/[^0-9]/g, ''))}
-                    onKeyDown={e => e.key === 'Enter' && selected && onContinue()}
-                    placeholder="5000"
-                    autoFocus
-                    style={{ flex: 1, border: 'none', outline: 'none', fontFamily: SANS, fontSize: fluid(18, 24), fontWeight: 600, color: C.ink900, background: 'transparent', padding: '0 14px 0 0' }}
-                  />
-                </div>
-                <div style={{ fontFamily: SANS, fontSize: fluid(12, 14), color: C.ink400, marginTop: 8 }}>Amount in USD · press Enter or tap Continue</div>
-              </div>
-            ) : current.type === 'multi' ? (
-              <MultiGoalPicker choices={current.choices} value={selected} onChange={onSelect}/>
-            ) : (
-              <div style={choiceGrid}>
-                {current.choices.map((choice, i) => (
-                  <div key={choice} style={isDesktop && current.choices.length % 2 !== 0 && i === current.choices.length - 1 ? { gridColumn: '1 / span 2' } : undefined}>
-                    <GoalCard label={choice} selected={selected === choice} onClick={() => onSelect(choice)}/>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* CTA for number and multi-select inputs */}
-          {current.type !== 'choice' && (
-            <div style={{ paddingLeft: isDesktop ? avatarSize + 18 : avatarSize + 10 }}>
-              <CTA
-                label="Continue  →"
-                full
-                disabled={current.type === 'multi' ? !(selected?.picks?.length > 0) : !selected}
-                onClick={onContinue}
+      {/* Answer area */}
+      <div style={{ paddingLeft: answerPad }}>
+        {current.type === 'number' ? (
+          <div>
+            <div className={cn('flex h-[52px] items-center overflow-hidden rounded-input border-[1.5px] bg-white', selected ? 'border-ink-900' : 'border-ink-200')}>
+              <div className="flex-shrink-0 px-3.5 font-sans text-ink-400" style={{ fontSize: fluid(16, 20) }}>$</div>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={selected ? Number(selected).toLocaleString('en-US') : ''}
+                onChange={e => onSelect(e.target.value.replace(/[^0-9]/g, ''))}
+                onKeyDown={e => e.key === 'Enter' && selected && onContinue()}
+                placeholder="5000"
+                autoFocus
+                className="flex-1 border-none bg-transparent pr-3.5 font-sans font-semibold text-ink-900 outline-none"
+                style={{ fontSize: fluid(18, 24) }}
               />
             </div>
-          )}
+            <div className="mt-2 font-sans text-ink-400" style={{ fontSize: fluid(12, 14) }}>Amount in USD · press Enter or tap Continue</div>
+          </div>
+        ) : current.type === 'multi' ? (
+          <MultiGoalPicker choices={current.choices} value={selected} onChange={onSelect}/>
+        ) : (
+          <div className={isGridChoice ? 'grid grid-cols-2 gap-2.5' : 'flex flex-col gap-2'}>
+            {current.choices.map((choice, i) => (
+              <div key={choice} className={isGridChoice && current.choices.length % 2 !== 0 && i === current.choices.length - 1 ? 'col-span-2' : undefined}>
+                <GoalCard label={choice} selected={selected === choice} onClick={() => onSelect(choice)}/>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* CTA for number and multi-select inputs */}
+      {current.type !== 'choice' && (
+        <div style={{ paddingLeft: answerPad }}>
+          <CTA
+            label="Continue  →"
+            full
+            disabled={current.type === 'multi' ? !(selected?.picks?.length > 0) : !selected}
+            onClick={onContinue}
+          />
+        </div>
+      )}
     </ScreenShell>
   );
 }
@@ -337,7 +337,7 @@ function MultiGoalPicker({ choices, value, onChange }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div className="flex flex-col gap-2">
       {choices.map(({ title, desc }) => {
         const isNone = title === NONE_GOAL;
         const checked = picks.includes(title);
@@ -346,28 +346,21 @@ function MultiGoalPicker({ choices, value, onChange }) {
           <div
             key={title}
             onClick={() => toggle(title)}
-            style={{
-              border: `1.5px solid ${checked ? C.ame400 : C.ink200}`,
-              borderRadius: 8,
-              background: checked ? C.ame50 : C.white,
-              padding: '14px 16px',
-              cursor: disabled ? 'default' : 'pointer',
-              opacity: disabled ? 0.4 : 1,
-              pointerEvents: disabled ? 'none' : 'auto',
-            }}
+            className={cn(
+              'rounded-card border-[1.5px] px-4 py-3.5',
+              checked ? 'border-ame-400 bg-ame-50' : 'border-ink-200 bg-white',
+              disabled ? 'pointer-events-none cursor-default opacity-40' : 'cursor-pointer',
+            )}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{
-                width: 18, height: 18, flexShrink: 0, borderRadius: 4,
-                border: `1.5px solid ${checked ? C.ame400 : C.ink200}`,
-                background: checked ? C.ame400 : C.white,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: C.white, fontSize: 12, fontFamily: SANS, fontWeight: 700,
-              }}>{checked ? '✓' : ''}</div>
-              <div style={{ fontFamily: SANS, fontSize: fluid(15, 18), fontWeight: 600, color: C.ink900 }}>{title}</div>
+            <div className="flex items-center gap-2.5">
+              <div className={cn(
+                'flex h-[18px] w-[18px] flex-shrink-0 items-center justify-center rounded-input border-[1.5px] font-sans text-xs font-bold text-white',
+                checked ? 'border-ame-400 bg-ame-400' : 'border-ink-200 bg-white',
+              )}>{checked ? '✓' : ''}</div>
+              <div className="font-sans font-semibold text-ink-900" style={{ fontSize: fluid(15, 18) }}>{title}</div>
             </div>
             {desc && (
-              <div style={{ fontFamily: SANS, fontSize: fluid(13, 15), color: C.ink400, lineHeight: 1.5, marginTop: 6, paddingLeft: 28 }}>{desc}</div>
+              <div className="mt-1.5 pl-7 font-sans leading-normal text-ink-400" style={{ fontSize: fluid(13, 15) }}>{desc}</div>
             )}
           </div>
         );
@@ -380,11 +373,8 @@ function MultiGoalPicker({ choices, value, onChange }) {
           placeholder="Tell me in your own words — what's drawing you to investing?"
           rows={3}
           autoFocus
-          style={{
-            border: `1.5px solid ${C.ink200}`, borderRadius: 4, padding: '12px 14px',
-            fontFamily: SANS, fontSize: fluid(15, 17), color: C.ink900, background: C.white,
-            outline: 'none', resize: 'vertical',
-          }}
+          className="resize-y rounded-input border-[1.5px] border-ink-200 bg-white px-3.5 py-3 font-sans text-ink-900 outline-none"
+          style={{ fontSize: fluid(15, 17) }}
         />
       )}
     </div>
@@ -398,56 +388,43 @@ function HeroSelect({ heroIds, onChoose, saving, onBack }) {
 
   return (
     <ScreenShell>
-          <BackButton onBack={onBack}/>
+      <BackButton onBack={onBack}/>
 
-          <div style={{ display: 'flex', gap: isDesktop ? 18 : 10, alignItems: 'flex-start' }}>
-            <GuideAvatar size={avatarSize}/>
-            <div style={{ flex: 1, paddingTop: isDesktop ? 4 : 0 }}>
-              <div style={{ fontFamily: SANS, fontSize: fluid(11, 13), fontWeight: 600, color: C.ink400, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: isDesktop ? 8 : 6 }}>Sage</div>
-              <div style={{ fontFamily: SANS, fontSize: fluid(15, 22), color: C.ink600, lineHeight: 1.5 }}>
-                Maybe you can ask some of these experts to help you?
-              </div>
+      <SageHeader avatarSize={avatarSize} isDesktop={isDesktop}>
+        Maybe you can ask some of these experts to help you?
+      </SageHeader>
+
+      <div className="grid grid-cols-2 gap-2.5">
+        {heroIds.map(id => {
+          const h = HERO_DATA[id];
+          const isPicked = picked === id;
+          return (
+            <div
+              key={id}
+              onClick={() => setPicked(id)}
+              className={cn(
+                'flex cursor-pointer flex-col gap-2 rounded-card border-[1.5px] px-3.5 pb-3 pt-3.5',
+                isPicked ? 'border-ame-400 bg-ame-50' : 'border-ink-200 bg-white',
+              )}
+            >
+              <div
+                className="flex h-9 w-9 items-center justify-center rounded-pill font-sans text-sm font-bold text-white"
+                style={{ background: h.color }}
+              >{h.initials}</div>
+              <div className="font-sans font-semibold text-ink-900" style={{ fontSize: fluid(15, 17) }}>{h.name}</div>
+              <div className="font-sans leading-snug text-ink-400" style={{ fontSize: fluid(12, 14) }}>{h.style}</div>
             </div>
-          </div>
+          );
+        })}
+      </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            {heroIds.map(id => {
-              const h = HERO_DATA[id];
-              const isPicked = picked === id;
-              return (
-                <div
-                  key={id}
-                  onClick={() => setPicked(id)}
-                  style={{
-                    border: `1.5px solid ${isPicked ? C.ame400 : C.ink200}`,
-                    borderRadius: 8,
-                    background: isPicked ? C.ame50 : C.white,
-                    padding: '14px 14px 12px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 8,
-                  }}
-                >
-                  <div style={{
-                    width: 36, height: 36, borderRadius: '50%', background: h.color,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: C.white, fontFamily: SANS, fontSize: 14, fontWeight: 700,
-                  }}>{h.initials}</div>
-                  <div style={{ fontFamily: SANS, fontSize: fluid(15, 17), fontWeight: 600, color: C.ink900 }}>{h.name}</div>
-                  <div style={{ fontFamily: SANS, fontSize: fluid(12, 14), color: C.ink400, lineHeight: 1.4 }}>{h.style}</div>
-                </div>
-              );
-            })}
-          </div>
-
-          <CTA
-            label={picked ? `Ask ${HERO_DATA[picked].name}  →` : 'Pick an expert to continue'}
-            full
-            loading={saving}
-            disabled={!picked}
-            onClick={() => picked && onChoose(picked)}
-          />
+      <CTA
+        label={picked ? `Ask ${HERO_DATA[picked].name}  →` : 'Pick an expert to continue'}
+        full
+        loading={saving}
+        disabled={!picked}
+        onClick={() => picked && onChoose(picked)}
+      />
     </ScreenShell>
   );
 }
@@ -456,6 +433,7 @@ function StockInterest({ stocks, setStocks, onFinish, saving, onBack }) {
   const [input, setInput] = useState('');
   const isDesktop = useIsDesktop();
   const avatarSize = isDesktop ? 48 : 34;
+  const answerPad = avatarSize + (isDesktop ? 18 : 10);
 
   function addStock() {
     const val = input.trim().toUpperCase();
@@ -467,50 +445,53 @@ function StockInterest({ stocks, setStocks, onFinish, saving, onBack }) {
 
   return (
     <ScreenShell>
-          {onBack && <BackButton onBack={onBack}/>}
-          <ProgressDots step={QUESTIONS.length + 1} total={QUESTIONS.length + 1}/>
+      {onBack && <BackButton onBack={onBack}/>}
+      <ProgressDots step={QUESTIONS.length + 1} total={QUESTIONS.length + 1}/>
 
-          <div style={{ display: 'flex', gap: isDesktop ? 18 : 10, alignItems: 'flex-start' }}>
-            <GuideAvatar size={avatarSize}/>
-            <div style={{ flex: 1, paddingTop: isDesktop ? 4 : 0 }}>
-              <div style={{ fontFamily: SANS, fontSize: fluid(11, 13), fontWeight: 600, color: C.ink400, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: isDesktop ? 8 : 6 }}>Sage</div>
-              <div style={{ fontFamily: SANS, fontSize: fluid(15, 22), color: C.ink600, lineHeight: 1.5 }}>
-                Any stocks, ETFs, or crypto you're curious about? Type a ticker or company name.
+      <SageHeader avatarSize={avatarSize} isDesktop={isDesktop}>
+        Any stocks, ETFs, or crypto you're curious about? Type a ticker or company name.
+      </SageHeader>
+
+      <div className="flex flex-col gap-4" style={{ paddingLeft: answerPad }}>
+        {stocks.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {stocks.map(s => (
+              <div
+                key={s}
+                className="inline-flex items-center gap-1.5 rounded-pill border border-ame-100 bg-ame-50 px-3 py-[5px] font-sans font-semibold text-ame-600"
+                style={{ fontSize: fluid(13, 15) }}
+              >
+                {s}
+                <div onClick={() => setStocks(prev => prev.filter(x => x !== s))} className="cursor-pointer text-ame-400" style={{ fontSize: fluid(13, 15) }}>×</div>
               </div>
-            </div>
+            ))}
           </div>
+        )}
 
-          <div style={{ paddingLeft: avatarSize + (isDesktop ? 18 : 10), display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {stocks.length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {stocks.map(s => (
-                  <div key={s} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: C.ame50, border: `1px solid ${C.ame100}`, borderRadius: 999, padding: '5px 12px', fontFamily: SANS, fontSize: fluid(13, 15), fontWeight: 600, color: C.ame600 }}>
-                    {s}
-                    <div onClick={() => setStocks(prev => prev.filter(x => x !== s))} style={{ cursor: 'pointer', color: C.ame400, fontSize: fluid(13, 15) }}>×</div>
-                  </div>
-                ))}
-              </div>
-            )}
+        <div className="flex gap-2">
+          <input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && addStock()}
+            placeholder="e.g. AAPL, Tesla, QQQ…"
+            className="h-12 flex-1 rounded-input border-[1.5px] border-ink-200 bg-white px-3.5 font-sans text-ink-900 outline-none"
+            style={{ fontSize: fluid(15, 17) }}
+          />
+          <div
+            onClick={addStock}
+            className="flex h-12 cursor-pointer items-center rounded-input bg-ink-900 px-[18px] font-sans font-semibold text-white"
+            style={{ fontSize: fluid(14, 16) }}
+          >Add</div>
+        </div>
 
-            <div style={{ display: 'flex', gap: 8 }}>
-              <input
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && addStock()}
-                placeholder="e.g. AAPL, Tesla, QQQ…"
-                style={{ flex: 1, height: 48, border: `1.5px solid ${C.ink200}`, borderRadius: 4, padding: '0 14px', fontFamily: SANS, fontSize: fluid(15, 17), color: C.ink900, background: C.white, outline: 'none' }}
-              />
-              <div onClick={addStock} style={{ height: 48, padding: '0 18px', background: C.ink900, color: C.white, borderRadius: 4, display: 'flex', alignItems: 'center', fontFamily: SANS, fontSize: fluid(14, 16), fontWeight: 600, cursor: 'pointer' }}>Add</div>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {stocks.length > 0 ? (
-                <CTA label="Now let's go buy some stocks  →" full loading={saving} onClick={() => onFinish(stocks)}/>
-              ) : (
-                <CTA label="I have no idea  →" full loading={saving} onClick={() => onFinish([])}/>
-              )}
-            </div>
-          </div>
+        <div className="flex flex-col gap-2.5">
+          {stocks.length > 0 ? (
+            <CTA label="Now let's go buy some stocks  →" full loading={saving} onClick={() => onFinish(stocks)}/>
+          ) : (
+            <CTA label="I have no idea  →" full loading={saving} onClick={() => onFinish([])}/>
+          )}
+        </div>
+      </div>
     </ScreenShell>
   );
 }

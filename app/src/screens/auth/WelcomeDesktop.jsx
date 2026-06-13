@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { C, SANS } from '../../tokens';
 import { CTA, SocialBtn, Divider, Field, LangToggle } from '../../components/Primitives';
 import BrandPanel from '../../components/BrandPanel';
 import { useNavigate } from 'react-router-dom';
@@ -29,40 +28,40 @@ export default function WelcomeDesktop() {
   }
 
   return (
-    <div style={{ width:1440, height:900, background:C.paper, display:'flex', overflow:'hidden' }}>
+    <div className="flex h-[900px] w-[1440px] overflow-hidden bg-paper">
       {/* Left brand panel */}
-      <div style={{ width:580, flexShrink:0 }}>
+      <div className="w-[580px] flex-shrink-0">
         <BrandPanel/>
       </div>
 
       {/* Right sign-up panel */}
-      <div style={{ flex:1, padding:'64px 72px', display:'flex', flexDirection:'column', justifyContent:'center' }}>
-        <div style={{ maxWidth:420 }}>
-          <div style={{ fontFamily:SANS, fontSize:28, fontWeight:700, color:C.ink900, letterSpacing:'-0.01em', marginBottom:6 }}>Create your account</div>
-          <div style={{ fontFamily:SANS, fontSize:15, color:C.ink500, marginBottom:24 }}>Start investing in minutes. No real money involved.</div>
-          <div style={{ display:'flex', gap:10, marginBottom:20 }}>
+      <div className="flex flex-1 flex-col justify-center px-[72px] py-16">
+        <div className="max-w-[420px]">
+          <div className="mb-1.5 font-sans text-[28px] font-bold tracking-[-0.01em] text-ink-900">Create your account</div>
+          <div className="mb-6 font-sans text-[15px] text-ink-500">Start investing in minutes. No real money involved.</div>
+          <div className="mb-5 flex gap-2.5">
             <SocialBtn provider="Google"/>
             <SocialBtn provider="Apple"/>
           </div>
           <Divider/>
-          <div style={{ display:'flex', flexDirection:'column', gap:14, marginTop:20 }}>
+          <div className="mt-5 flex flex-col gap-3.5">
             <Field label="First name" placeholder="Jamie" value={firstName} onChange={e => setFirstName(e.target.value)}/>
             <Field label="Email address" placeholder="jamie@example.com" value={email} onChange={e => setEmail(e.target.value)}/>
             <Field label="Password" placeholder="••••••••••" type="password" value={password} onChange={e => setPassword(e.target.value)}/>
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 16px', background:C.ink50, border:`1px solid ${C.ink100}`, borderRadius:4 }}>
-              <div style={{ fontFamily:SANS, fontSize:14, color:C.ink600 }}>Tooltip language</div>
+            <div className="flex items-center justify-between rounded-input border border-ink-100 bg-ink-50 px-4 py-2.5">
+              <div className="font-sans text-sm text-ink-600">Tooltip language</div>
               <LangToggle/>
             </div>
           </div>
-          {error && <div style={{ fontFamily:SANS, fontSize:13, color:C.red, marginTop:12 }}>{error}</div>}
-          <div style={{ marginTop:20 }}>
+          {error && <div className="mt-3 font-sans text-[13px] text-red">{error}</div>}
+          <div className="mt-5">
             <CTA label={loading ? 'Creating account…' : 'Create account  →'} full onClick={handleSubmit}/>
           </div>
-          <div style={{ fontFamily:SANS, fontSize:12, color:C.ink400, textAlign:'center', marginTop:14 }}>
+          <div className="mt-3.5 text-center font-sans text-xs text-ink-400">
             By continuing you agree to our Terms of Service and Privacy Policy.
           </div>
-          <div style={{ fontFamily:SANS, fontSize:14, color:C.ink500, textAlign:'center', marginTop:16 }}>
-            Already have an account? <span style={{ color:C.ame400, cursor:'pointer' }} onClick={() => navigate('/sign-in')}>Sign in</span>
+          <div className="mt-4 text-center font-sans text-sm text-ink-500">
+            Already have an account? <span className="cursor-pointer text-ame-400" onClick={() => navigate('/sign-in')}>Sign in</span>
           </div>
         </div>
       </div>

@@ -1,47 +1,52 @@
-import { C, SANS } from '../../tokens';
+import { C } from '../../tokens';
 import { StatusBar, Mark, SimPill, CTA, SocialBtn, LangToggle } from '../../components/Primitives';
 import QSWordmark from '../../components/QSWordmark';
 import { useNavigate } from 'react-router-dom';
+import { cn } from '../../lib/utils';
 
 export default function WelcomeMobile() {
   const navigate = useNavigate();
   return (
-    <div style={{ width:390, height:844, background:C.paper, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+    <div className="flex h-[844px] w-[390px] flex-col overflow-hidden bg-paper">
       <StatusBar/>
-      <div style={{ flex:1, display:'flex', flexDirection:'column', padding:'16px 32px', gap:0 }}>
-        <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:24 }}>
-          <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', gap:10 }}>
+      <div className="flex flex-1 flex-col px-8 py-4">
+        <div className="flex flex-1 flex-col items-center justify-center gap-6">
+          <div className="flex flex-col items-start gap-2.5">
             <Mark size={48}/>
-            <div style={{ display:'flex', alignItems:'center', gap:6, opacity:0.35 }}>
-              <span style={{ fontFamily:SANS, fontSize:11, color:C.ink500 }}>by</span>
+            <div className="flex items-center gap-1.5 opacity-35">
+              <span className="font-sans text-[11px] text-ink-500">by</span>
               <QSWordmark onDark={false} size={28}/>
             </div>
           </div>
-          <div style={{ textAlign:'center', maxWidth:280 }}>
-            <div style={{ fontFamily:SANS, fontSize:18, fontWeight:400, color:C.ink600, lineHeight:1.6 }}>
+          <div className="max-w-[280px] text-center">
+            <div className="font-sans text-[18px] font-normal leading-relaxed text-ink-600">
               Learn investing by doing it.<br/>With legendary investors as your guides.
             </div>
           </div>
           <SimPill/>
-          <div style={{ display:'flex', gap:0 }}>
+          <div className="flex">
             {[['WB',C.ame400],['CW',C.aqua400],['RD',C.gold]].map(([init,color],i) => (
-              <div key={init} style={{ width:44, height:44, borderRadius:'50%', background:`${color}10`, border:`2px solid ${C.white}`, marginLeft:i>0?-10:0, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:SANS, fontWeight:700, fontSize:13, color, zIndex:3-i }}>
+              <div
+                key={init}
+                className={cn('flex h-11 w-11 items-center justify-center rounded-pill border-2 border-white font-sans text-[13px] font-bold', i > 0 && '-ml-2.5')}
+                style={{ background:`${color}10`, color, zIndex:3-i }}
+              >
                 {i<2?init:'?'}
               </div>
             ))}
-            <div style={{ width:44, height:44, borderRadius:'50%', background:C.ink50, border:`2px solid ${C.white}`, marginLeft:-10, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:SANS, fontSize:11, color:C.ink400, zIndex:0 }}>+7</div>
+            <div className="z-0 -ml-2.5 flex h-11 w-11 items-center justify-center rounded-pill border-2 border-white bg-ink-50 font-sans text-[11px] text-ink-400">+7</div>
           </div>
-          <div style={{ fontFamily:SANS, fontSize:13, color:C.ink400 }}>10 legendary investors in the library</div>
+          <div className="font-sans text-[13px] text-ink-400">10 legendary investors in the library</div>
         </div>
-        <div style={{ display:'flex', flexDirection:'column', gap:10, paddingBottom:8 }}>
+        <div className="flex flex-col gap-2.5 pb-2">
           <CTA label="Get started  →" full onClick={() => navigate('/sign-up')}/>
           <CTA label="Sign in" full ghost onClick={() => navigate('/sign-in')}/>
-          <div style={{ display:'flex', gap:8 }}>
+          <div className="flex gap-2">
             <SocialBtn provider="Google"/>
             <SocialBtn provider="Apple"/>
           </div>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', paddingTop:4 }}>
-            <div style={{ fontFamily:SANS, fontSize:12, color:C.ink400 }}>Tooltip language:</div>
+          <div className="flex items-center justify-between pt-1">
+            <div className="font-sans text-xs text-ink-400">Tooltip language:</div>
             <LangToggle/>
           </div>
         </div>

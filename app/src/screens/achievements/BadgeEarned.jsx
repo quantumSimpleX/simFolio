@@ -1,7 +1,11 @@
+import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { C, SANS, DISPLAY } from '../../tokens'
+import { C } from '../../tokens'
 import { BadgeGlyphForIndex, MedalGlyph, TrophyGlyph } from '../../components/Badges'
 import { ProgressRing } from '../../components/Charts'
+import { Dialog, DialogPortal, DialogOverlay } from '../../components/ui/dialog'
+import * as DialogPrimitive from '@radix-ui/react-dialog'
+import { Button } from '../../components/ui/button'
 
 const MOMENT_TYPES = {
   badge: {
@@ -15,8 +19,6 @@ const MOMENT_TYPES = {
     progressVal: 1,
     heroeQuote: '"Every investor started exactly here — with one trade."',
     ctaLabel: 'Continue  →',
-    ctaBg: C.white,
-    ctaColor: C.ink900,
   },
   medal: {
     eyebrow: 'Medal earned',
@@ -29,8 +31,6 @@ const MOMENT_TYPES = {
     progressVal: 1,
     heroeQuote: '"Patience compounds. So does knowledge."',
     ctaLabel: 'Continue  →',
-    ctaBg: C.white,
-    ctaColor: C.ink900,
   },
   trophy: {
     eyebrow: 'Trophy earned',
@@ -43,8 +43,6 @@ const MOMENT_TYPES = {
     progressVal: 1,
     heroeQuote: '"Discipline is the bridge between goals and accomplishment."',
     ctaLabel: 'Continue  →',
-    ctaBg: C.white,
-    ctaColor: C.ink900,
   },
 }
 
@@ -53,48 +51,57 @@ export default function BadgeEarned() {
   const { state } = useLocation()
   const type = state?.type || 'badge'
   const m = MOMENT_TYPES[type] || MOMENT_TYPES.badge
+  const [open, setOpen] = useState(true)
+
+  function dismiss() {
+    setOpen(false)
+    navigate('/portfolio')
+  }
 
   return (
-    <div style={{ width:'100%', minHeight:'100dvh', background:C.ink900, display:'flex', flexDirection:'column' }}>
-      <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:24, padding:'40px', width:'100%', maxWidth:480, margin:'0 auto', boxSizing:'border-box' }}>
-        {/* Glyph */}
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'center' }}>
-          {type === 'badge'  && <BadgeGlyphForIndex index={0} size={96} earned/>}
-          {type === 'medal'  && <MedalGlyph size={88} earned/>}
-          {type === 'trophy' && <TrophyGlyph size={100} earned/>}
-        </div>
-
-        {/* Text */}
-        <div style={{ textAlign:'center' }}>
-          <div style={{ fontFamily:SANS, fontSize:11, fontWeight:600, color:m.eyebrowColor, letterSpacing:'0.16em', textTransform:'uppercase', marginBottom:10 }}>{m.eyebrow}</div>
-          <div style={{ fontFamily:DISPLAY, fontWeight:700, fontSize:36, color:C.white, letterSpacing:'-0.02em', lineHeight:1 }}>{m.title}</div>
-          <div style={{ fontFamily:SANS, fontSize:15, color:C.ink400, marginTop:8, lineHeight:1.5 }}>{m.desc}</div>
-        </div>
-
-        {/* Progress card */}
-        <div style={{ width:'100%', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, padding:'16px 20px', display:'flex', alignItems:'center', gap:16 }}>
-          <ProgressRing value={m.progressVal} total={10} size={52} color={m.progressColor}/>
-          <div>
-            <div style={{ fontFamily:SANS, fontWeight:600, fontSize:15, color:C.white, marginBottom:3 }}>{m.progressLabel}</div>
-            <div style={{ fontFamily:SANS, fontSize:13, color:C.ink400 }}>{m.progressSub}</div>
-          </div>
-        </div>
-
-        {/* Hero quote */}
-        <div style={{ display:'flex', gap:10, alignItems:'flex-start', padding:'12px 16px', background:'rgba(255,255,255,0.04)', borderRadius:8, width:'100%' }}>
-          <div style={{ width:26, height:26, borderRadius:'50%', background:`${C.ame400}20`, border:`1.5px solid ${C.ame400}50`, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:SANS, fontWeight:700, fontSize:9, color:C.ame400, flexShrink:0 }}>WB</div>
-          <div style={{ fontFamily:SANS, fontSize:13, color:C.ink400, fontStyle:'italic', lineHeight:1.5 }}>{m.heroeQuote}</div>
-        </div>
-      </div>
-
-      <div style={{ padding:'0 24px 36px', flexShrink:0, width:'100%', maxWidth:480, margin:'0 auto', boxSizing:'border-box' }}>
-        <div
-          onClick={() => navigate('/portfolio')}
-          style={{ height:48, background:m.ctaBg, color:m.ctaColor, borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:SANS, fontSize:15, fontWeight:700, cursor:'pointer' }}
+    <Dialog open={open} onOpenChange={o => { if (!o) dismiss() }}>
+      <DialogPortal>
+        <DialogOverlay className="bg-ink-900" />
+        <DialogPrimitive.Content
+          aria-describedby={undefined}
+          className="fixed inset-0 z-50 flex flex-col bg-ink-900 font-sans focus:outline-none"
         >
-          {m.ctaLabel}
-        </div>
-      </div>
-    </div>
+          <div className="mx-auto box-border flex w-full max-w-[480px] flex-1 flex-col items-center justify-center gap-6 p-10">
+            {/* Glyph */}
+            <div className="flex items-center justify-center">
+              {type === 'badge'  && <BadgeGlyphForIndex index={0} size={96} earned/>}
+              {type === 'medal'  && <MedalGlyph size={88} earned/>}
+              {type === 'trophy' && <TrophyGlyph size={100} earned/>}
+            </div>
+
+            {/* Text */}
+            <div className="text-center">
+              <div className="mb-2.5 font-sans text-[11px] font-semibold uppercase tracking-[0.16em]" style={{ color: m.eyebrowColor }}>{m.eyebrow}</div>
+              <DialogPrimitive.Title className="font-display text-4xl font-bold leading-none tracking-[-0.02em] text-white">{m.title}</DialogPrimitive.Title>
+              <div className="mt-2 font-sans text-[15px] leading-normal text-ink-400">{m.desc}</div>
+            </div>
+
+            {/* Progress card */}
+            <div className="flex w-full items-center gap-4 rounded-card border border-white/[0.08] bg-white/[0.05] px-5 py-4">
+              <ProgressRing value={m.progressVal} total={10} size={52} color={m.progressColor}/>
+              <div>
+                <div className="mb-[3px] font-sans text-[15px] font-semibold text-white">{m.progressLabel}</div>
+                <div className="font-sans text-[13px] text-ink-400">{m.progressSub}</div>
+              </div>
+            </div>
+
+            {/* Hero quote */}
+            <div className="flex w-full items-start gap-2.5 rounded-card bg-white/[0.04] px-4 py-3">
+              <div className="flex h-[26px] w-[26px] flex-shrink-0 items-center justify-center rounded-pill border-[1.5px] border-ame-400/50 bg-ame-400/20 font-sans text-[9px] font-bold text-ame-400">WB</div>
+              <div className="font-sans text-[13px] italic leading-normal text-ink-400">{m.heroeQuote}</div>
+            </div>
+          </div>
+
+          <div className="mx-auto box-border w-full max-w-[480px] flex-shrink-0 px-6 pb-9">
+            <Button size="cta" onClick={dismiss} className="w-full bg-white font-bold text-ink-900 hover:bg-white hover:opacity-90">{m.ctaLabel}</Button>
+          </div>
+        </DialogPrimitive.Content>
+      </DialogPortal>
+    </Dialog>
   )
 }

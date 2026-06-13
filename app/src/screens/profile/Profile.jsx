@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { C, SANS, DISPLAY } from '../../tokens';
 import { AppShell } from '../../components/AppShell';
 import { PageHeader } from '../../components/Nav';
 import { CTA, Eyebrow } from '../../components/Primitives';
+import { Card } from '../../components/ui/card';
 import { BadgeGlyphForIndex, MedalGlyph, TrophyGlyph } from '../../components/Badges';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { QUESTION_LABELS } from '../onboarding/questionLabels';
 import { useAchievements } from '../../hooks/useAchievements';
+import { cn } from '../../lib/utils';
 
 function formatAnswer(key, value) {
   if (value == null || (Array.isArray(value) && value.length === 0)) return null;
@@ -53,65 +54,68 @@ export default function Profile() {
     <AppShell active="profile" maxWidth={720}>
       <PageHeader title="Profile"/>
 
-      <div style={{ background: C.white, border: `1px solid ${C.ink100}`, borderRadius: 8, padding: '20px 24px', marginBottom: 20 }}>
-        <div style={{ fontFamily: SANS, fontSize: 18, fontWeight: 600, color: C.ink900 }}>{firstName || 'Investor'}</div>
-        {user?.email && <div style={{ fontFamily: SANS, fontSize: 14, color: C.ink400, marginTop: 4 }}>{user.email}</div>}
-      </div>
+      <Card className="mb-5 px-6 py-5">
+        <div className="font-sans text-[18px] font-semibold text-ink-900">{firstName || 'Investor'}</div>
+        {user?.email && <div className="mt-1 font-sans text-sm text-ink-400">{user.email}</div>}
+      </Card>
 
-      <div style={{ background: C.white, border: `1px solid ${C.ink100}`, borderRadius: 8, padding: '20px 24px', marginBottom: 20 }}>
-        <div style={{ marginBottom: 16 }}><Eyebrow>Achievements</Eyebrow></div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 14 }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 26, color: C.ink900, letterSpacing: '-0.02em', lineHeight: 1 }}>
+      <Card className="mb-5 px-6 py-5">
+        <div className="mb-4"><Eyebrow>Achievements</Eyebrow></div>
+        <div className="mb-3.5 flex items-center gap-5">
+          <div className="flex-1">
+            <div className="font-display text-[26px] font-bold leading-none tracking-[-0.02em] text-ink-900">
               {achLoading ? '…' : `${earnedCount} badge${earnedCount !== 1 ? 's' : ''}`}
             </div>
-            <div style={{ fontFamily: SANS, fontSize: 13, color: C.ink400, marginTop: 4 }}>
+            <div className="mt-1 font-sans text-[13px] text-ink-400">
               {toNextMedal === 10 && medalCount === 0 ? '10 badges → first medal' : `${toNextMedal} more → next medal`}
             </div>
-            <div style={{ marginTop: 10, height: 5, background: C.ink100, borderRadius: 3 }}>
-              <div style={{ width: `${((earnedCount % 10) / 10) * 100}%`, height: '100%', background: C.ame400, borderRadius: 3 }}/>
+            <div className="mt-2.5 h-[5px] rounded-[3px] bg-ink-100">
+              <div className="h-full rounded-[3px] bg-ame-400" style={{ width: `${((earnedCount % 10) / 10) * 100}%` }}/>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
-            <div style={{ textAlign: 'center' }}>
+          <div className="flex items-end gap-3">
+            <div className="text-center">
               <MedalGlyph size={32} earned={medalCount > 0}/>
-              <div style={{ fontFamily: SANS, fontSize: 10, color: C.ink400, marginTop: 3 }}>{medalCount}</div>
+              <div className="mt-[3px] font-sans text-[10px] text-ink-400">{medalCount}</div>
             </div>
-            <div style={{ textAlign: 'center' }}>
+            <div className="text-center">
               <TrophyGlyph size={40} earned={trophyCount > 0}/>
-              <div style={{ fontFamily: SANS, fontSize: 10, color: C.ink400, marginTop: 3 }}>{trophyCount}</div>
+              <div className="mt-[3px] font-sans text-[10px] text-ink-400">{trophyCount}</div>
             </div>
           </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
+        <div className="grid grid-cols-5 gap-2">
           {badges.map((b, i) => (
-            <div
+            <Card
               key={b.id}
               onClick={() => b.earned && navigate('/badge-earned', { state: { badge: b } })}
-              style={{ background: C.paper, border: `1px solid ${b.earned ? C.ink100 : C.ink50}`, borderRadius: 8, padding: '10px 6px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, opacity: b.earned ? 1 : 0.4, cursor: b.earned ? 'pointer' : 'default' }}
+              className={cn(
+                'flex flex-col items-center gap-1 bg-paper px-1.5 py-2.5',
+                b.earned ? 'cursor-pointer border-ink-100 opacity-100' : 'cursor-default border-ink-50 opacity-40',
+              )}
             >
               <BadgeGlyphForIndex index={i} size={28} earned={b.earned}/>
-              <div style={{ fontFamily: SANS, fontWeight: 600, fontSize: 10, color: b.earned ? C.ink900 : C.ink400, textAlign: 'center', lineHeight: 1.2 }}>{b.name}</div>
-            </div>
+              <div className={cn('text-center font-sans text-[10px] font-semibold leading-tight', b.earned ? 'text-ink-900' : 'text-ink-400')}>{b.name}</div>
+            </Card>
           ))}
         </div>
-      </div>
+      </Card>
 
-      <div style={{ background: C.white, border: `1px solid ${C.ink100}`, borderRadius: 8, padding: '20px 24px', marginBottom: 20 }}>
-        <div style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, color: C.ink400, letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 14 }}>Your onboarding answers</div>
+      <Card className="mb-5 px-6 py-5">
+        <div className="mb-3.5 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-400">Your onboarding answers</div>
         {rows.length === 0 ? (
-          <div style={{ fontFamily: SANS, fontSize: 14, color: C.ink400 }}>No onboarding answers saved yet.</div>
+          <div className="font-sans text-sm text-ink-400">No onboarding answers saved yet.</div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div className="flex flex-col">
             {rows.map((r, i) => (
-              <div key={r.key} style={{ display: 'flex', justifyContent: 'space-between', gap: 16, padding: '10px 0', borderTop: i === 0 ? 'none' : `1px solid ${C.ink100}` }}>
-                <div style={{ fontFamily: SANS, fontSize: 14, color: C.ink400, flexShrink: 0 }}>{r.label}</div>
-                <div style={{ fontFamily: SANS, fontSize: 14, fontWeight: 600, color: C.ink900, textAlign: 'right' }}>{r.value}</div>
+              <div key={r.key} className={cn('flex justify-between gap-4 py-2.5', i !== 0 && 'border-t border-ink-100')}>
+                <div className="flex-shrink-0 font-sans text-sm text-ink-400">{r.label}</div>
+                <div className="text-right font-sans text-sm font-semibold text-ink-900">{r.value}</div>
               </div>
             ))}
           </div>
         )}
-      </div>
+      </Card>
 
       <CTA label="Sign out" full onClick={signOut}/>
     </AppShell>
