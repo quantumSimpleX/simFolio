@@ -89,7 +89,7 @@ describe('Primitives', () => {
     const { container } = renderWithProviders(<><LangToggle/><ThemeToggle/></>)
     fireEvent.click(screen.getByText('繁中'))
     fireEvent.click(screen.getByText('EN'))
-    const toggle = container.querySelector('div[style*="width: 36px"]')
+    const toggle = container.querySelector('[data-testid="theme-toggle"]')
     fireEvent.click(toggle)
   })
 })

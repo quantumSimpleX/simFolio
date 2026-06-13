@@ -3,6 +3,16 @@ import { C, SANS, DISPLAY } from '../tokens';
 import { useLang } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import glossary from '../data/glossary.json';
+import { cn } from '../lib/utils';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Badge } from './ui/badge';
+import { Avatar, AvatarFallback } from './ui/avatar';
+import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group';
+import {
+  Tooltip, TooltipTrigger, TooltipContent, TooltipProvider,
+} from './ui/tooltip';
 
 // Map display text → glossary key
 const TERM_MAP = {
@@ -57,29 +67,35 @@ export function Mark({ size = 40 }) {
 
 export function SimPill() {
   return (
-    <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:C.ame50, border:`1px solid ${C.ame100}`, borderRadius:999, padding:'4px 12px', fontFamily:SANS, fontSize:12, color:C.ame600, fontWeight:500 }}>
-      <div style={{ width:5, height:5, borderRadius:'50%', background:C.ame400 }}/>
+    <Badge variant="sim" size="sim">
+      <span style={{ width:5, height:5, borderRadius:'50%', background:C.ame400 }}/>
       Simulated only — no real money
-    </div>
+    </Badge>
   );
 }
 
 export function CTA({ label, full=false, ghost=false, danger=false, disabled=false, loading=false, style={}, onClick }) {
-  const bg   = danger ? C.red : ghost ? 'transparent' : C.ink900;
-  const fg   = ghost ? C.ink700 : C.white;
-  const bord = ghost ? `1px solid ${C.ink200}` : 'none';
+  const variant = danger ? 'danger' : ghost ? 'ghost' : 'primary';
   return (
-    <div onClick={!disabled && !loading ? onClick : undefined} style={{ height:48, background:bg, color:fg, border:bord, borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:SANS, fontSize:15, fontWeight:600, letterSpacing:'0.01em', cursor:disabled||loading?'default':'pointer', width:full?'100%':undefined, userSelect:'none', opacity:disabled?0.45:1, ...style }}>
-      {loading ? 'Please wait…' : label}
-    </div>
+    <Button
+      variant={variant}
+      size="cta"
+      disabled={disabled}
+      loading={loading}
+      onClick={!disabled && !loading ? onClick : undefined}
+      className={cn(full && 'w-full')}
+      style={style}
+    >
+      {label}
+    </Button>
   );
 }
 
 export function GhostCTA({ label, style={}, onClick }) {
   return (
-    <div onClick={onClick} style={{ height:48, background:'transparent', color:C.ink600, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:SANS, fontSize:14, fontWeight:500, cursor:'pointer', ...style }}>
+    <Button variant="link" size="cta" onClick={onClick} className="font-medium text-ink-600" style={style}>
       {label}
-    </div>
+    </Button>
   );
 }
 
@@ -88,14 +104,14 @@ export function Field({ label, placeholder, type='text', value, onChange, filled
   const isLive = !!onChange;
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-      <div style={{ fontFamily:SANS, fontSize:13, fontWeight:600, color:error?C.red:C.ink600, letterSpacing:'0.04em' }}>{label}</div>
+      <Label className={cn(error && 'text-red')}>{label}</Label>
       {isLive ? (
-        <input
+        <Input
           type={type}
           value={value ?? ''}
           onChange={onChange}
           placeholder={placeholder}
-          style={{ height:48, border:`1.5px solid ${error?C.red:C.ink700}`, borderRadius:4, padding:'0 14px', background:C.white, fontFamily:SANS, fontSize:15, color:C.ink900, outline:'none', width:'100%', boxSizing:'border-box' }}
+          className={cn(error && 'border-red focus-visible:border-red focus-visible:ring-red')}
         />
       ) : (
         <div style={{ height:48, border:`1.5px solid ${error?C.red:filled?C.ink700:C.ink200}`, borderRadius:4, padding:'0 14px', display:'flex', alignItems:'center', background:C.white, fontFamily:SANS, fontSize:15, color:filled?C.ink900:C.ink300 }}>
@@ -128,24 +144,41 @@ export function Divider({ label='or with email' }) {
 
 export function LangToggle() {
   const { lang, setLang } = useLang();
-
-  const active = lang === 'zh-TW' ? 1 : 0;
+  const value = lang === 'zh-TW' ? 'zh-TW' : 'en';
   return (
-    <div style={{ display:'inline-flex', border:`1px solid ${C.ink100}`, borderRadius:4, overflow:'hidden' }}>
-      {['EN','繁中'].map((l, i) => (
-        <div key={l} onClick={() => setLang && setLang(i === 0 ? 'en' : 'zh-TW')} style={{ padding:'5px 14px', fontFamily:SANS, fontSize:13, fontWeight:i===active?600:400, background:i===active?C.ink900:'transparent', color:i===active?C.white:C.ink400, cursor:'pointer' }}>{l}</div>
-      ))}
-    </div>
+    <ToggleGroup
+      type="single"
+      value={value}
+      onValueChange={v => v && setLang && setLang(v)}
+      size="sm"
+    >
+      <ToggleGroupItem value="en">EN</ToggleGroupItem>
+      <ToggleGroupItem value="zh-TW">繁中</ToggleGroupItem>
+    </ToggleGroup>
   );
 }
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
-
+  const dark = theme === 'dark';
   return (
-    <div onClick={() => setTheme && setTheme(theme === 'dark' ? 'light' : 'dark')} style={{ width:36, height:20, borderRadius:999, background:theme==='dark'?C.ame400:C.ink200, cursor:'pointer', position:'relative', transition:'background 0.2s', flexShrink:0 }}>
-      <div style={{ width:16, height:16, borderRadius:'50%', background:C.white, position:'absolute', top:2, left:theme==='dark'?18:2, transition:'left 0.2s' }}/>
-    </div>
+    <button
+      type="button"
+      aria-label="Toggle theme"
+      data-testid="theme-toggle"
+      onClick={() => setTheme && setTheme(dark ? 'light' : 'dark')}
+      className={cn(
+        'relative h-5 w-9 flex-shrink-0 rounded-pill transition-colors',
+        dark ? 'bg-ame-400' : 'bg-ink-200',
+      )}
+    >
+      <span
+        className={cn(
+          'absolute top-0.5 h-4 w-4 rounded-pill bg-white transition-all',
+          dark ? 'left-[18px]' : 'left-0.5',
+        )}
+      />
+    </button>
   );
 }
 
@@ -158,7 +191,7 @@ export function Eyebrow({ children, style={} }) {
 }
 
 export function TermUnderline({ children, termKey }) {
-  const [show, setShow] = useState(false);
+  const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const { lang } = useLang();
 
@@ -168,67 +201,75 @@ export function TermUnderline({ children, termKey }) {
 
   // close on outside click
   useEffect(() => {
-    if (!show) return;
+    if (!open) return;
     function handler(e) {
-      if (ref.current && !ref.current.contains(e.target)) setShow(false);
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
     }
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [show]);
+  }, [open]);
 
   if (!entry) {
-    return <span style={{ borderBottom:`1.5px dotted ${C.ame400}`, cursor:'pointer' }}>{children}</span>;
+    return <span className="cursor-pointer border-b-[1.5px] border-dotted border-ame-400">{children}</span>;
   }
 
   return (
-    <span ref={ref} style={{ position:'relative', display:'inline' }}>
-      <span
-        style={{ borderBottom:`1.5px dotted ${C.ame400}`, cursor:'pointer' }}
-        onClick={() => setShow(s => !s)}
-        onMouseEnter={() => setShow(true)}
-        onMouseLeave={() => setShow(false)}
-      >
-        {children}
-      </span>
-      {show && (
-        <span style={{ position:'absolute', bottom:'calc(100% + 6px)', left:'50%', transform:'translateX(-50%)', zIndex:100, minWidth:220, maxWidth:280, background:C.white, border:`1px solid ${C.ink100}`, borderRadius:8, padding:'10px 14px', boxShadow:'0 4px 20px rgba(0,0,0,0.12)', display:'block' }}>
-          <span style={{ fontFamily:SANS, fontSize:12, fontWeight:700, color:C.ink900, display:'block', marginBottom:4 }}>{entry.title}</span>
-          <span style={{ fontFamily:SANS, fontSize:12, color:C.ink600, lineHeight:1.5, display:'block' }}>{entry.definition}</span>
-        </span>
-      )}
-    </span>
+    <TooltipProvider delayDuration={0}>
+      <Tooltip open={open} onOpenChange={setOpen}>
+        <TooltipTrigger asChild>
+          <span
+            ref={ref}
+            className="cursor-pointer border-b-[1.5px] border-dotted border-ame-400"
+            onMouseEnter={() => setOpen(true)}
+            onMouseLeave={() => setOpen(false)}
+          >
+            {children}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>
+          <span className="mb-1 block font-sans text-xs font-bold text-ink-900">{entry.title}</span>
+          <span className="block font-sans text-xs leading-relaxed text-ink-600">{entry.definition}</span>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 
 export function StatusPill({ status }) {
-  const map = {
-    pending:   { bg:C.goldBg,  color:C.gold,    dot:C.gold    },
-    queued:    { bg:C.queuedBg, color:C.queuedColor, dot:C.queuedColor },
-    filled:    { bg:C.aqua50,  color:C.aqua600, dot:C.aqua400 },
-    cancelled: { bg:C.ink50,   color:C.ink500,  dot:C.ink400  },
-    partial:   { bg:C.goldBg,  color:C.gold,    dot:C.goldLight },
-  };
-  const s = map[status?.toLowerCase()] || map.filled;
+  const variant = { pending:'pending', queued:'queued', filled:'filled', cancelled:'cancelled', partial:'partial' }[status?.toLowerCase()] || 'filled';
+  const dot = {
+    pending:   C.gold,
+    queued:    C.queuedColor,
+    filled:    C.aqua400,
+    cancelled: C.ink400,
+    partial:   C.goldLight,
+  }[status?.toLowerCase()] || C.aqua400;
   const label = status ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase() : 'Filled';
   return (
-    <div style={{ display:'inline-flex', alignItems:'center', gap:5, background:s.bg, color:s.color, borderRadius:999, padding:'3px 10px', fontFamily:SANS, fontSize:12, fontWeight:600 }}>
-      <div style={{ width:5, height:5, borderRadius:'50%', background:s.dot }}/>
+    <Badge variant={variant}>
+      <span style={{ width:5, height:5, borderRadius:'50%', background:dot }}/>
       {label}
-    </div>
+    </Badge>
   );
 }
 
 export function HeroAvatar({ initials, color, size=36 }) {
   return (
-    <div style={{ width:size, height:size, borderRadius:'50%', background:`${color}12`, border:`1.5px solid ${color}35`, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:SANS, fontWeight:700, fontSize:size*0.36, color, flexShrink:0 }}>
-      {initials}
-    </div>
+    <Avatar
+      style={{ width:size, height:size, background:`${color}12`, border:`1.5px solid ${color}35` }}
+    >
+      <AvatarFallback style={{ background:'transparent', color, fontSize:size*0.36 }}>
+        {initials}
+      </AvatarFallback>
+    </Avatar>
   );
 }
 
 export function GuideAvatar({ size=36 }) {
   return (
-    <div style={{ width:size, height:size, borderRadius:'50%', background:C.aqua50, border:`1.5px solid ${C.aqua400}40`, display:'flex', alignItems:'center', justifyContent:'center', color:C.aqua400, fontSize:size*0.44, flexShrink:0 }}>◇</div>
+    <Avatar style={{ width:size, height:size, background:C.aqua50, border:`1.5px solid ${C.aqua400}40` }}>
+      <AvatarFallback style={{ background:'transparent', color:C.aqua400, fontSize:size*0.44, fontWeight:400 }}>◇</AvatarFallback>
+    </Avatar>
   );
 }
 
@@ -255,13 +296,11 @@ export function GoalCard({ label, selected, compact=false, onClick }) {
 }
 
 export function MktStatus({ open=true }) {
-  const color = open ? C.aqua400 : C.ink400;
-  const bg    = open ? C.aqua50  : C.ink50;
   return (
-    <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:bg, borderRadius:999, padding:'4px 10px', fontFamily:SANS, fontSize:12, fontWeight:500, color }}>
-      <div style={{ width:6, height:6, borderRadius:'50%', background:color }}/>
+    <Badge variant={open ? 'filled' : 'cancelled'}>
+      <span style={{ width:6, height:6, borderRadius:'50%', background:open ? C.aqua400 : C.ink400 }}/>
       {open ? 'Markets open' : 'Markets closed'}
-    </div>
+    </Badge>
   );
 }
 

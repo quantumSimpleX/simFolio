@@ -1,3 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* shadcn semantic CSS variables → mapped onto QSXC tokens (no slate/zinc defaults).
+   tokens.css owns the raw --ink/--ame/etc; this layer only aliases them so the
+   shadcn primitives in components/ui/* resolve to the QSXC palette. */
+:root, [data-theme="light"] {
+  --background: var(--paper);
+  --foreground: var(--ink-900);
+  --card: var(--white);
+  --card-foreground: var(--ink-900);
+  --popover: var(--white);
+  --popover-foreground: var(--ink-900);
+  --primary: var(--ink-900);
+  --primary-foreground: var(--white);
+  --secondary: var(--ink-50);
+  --secondary-foreground: var(--ink-900);
+  --muted: var(--ink-50);
+  --muted-foreground: var(--ink-400);
+  --accent: var(--ame-50);
+  --accent-foreground: var(--ame-600);
+  --destructive: var(--red);
+  --destructive-foreground: var(--white);
+  --border: var(--ink-100);
+  --input: var(--ink-200);
+  --ring: var(--ame-400);
+}
+
 /* Global base — full-viewport responsive web app shell */
 * { box-sizing: border-box; }
 

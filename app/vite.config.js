@@ -5,6 +5,11 @@ import { fileURLToPath } from 'node:url'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
   server: {
     proxy: {
       // Yahoo Finance chart API has no CORS headers — proxy it in dev so
