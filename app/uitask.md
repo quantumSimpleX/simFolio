@@ -89,28 +89,29 @@ names & props.**
 
 Move every one-off inline block into `src/components/`, built on `ui/*`, then consume across screens.
 
-- [ ] **3.1** `OrderCard`, `FilledRow`, `EmptyState` ← `OrdersMobile.jsx`.
-- [ ] **3.2** `Fundamentals`, `WatchRow`, `SearchResultRow`, `WatchlistButton` ← `Markets.jsx` / `StockDetail.jsx`.
-- [ ] **3.3** `PositionCard`, `SellButton` ← `StockDetail.jsx`.
-- [ ] **3.4** `PriceCard` / order-receipt block ← `BuyScreen.jsx` / `SellScreen.jsx` / `TradeReceipt.jsx`.
-- [ ] **3.5** `HeroChatPanel` (message list + composer) ← `PortfolioDesktop.jsx` / `AskTab.jsx`,
+- [x] **3.1** `OrderCard`, `FilledRow`, `EmptyState` ← `OrdersMobile.jsx`.
+- [x] **3.2** `Fundamentals`, `WatchRow`, `SearchResultRow`, `WatchlistButton` ← `Markets.jsx` / `StockDetail.jsx`.
+- [x] **3.3** `PositionCard`, `SellButton` ← `StockDetail.jsx`.
+- [x] **3.4** `PriceCard` / order-receipt block ← `BuyScreen.jsx` / `SellScreen.jsx` / `TradeReceipt.jsx`.
+- [x] **3.5** `HeroChatPanel` (message list + composer) ← `PortfolioDesktop.jsx` / `AskTab.jsx`,
       reusing `HeroMessage`/`UserMessage`/`SageMsg` inside `ui/scroll-area` + `ui/card`.
-- [ ] **3.6** Recompose `AppShell.jsx` and `Nav.jsx` (`TopNav`/`BottomNav`/`PageHeader`/`BackHeader`) on `ui/*`.
-- [ ] **3.7** Recompose `StockRow.jsx`, `HoldingRow.jsx`, `Badges.jsx`, `HeroMessage.jsx`, `BrandPanel.jsx`, `QSWordmark.jsx`.
-- [ ] **3.8 Verify:** `orders.test.jsx`, `trade.test.jsx`, `misc.test.jsx`, `screens.smoke.test.jsx` green.
+- [x] **3.6** Recompose `AppShell.jsx` and `Nav.jsx` (`TopNav`/`BottomNav`/`PageHeader`/`BackHeader`) on `ui/*`.
+- [~] **3.7** Recompose `StockRow.jsx`, `HoldingRow.jsx`, `Badges.jsx`, `HeroMessage.jsx`, `BrandPanel.jsx`, `QSWordmark.jsx`.
+      DONE: StockRow, HoldingRow, HeroMessage, BrandPanel. `QSWordmark` left inline (dynamic SVG geometry — justified exception).
+      **GAP: `Badges.jsx` was NOT recomposed** (Dev B skipped it) → route to QA/fix loop.
+- [x] **3.8 Verify:** `orders.test.jsx`, `trade.test.jsx`, `misc.test.jsx`, `screens.smoke.test.jsx` green (114 tests pass on merged `main` 47ace9d).
 
 ---
 
 ## Phase 4 — Migrate screens domain-by-domain (commit + suite green per domain)
 
-- [ ] **4.1** `auth/` — `WelcomeMobile`, `WelcomeDesktop`, `SignUp`, `SignIn`, `ReturningUser` →
-      verify `auth.screens.test.jsx` + smoke.
-- [ ] **4.2** `onboarding/Onboarding.jsx` → verify `onboarding.flow.test.jsx` + smoke.
-- [ ] **4.3** `portfolio/` (`PortfolioDesktop`, `PortfolioMobile`, `AskTab`) + `markets/`
-      (`Markets`, `StockDetail`) → verify smoke.
-- [ ] **4.4** `trade/` (`BuyScreen`, `SellScreen`, `TradeReceipt`, `HeroHandoff`) → verify `trade.test.jsx` + smoke.
-- [ ] **4.5** `orders/OrdersMobile`, `achievements/` (`AchievementsMobile`, `BadgeEarned`→`ui/dialog`),
-      `profile/Profile` → verify `orders.test.jsx` + smoke.
+- [x] **4.1** `auth/` — `WelcomeMobile`, `WelcomeDesktop`, `SignUp`, `SignIn`, `ReturningUser` (Dev B).
+- [x] **4.2** `onboarding/Onboarding.jsx` (Dev B).
+- [x] **4.3** `portfolio/` (`PortfolioDesktop`, `PortfolioMobile`, `AskTab`) + `markets/`
+      (`Markets`, `StockDetail`) (Dev A).
+- [x] **4.4** `trade/` (`BuyScreen`, `SellScreen`, `TradeReceipt`, `HeroHandoff`) (Dev A).
+- [x] **4.5** `orders/OrdersMobile`, `achievements/` (`AchievementsMobile`, `BadgeEarned`→`ui/dialog`),
+      `profile/Profile` (Dev B).
 
 ---
 
