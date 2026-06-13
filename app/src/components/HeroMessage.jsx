@@ -32,7 +32,7 @@ export function HeroMessage({ hero='warren', text, time, isNew=false }) {
 export function UserMessage({ text }) {
   return (
     <div className="flex justify-end">
-      <div className="max-w-[80%] rounded-[8px_8px_2px_8px] bg-ink-900 px-3.5 py-2.5 font-sans text-lg leading-normal text-white">{text}</div>
+      <div className="max-w-[80%] rounded-[8px_8px_4px_8px] bg-ink-900 px-3.5 py-2.5 font-sans text-lg leading-normal text-white">{text}</div>
     </div>
   );
 }
@@ -42,7 +42,7 @@ export function SageMsg({ text, compact=false }) {
     <div className="flex gap-2.5">
       <GuideAvatar size={compact ? 28 : 36}/>
       <div className="flex-1">
-        <div className="mb-1.5 font-sans text-[13px] font-semibold uppercase tracking-[0.12em] text-ink-400">Sage</div>
+        <div className="mb-1.5 font-sans text-[13px] font-semibold uppercase tracking-[0.14em] text-ink-400">Sage</div>
         <div className={cn('font-sans leading-relaxed text-ink-600', compact ? 'text-[15px]' : 'text-lg')}>{text}</div>
       </div>
     </div>

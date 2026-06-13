@@ -38,7 +38,7 @@ export default function ReturningUser() {
 
         <div className="flex flex-col gap-2.5">
           <div className="flex h-12 cursor-pointer items-center gap-3 rounded-input border border-ink-200 bg-white px-[18px]">
-            <div className="h-5 w-5 flex-shrink-0 rounded-sm bg-ink-100"/>
+            <div className="h-5 w-5 flex-shrink-0 rounded-input bg-ink-100"/>
             <div className="font-sans text-sm font-medium text-ink-700">Sign in with Face ID</div>
           </div>
           <CTA label="Go to my portfolio  →" full onClick={() => navigate('/portfolio')}/>

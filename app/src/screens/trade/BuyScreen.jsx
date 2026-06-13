@@ -206,7 +206,7 @@ function MarketClosedBanner() {
 function QtyInputBlock({ qty, setQty }) {
   return (
     <div className="flex h-14 items-center justify-between rounded-input border-[1.5px] border-ame-400 bg-white px-4 [box-shadow:0_0_0_3px_color-mix(in_srgb,var(--ame-400)_10%,transparent)]">
-      <div className="font-sans text-[11px] font-semibold uppercase tracking-[0.12em] text-ame-400">Shares</div>
+      <div className="font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-ame-400">Shares</div>
       <input
         type="number"
         min="0.01"

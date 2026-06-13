@@ -96,7 +96,7 @@ export default function TradeReceipt() {
           <div className="flex gap-2.5 rounded-card border border-gold/30 bg-goldBg px-4 py-3">
             <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-pill border-[1.5px] border-aqua-400/40 bg-aqua-50 text-[11px] text-aqua-400">◇</div>
             <div>
-              <div className="mb-1 font-sans text-xs font-semibold uppercase tracking-[0.1em] text-gold">Why is the price different?</div>
+              <div className="mb-1 font-sans text-xs font-semibold uppercase tracking-[0.14em] text-gold">Why is the price different?</div>
               <div className="font-sans text-[13px] leading-normal text-ink-600">
                 Your order price was ${marketPrice.toFixed(2)}. The executed price was ${execPrice.toFixed(2)} — this small difference is called <TermUnderline>slippage</TermUnderline>. A limit order would have protected you.
               </div>

@@ -80,7 +80,7 @@ export default function PortfolioMobile() {
         <div className="flex">
           {[['Cash', `$${fmt(displayCash)}`], ['Positions', String(displayHoldings.length)], ['All-time', `${pnlPos?'+':''}${displayPct.toFixed(1)}%`]].map(([label,value],i,arr) => (
             <div key={label} className={cn('flex-1', i<arr.length-1 && 'border-r border-ink-100 pr-4', i>0 && 'pl-4')}>
-              <div className="mb-[3px] font-sans text-[11px] uppercase tracking-[0.1em] text-ink-400">{label}</div>
+              <div className="mb-[3px] font-sans text-[11px] uppercase tracking-[0.14em] text-ink-400">{label}</div>
               <div className="font-sans text-base font-semibold text-ink-900">{value}</div>
             </div>
           ))}
