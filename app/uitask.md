@@ -180,13 +180,30 @@ Baseline: 114/114 tests pass, build + lint clean. Two fix workstreams (assigned 
 
 ---
 
-## QA Findings — Round 2 (open — to reach the ~90% stretch target)
+## QA Findings — Round 2 (DONE — merged `main` @ 3a5386e)
 
-Gate is cleared (80%); these close the gap from 83.78% → ~90% per `unittest.md`.
-- [ ] **R2-1** Re-add `src/test/hooks.test.jsx` — fix the 3 `usePlaceOrder` cases (QUEUED/FILLED/error)
-  to match how `supabaseMock.functions.invoke` actually resolves; hooks/* is the next-biggest hole (68.8%).
-- [ ] **R2-2** Re-add `src/test/marketCache.test.js` — align the 7 failing cases with the real
-  `getCachedQuotes`/`getStoredFundamentals`/`persistQuotes` query-chain + mapping (lib/* at ~70%).
-- [ ] **R2-3** (MINOR) `ui.test.jsx` Tabs/ToggleGroup interaction: Radix click-activation doesn't flip
-  `aria-selected`/value under jsdom; currently asserts render + default state only. Optional: drive with
-  `@testing-library/user-event` + pointer-event shims if true interaction coverage is wanted.
+- [x] **R2-1** `src/test/hooks.test.jsx` re-added (15 tests). usePlaceOrder now 100% (all 4 branches:
+  null-session no-op incl. `?? 0` fallback, FILLED, QUEUED, transport + data.error); useOrders/usePortfolio 100%;
+  useWatchlist/useBreakpoint/useSymbolSearch/useAchievements/useHeroSelections exercised.
+- [x] **R2-2** `src/test/marketCache.test.js` re-added (9 tests), all green — covers arg guards, build-query
+  finite-vs-`Infinity` maxAgeMs paths, full `quoteToRow` + omit-zero-fundamentals via persistQuotes.
+- **Result: 172/172 tests pass; line coverage 84.6%; 80% gate cleared (exit 0). Build + lint clean.**
+
+### Why 90% was not reached (documented blocker)
+- **Test-infra aliasing:** `vite.config.js` `test.alias` rewrites the `./supabase` specifier, so `marketCache.js`
+  binds a SECOND, state-isolated instance of `supabaseMock` — data seeded via `__setTableData` is invisible to it,
+  and `vi.mock` can't intercept (alias rewrites before the mock registry). This makes the `rowToQuote` mapping
+  (~marketCache.js:5-29) and `getStoredFundamentals` row loop (~67-75) — ~14 lines — UNREACHABLE in unit isolation.
+  Fixing requires editing `vite.config.js` / `supabaseMock.js` (was out of scope for the agents).
+- **Untested hooks outside Round-1/2 scope:** `useQuotes.js` (~52%), `useHeroChat.js` (~60%),
+  `useMarketDataPreload.js`, `usePortfolioCandles.js`, `useQueuedExecution.js`, `useStockDetail.js`.
+
+### Round 3 (only if 90% is required) — needs test-infra change
+- [ ] **R3-1** Refactor the supabase mock so a single shared instance backs both direct imports and `marketCache.js`
+  (adjust `test.alias`/`supabaseMock` to share one table-map) → unlocks the ~14 marketCache mapping lines.
+- [ ] **R3-2** Add hook tests for `useQuotes`, `useHeroChat`, `useStockDetail`, `usePortfolioCandles`,
+  `useQueuedExecution`, `useMarketDataPreload` — the remaining large gaps to clear ~90%.
+
+### Minor (deferred, non-blocking)
+- `ui.test.jsx` Tabs/ToggleGroup assert render + default state only (Radix click-activation doesn't flip
+  `aria-selected`/value under jsdom). Optional: drive with `user-event` + pointer-event shims for true interaction coverage.
