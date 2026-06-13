@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { C, SANS, DISPLAY } from '../../tokens';
+import { cn } from '../../lib/utils';
 import { Eyebrow } from '../../components/Primitives';
 import { BottomNav, TopNav } from '../../components/Nav';
 import { ChartPanel, RangeButtons } from '../../components/Charts';
@@ -48,23 +48,23 @@ export default function PortfolioMobile() {
   const pnlPos = displayPnl >= 0;
 
   return (
-    <div style={{ width:'100%', height:'100dvh', background:C.paper, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+    <div className="flex h-[100dvh] w-full flex-col overflow-hidden bg-paper">
       <TopNav active="portfolio"/>
-      <div style={{ padding:'8px 10px 0', flexShrink:0 }}>
-        <div style={{ display:'flex', alignItems:'flex-end', gap:12 }}>
-          <div style={{ fontFamily:DISPLAY, fontWeight:700, fontSize:38, color:C.ink900, letterSpacing:'-0.02em', lineHeight:1 }}>
+      <div className="flex-shrink-0 px-2.5 pt-2">
+        <div className="flex items-end gap-3">
+          <div className="font-display text-[38px] font-bold leading-none tracking-[-0.02em] text-ink-900">
             {loading ? '…' : `$${fmt(displayTotal)}`}
           </div>
-          <div style={{ fontFamily:SANS, fontSize:14, color:pnlPos?C.aqua600:C.red, fontWeight:500, lineHeight:1.1 }}>
+          <div className={cn('font-sans text-sm font-medium leading-tight', pnlPos ? 'text-aqua-600' : 'text-red')}>
             {pnlPos?'+':''}{fmt(displayPnl)} ({pnlPos?'+':''}{displayPct.toFixed(1)}%)
           </div>
-          <div style={{ marginLeft:'auto' }}>
+          <div className="ml-auto">
             <RangeButtons range={activeRange} onRangeChange={setActiveRange}/>
           </div>
         </div>
       </div>
 
-      <div style={{ padding:'12px 6px 0', flexShrink:0, background:C.white, borderBottom:`1px solid ${C.ink100}` }}>
+      <div className="flex-shrink-0 border-b border-ink-100 bg-white px-1.5 pt-3">
         <ChartPanel
           height={168}
           candles={candles}
@@ -76,24 +76,24 @@ export default function PortfolioMobile() {
         />
       </div>
 
-      <div style={{ padding:'16px 10px 0', flexShrink:0 }}>
-        <div style={{ display:'flex' }}>
+      <div className="flex-shrink-0 px-2.5 pt-4">
+        <div className="flex">
           {[['Cash', `$${fmt(displayCash)}`], ['Positions', String(displayHoldings.length)], ['All-time', `${pnlPos?'+':''}${displayPct.toFixed(1)}%`]].map(([label,value],i,arr) => (
-            <div key={label} style={{ flex:1, borderRight:i<arr.length-1?`1px solid ${C.ink100}`:'none', paddingRight:i<arr.length-1?16:0, paddingLeft:i>0?16:0 }}>
-              <div style={{ fontFamily:SANS, fontSize:11, color:C.ink400, letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:3 }}>{label}</div>
-              <div style={{ fontFamily:SANS, fontSize:16, fontWeight:600, color:C.ink900 }}>{value}</div>
+            <div key={label} className={cn('flex-1', i<arr.length-1 && 'border-r border-ink-100 pr-4', i>0 && 'pl-4')}>
+              <div className="mb-[3px] font-sans text-[11px] uppercase tracking-[0.1em] text-ink-400">{label}</div>
+              <div className="font-sans text-base font-semibold text-ink-900">{value}</div>
             </div>
           ))}
         </div>
       </div>
 
-      <div style={{ flex:1, padding:'20px 10px 0', overflow:'auto' }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+      <div className="flex-1 overflow-auto px-2.5 pt-5">
+        <div className="mb-3 flex items-center justify-between">
           <Eyebrow>Holdings</Eyebrow>
-          <div onClick={() => navigate('/markets')} style={{ fontFamily:SANS, fontSize:13, color:C.ame400, cursor:'pointer' }}>+ Add</div>
+          <div onClick={() => navigate('/markets')} className="cursor-pointer font-sans text-[13px] text-ame-400">+ Add</div>
         </div>
         {loading && positions.length === 0 && (
-          <div style={{ fontFamily:SANS, fontSize:14, color:C.ink400, padding:'20px 0' }}>Loading positions…</div>
+          <div className="py-5 font-sans text-sm text-ink-400">Loading positions…</div>
         )}
         {displayHoldings.map(h => (
           <HoldingRow

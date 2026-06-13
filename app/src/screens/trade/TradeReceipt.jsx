@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import { C, SANS, DISPLAY } from '../../tokens'
-import { CTA, Eyebrow, TermUnderline } from '../../components/Primitives'
+import { cn } from '../../lib/utils'
+import { CTA, Eyebrow, TermUnderline, ReceiptRow } from '../../components/Primitives'
 import { AppShell } from '../../components/AppShell'
 import { usePortfolio } from '../../hooks/usePortfolio'
 import { TRANSACTION_FEE } from '../../lib/fees'
@@ -29,21 +29,23 @@ export default function TradeReceipt() {
 
   const ts = new Date().toLocaleString('en-US', { weekday:'short', hour:'numeric', minute:'2-digit', hour12:true, timeZone:'America/New_York' }) + ' EST'
 
+  const statusRing = isQueued ? 'border-gold bg-goldBg text-gold' : isSell ? 'border-red bg-redBg text-red' : 'border-aqua-400 bg-aqua-50 text-aqua-400'
+
   return (
     <AppShell active="portfolio">
-      <div style={{ maxWidth:560, margin:'0 auto', display:'flex', flexDirection:'column', gap:20 }}>
-        <div style={{ textAlign:'center', padding:'8px 0' }}>
-          <div style={{ width:48, height:48, borderRadius:'50%', background:isQueued?C.goldBg:isSell?C.redBg:C.aqua50, border:`2px solid ${isQueued?C.gold:isSell?C.red:C.aqua400}`, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px', fontFamily:SANS, fontSize:22, color:isQueued?C.gold:isSell?C.red:C.aqua400 }}>
+      <div className="mx-auto flex max-w-[560px] flex-col gap-5">
+        <div className="py-2 text-center">
+          <div className={cn('mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-pill border-2 font-sans text-[22px]', statusRing)}>
             {isQueued ? '⏳' : '✓'}
           </div>
-          <div style={{ fontFamily:DISPLAY, fontWeight:700, fontSize:28, color:C.ink900, letterSpacing:'-0.02em' }}>
+          <div className="font-display text-[28px] font-bold tracking-[-0.02em] text-ink-900">
             {isQueued ? 'Order queued' : isSell ? 'Sold' : 'Order filled'}
           </div>
-          <div style={{ fontFamily:SANS, fontSize:14, color:C.ink400, marginTop:4 }}>{ts}</div>
+          <div className="mt-1 font-sans text-sm text-ink-400">{ts}</div>
         </div>
 
-        <div style={{ background:C.white, border:`1px solid ${C.ink100}`, borderRadius:8, padding:'4px 20px 12px' }}>
-          <div style={{ padding:'12px 0 6px' }}><Eyebrow>Transaction receipt</Eyebrow></div>
+        <div className="rounded-card border border-ink-100 bg-white px-5 pb-3 pt-1">
+          <div className="pb-1.5 pt-3"><Eyebrow>Transaction receipt</Eyebrow></div>
           {isSell ? (
             <>
               <ReceiptRow label="Sold" value={`${qty} shares of ${ticker}`}/>
@@ -53,7 +55,7 @@ export default function TradeReceipt() {
                 <ReceiptRow
                   label={<TermUnderline>{pnlPositive ? 'Realised gain' : 'Realised loss'}</TermUnderline>}
                   value={`${pnlPositive?'+':'−'}$${Math.abs(pnl).toFixed(2)}`}
-                  valueColor={pnlPositive?C.aqua600:C.red}
+                  valueColor={pnlPositive?'var(--aqua-600)':'var(--red)'}
                 />
               )}
               <ReceiptRow label={<TermUnderline>Transaction fee</TermUnderline>} value={`−$${fee.toFixed(2)}`}/>
@@ -74,14 +76,14 @@ export default function TradeReceipt() {
                 <ReceiptRow
                   label={<TermUnderline>Slippage</TermUnderline>}
                   value={`−$${slippageAmt.toFixed(2)} vs. order price`}
-                  valueColor={C.gold}
+                  valueColor="var(--gold)"
                 />
               )}
               {result.spread_component > 0 && (
                 <ReceiptRow
                   label={<TermUnderline>Bid-ask spread</TermUnderline>}
                   value={`$${(result.spread_component * qty).toFixed(2)} (${result.spread_bps ?? '—'} bps)`}
-                  valueColor={C.gold}
+                  valueColor="var(--gold)"
                 />
               )}
               <ReceiptRow label={<TermUnderline>Transaction fee</TermUnderline>} value={`$${fee.toFixed(2)}`}/>
@@ -91,11 +93,11 @@ export default function TradeReceipt() {
         </div>
 
         {hasSlippage && (
-          <div style={{ background:C.goldBg, border:`1px solid ${C.gold}30`, borderRadius:8, padding:'12px 16px', display:'flex', gap:10 }}>
-            <div style={{ width:24, height:24, borderRadius:'50%', background:C.aqua50, border:`1.5px solid ${C.aqua400}40`, display:'flex', alignItems:'center', justifyContent:'center', color:C.aqua400, fontSize:11, flexShrink:0 }}>◇</div>
+          <div className="flex gap-2.5 rounded-card border border-gold/30 bg-goldBg px-4 py-3">
+            <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-pill border-[1.5px] border-aqua-400/40 bg-aqua-50 text-[11px] text-aqua-400">◇</div>
             <div>
-              <div style={{ fontFamily:SANS, fontSize:12, fontWeight:600, color:C.gold, letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:4 }}>Why is the price different?</div>
-              <div style={{ fontFamily:SANS, fontSize:13, color:C.ink600, lineHeight:1.5 }}>
+              <div className="mb-1 font-sans text-xs font-semibold uppercase tracking-[0.1em] text-gold">Why is the price different?</div>
+              <div className="font-sans text-[13px] leading-normal text-ink-600">
                 Your order price was ${marketPrice.toFixed(2)}. The executed price was ${execPrice.toFixed(2)} — this small difference is called <TermUnderline>slippage</TermUnderline>. A limit order would have protected you.
               </div>
             </div>
@@ -103,24 +105,24 @@ export default function TradeReceipt() {
         )}
 
         {isSell && (
-          <div style={{ display:'flex', gap:10, alignItems:'flex-start', padding:'12px 16px', background:C.ame50, border:`1px solid ${C.ame100}`, borderRadius:8 }}>
-            <div style={{ width:28, height:28, borderRadius:'50%', background:`${C.ame400}12`, border:`1.5px solid ${C.ame400}35`, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:SANS, fontWeight:700, fontSize:10, color:C.ame400, flexShrink:0 }}>WB</div>
+          <div className="flex items-start gap-2.5 rounded-card border border-ame-100 bg-ame-50 px-4 py-3">
+            <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-pill border-[1.5px] border-ame-400/35 bg-ame-400/10 font-sans text-[10px] font-bold text-ame-400">WB</div>
             <div>
-              <div style={{ fontFamily:SANS, fontSize:12, fontWeight:600, color:C.ame600, marginBottom:3 }}>Warren on this trade</div>
-              <div style={{ fontFamily:SANS, fontSize:13, color:C.ink600, lineHeight:1.5, fontStyle:'italic' }}>"A loss can be the right decision. What changed your mind? Understanding your own reasoning is more valuable than the money."</div>
-              <div onClick={() => navigate('/ask')} style={{ fontFamily:SANS, fontSize:12, color:C.ame400, marginTop:6, cursor:'pointer' }}>Add a reflection note →</div>
+              <div className="mb-[3px] font-sans text-xs font-semibold text-ame-600">Warren on this trade</div>
+              <div className="font-sans text-[13px] italic leading-normal text-ink-600">"A loss can be the right decision. What changed your mind? Understanding your own reasoning is more valuable than the money."</div>
+              <div onClick={() => navigate('/ask')} className="mt-1.5 cursor-pointer font-sans text-xs text-ame-400">Add a reflection note →</div>
             </div>
           </div>
         )}
 
         {cashBalance != null && (
-          <div style={{ display:'flex', justifyContent:'space-between', padding:'0 4px' }}>
-            <div style={{ fontFamily:SANS, fontSize:14, color:C.ink500 }}>Cash remaining</div>
-            <div style={{ fontFamily:SANS, fontSize:14, fontWeight:700, color:C.ink900 }}>${cashBalance.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 })}</div>
+          <div className="flex justify-between px-1">
+            <div className="font-sans text-sm text-ink-500">Cash remaining</div>
+            <div className="font-sans text-sm font-bold text-ink-900">${cashBalance.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 })}</div>
           </div>
         )}
 
-        <div style={{ display:'flex', flexDirection:'column', gap:10, marginTop:4 }}>
+        <div className="mt-1 flex flex-col gap-2.5">
           {!isSell && !isQueued && (
             <CTA label="Continue to portfolio  →" full onClick={() => navigate('/hero-handoff')}/>
           )}
@@ -130,14 +132,5 @@ export default function TradeReceipt() {
         </div>
       </div>
     </AppShell>
-  )
-}
-
-function ReceiptRow({ label, value, valueColor, bold }) {
-  return (
-    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 0', borderBottom:`1px solid ${C.ink100}` }}>
-      <div style={{ fontFamily:SANS, fontSize:14, color:C.ink500 }}>{label}</div>
-      <div style={{ fontFamily:SANS, fontSize:14, fontWeight:bold?700:500, color:valueColor||C.ink700 }}>{value}</div>
-    </div>
   )
 }
