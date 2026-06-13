@@ -156,9 +156,9 @@ export function ChartPanel({ height, candles, isLoading, isError, range='All', o
 // Compact range selector meant to sit in a header row, outside the chart pane
 export function RangeButtons({ range, onRangeChange }) {
   return (
-    <div style={{ display:'flex', gap:3 }}>
+    <div style={{ display:'flex', gap:4 }}>
       {RANGES.map(r => (
-        <div key={r} onClick={() => onRangeChange?.(r)} style={{ padding:'2px 5px', background:r===range?C.ink900:'transparent', border:`1px solid ${r===range?C.ink900:C.ink100}`, borderRadius:3, fontFamily:SANS, fontSize:10, fontWeight:r===range?600:400, color:r===range?C.white:C.ink500, cursor:'pointer', userSelect:'none', whiteSpace:'nowrap' }}>{r}</div>
+        <div key={r} onClick={() => onRangeChange?.(r)} style={{ padding:'5px 10px', background:r===range?C.ink900:'transparent', border:`1px solid ${r===range?C.ink900:C.ink100}`, borderRadius:3, fontFamily:SANS, fontSize:13, fontWeight:r===range?600:400, color:r===range?C.white:C.ink500, cursor:'pointer', userSelect:'none', whiteSpace:'nowrap' }}>{r}</div>
       ))}
     </div>
   )

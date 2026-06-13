@@ -82,7 +82,7 @@ export default function PortfolioDesktop() {
       <div style={{ display:'flex', gap:32, alignItems:'flex-start' }}>
         {/* Left: portfolio data */}
         <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:24 }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end' }}>
             <div>
               <div style={{ fontFamily:DISPLAY, fontWeight:700, fontSize:48, color:C.ink900, letterSpacing:'-0.025em', lineHeight:1 }}>
                 {loading ? '…' : `$${fmt(displayTotal)}`}
@@ -94,7 +94,7 @@ export default function PortfolioDesktop() {
             <RangeButtons range={activeRange} onRangeChange={setActiveRange}/>
           </div>
 
-          <div style={{ background:C.white, border:`1px solid ${C.ink100}`, borderRadius:8, padding:'20px 8px 8px' }}>
+          <div style={{ background:C.white, border:`1px solid ${C.ink100}`, borderRadius:8, padding:'8px 8px 8px' }}>
             <ChartPanel
               height={300}
               candles={candles}
