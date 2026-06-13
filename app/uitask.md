@@ -169,3 +169,24 @@ Baseline: 114/114 tests pass, build + lint clean. Two fix workstreams (assigned 
 
 ### Resolved / non-issues
 - **Badges.jsx** "not recomposed" — reclassified as justified dynamic-SVG exception (QA2). Task 3.7 marked done.
+- **N2** (MOMCAKE twice on Buy/Sell) — user decision: **leave as-is** (pre-existing intent, out of scope). WONTFIX.
+
+### Round 1 outcome (merged `main` @ 47f4be8)
+- D1 + D2 + D3 (radii, eyebrow tracking, test re-anchor) — **DONE** (Fix D, merged `d51bcc3`).
+- T1 coverage — **PARTIAL**: added `context.test.jsx`, `fees.test.js`, `ui.test.jsx`.
+  **148/148 tests pass; line coverage 83.78% → 80% gate CLEARED.** Build + lint clean.
+- Fix Agent T hit a session limit mid-run; its `hooks.test.jsx` and `marketCache.test.js` were
+  written but **not verified and were failing** (wrong supabase-mock assumptions) → **quarantined** (removed), see Round 2.
+
+---
+
+## QA Findings — Round 2 (open — to reach the ~90% stretch target)
+
+Gate is cleared (80%); these close the gap from 83.78% → ~90% per `unittest.md`.
+- [ ] **R2-1** Re-add `src/test/hooks.test.jsx` — fix the 3 `usePlaceOrder` cases (QUEUED/FILLED/error)
+  to match how `supabaseMock.functions.invoke` actually resolves; hooks/* is the next-biggest hole (68.8%).
+- [ ] **R2-2** Re-add `src/test/marketCache.test.js` — align the 7 failing cases with the real
+  `getCachedQuotes`/`getStoredFundamentals`/`persistQuotes` query-chain + mapping (lib/* at ~70%).
+- [ ] **R2-3** (MINOR) `ui.test.jsx` Tabs/ToggleGroup interaction: Radix click-activation doesn't flip
+  `aria-selected`/value under jsdom; currently asserts render + default state only. Optional: drive with
+  `@testing-library/user-event` + pointer-event shims if true interaction coverage is wanted.
