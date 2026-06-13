@@ -133,45 +133,45 @@ export default function PortfolioDesktop() {
         </div>
 
         {/* Right: hero sidebar — sticky card, like the Trade sidebar on StockDetail */}
-        <div style={{ width:380, flexShrink:0, border:`1px solid ${C.ink100}`, borderRadius:8, background:C.white, display:'flex', flexDirection:'column', overflow:'hidden', position:'sticky', top:28, height:'calc(100dvh - 130px)' }}>
-          <div style={{ height:52, borderBottom:`1px solid ${C.ink100}`, display:'flex', alignItems:'stretch' }}>
+        <div style={{ width:380, flexShrink:0, border:`1px solid ${C.ink100}`, borderRadius:8, background:C.white, display:'flex', flexDirection:'column', overflow:'hidden', position:'sticky', top:28, height:'calc(100dvh / var(--zoom) - 100px)' }}>
+          <div style={{ height:44, borderBottom:`1px solid ${C.ink100}`, display:'flex', alignItems:'stretch' }}>
             {['Council', ...heroes.map(h => h.name.split(' ')[0])].slice(0,3).map(t => (
-              <div key={t} onClick={() => setActiveTab(t)} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:SANS, fontSize:13, fontWeight:activeTab===t?600:400, color:activeTab===t?C.ink900:C.ink400, borderBottom:activeTab===t?`2px solid ${C.ink900}`:'2px solid transparent', cursor:'pointer' }}>{t}</div>
+              <div key={t} onClick={() => setActiveTab(t)} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:SANS, fontSize:15, fontWeight:activeTab===t?600:400, color:activeTab===t?C.ink900:C.ink400, borderBottom:activeTab===t?`2px solid ${C.ink900}`:'2px solid transparent', cursor:'pointer' }}>{t}</div>
             ))}
           </div>
-          <div style={{ padding:'18px 24px 14px', display:'flex', gap:10, alignItems:'center', borderBottom:`1px solid ${C.ink100}` }}>
+          <div style={{ padding:'8px 12px', display:'flex', gap:10, alignItems:'center', borderBottom:`1px solid ${C.ink100}` }}>
             <div style={{ display:'flex' }}>
               {heroes.slice(0,3).map((h,i) => (
                 <div key={h.id} style={{ width:30, height:30, borderRadius:'50%', background:`${h.color}12`, border:`1.5px solid ${h.color}35`, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:SANS, fontWeight:700, fontSize:11, color:h.color, marginLeft:i>0?-8:0 }}>{h.initials}</div>
               ))}
             </div>
             <div>
-              <div style={{ fontFamily:SANS, fontSize:14, fontWeight:600, color:C.ink900 }}>{councilNames || 'Sage'}</div>
-              <div style={{ fontFamily:SANS, fontSize:12, color:C.ink400 }}>{heroes.length} of 3 council slots · watching your portfolio</div>
+              <div style={{ fontFamily:SANS, fontSize:17, fontWeight:600, color:C.ink900 }}>{councilNames || 'Sage'}</div>
+              <div style={{ fontFamily:SANS, fontSize:14, color:C.ink400 }}>{heroes.length} of 3 council slots · watching your portfolio</div>
             </div>
           </div>
-          <div style={{ padding:'14px 24px', borderBottom:`1px solid ${C.ink100}`, display:'flex', flexWrap:'wrap', gap:6 }}>
+          <div style={{ padding:'6px 12px', borderBottom:`1px solid ${C.ink100}`, display:'flex', flexWrap:'wrap', gap:5 }}>
             {QUICK_PROMPTS.map(p => (
-              <div key={p} onClick={() => handleSend(p)} style={{ padding:'5px 12px', background:C.ink50, border:`1px solid ${C.ink100}`, borderRadius:999, fontFamily:SANS, fontSize:12, color:C.ink700, cursor:'pointer' }}>{p}</div>
+              <div key={p} onClick={() => handleSend(p)} style={{ padding:'4px 10px', background:C.ink50, border:`1px solid ${C.ink100}`, borderRadius:999, fontFamily:SANS, fontSize:14, color:C.ink700, cursor:'pointer' }}>{p}</div>
             ))}
           </div>
-          <div style={{ flex:1, padding:'20px 24px', display:'flex', flexDirection:'column', gap:18, overflow:'auto' }}>
+          <div style={{ flex:1, padding:'10px 12px', display:'flex', flexDirection:'column', gap:10, overflow:'auto' }}>
             {(history ?? []).map((msg, i) => (
               msg.role === 'user'
                 ? <UserMessage key={i} text={msg.content}/>
                 : <HeroMessage key={i} hero={heroId} text={`"${msg.content}"`}/>
             ))}
-            {isPending && <div style={{ fontFamily:SANS, fontSize:13, color:C.ink400, fontStyle:'italic' }}>Thinking…</div>}
+            {isPending && <div style={{ fontFamily:SANS, fontSize:16, color:C.ink400, fontStyle:'italic' }}>Thinking…</div>}
             <div ref={bottomRef}/>
           </div>
-          <div style={{ padding:'14px 24px 20px', borderTop:`1px solid ${C.ink100}` }}>
+          <div style={{ padding:'8px 12px 12px', borderTop:`1px solid ${C.ink100}` }}>
             <div style={{ display:'flex', gap:8 }}>
               <input
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => e.key==='Enter' && handleSend()}
                 placeholder="Ask your council…"
-                style={{ flex:1, height:44, border:`1px solid ${C.ink200}`, borderRadius:4, padding:'0 14px', fontFamily:SANS, fontSize:14, color:C.ink900, background:C.white, outline:'none' }}
+                style={{ flex:1, height:44, border:`1px solid ${C.ink200}`, borderRadius:4, padding:'0 12px', fontFamily:SANS, fontSize:16, color:C.ink900, background:C.white, outline:'none' }}
               />
               <div onClick={() => handleSend()} style={{ width:44, height:44, background:C.ink900, borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', color:C.white, cursor:'pointer', fontSize:18, opacity:isPending?0.5:1 }}>→</div>
             </div>

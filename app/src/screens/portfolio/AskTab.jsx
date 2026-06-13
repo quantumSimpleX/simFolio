@@ -41,31 +41,31 @@ export default function AskTab() {
   return (
     <div style={{ width:'100%', height:'100dvh', background:C.paper, display:'flex', flexDirection:'column', overflow:'hidden' }}>
       <TopNav active="portfolio"/>
-      <div style={{ padding:'14px 24px 10px', display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
+      <div style={{ padding:'8px 12px', display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
         <div style={{ display:'flex' }}>
           {heroes.slice(0,3).map((h, i) => (
             <div key={h.id} style={{ width:34, height:34, borderRadius:'50%', background:`${h.color}12`, border:`1.5px solid ${h.color}35`, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:SANS, fontWeight:700, fontSize:12, color:h.color, marginLeft:i>0?-8:0 }}>{h.initials}</div>
           ))}
         </div>
         <div>
-          <div style={{ fontFamily:SANS, fontSize:16, fontWeight:600, color:C.ink900 }}>Your Council</div>
-          <div style={{ fontFamily:SANS, fontSize:12, color:C.ink400 }}>{councilNames || 'Sage'}</div>
+          <div style={{ fontFamily:SANS, fontSize:18, fontWeight:600, color:C.ink900 }}>Your Council</div>
+          <div style={{ fontFamily:SANS, fontSize:14, color:C.ink400 }}>{councilNames || 'Sage'}</div>
         </div>
         <div style={{ width:7, height:7, borderRadius:'50%', background:C.aqua400, marginLeft:'auto' }}/>
       </div>
 
-      <div style={{ padding:'12px 24px', borderBottom:`1px solid ${C.ink100}`, display:'flex', flexWrap:'wrap', gap:6, flexShrink:0 }}>
+      <div style={{ padding:'6px 12px', borderBottom:`1px solid ${C.ink100}`, display:'flex', flexWrap:'wrap', gap:5, flexShrink:0 }}>
         {QUICK_PROMPTS.map(p => (
-          <div key={p} onClick={() => handleSend(p)} style={{ padding:'5px 12px', background:C.ink50, border:`1px solid ${C.ink100}`, borderRadius:999, fontFamily:SANS, fontSize:12, color:C.ink700, cursor:'pointer' }}>{p}</div>
+          <div key={p} onClick={() => handleSend(p)} style={{ padding:'4px 10px', background:C.ink50, border:`1px solid ${C.ink100}`, borderRadius:999, fontFamily:SANS, fontSize:14, color:C.ink700, cursor:'pointer' }}>{p}</div>
         ))}
       </div>
 
-      <div style={{ flex:1, padding:'16px 24px', display:'flex', flexDirection:'column', gap:16, overflow:'auto' }}>
+      <div style={{ flex:1, padding:'10px 12px', display:'flex', flexDirection:'column', gap:10, overflow:'auto' }}>
         {historyLoading && (
-          <div style={{ fontFamily:SANS, fontSize:13, color:C.ink400, textAlign:'center', paddingTop:20 }}>Loading conversation…</div>
+          <div style={{ fontFamily:SANS, fontSize:17, color:C.ink400, textAlign:'center', paddingTop:16 }}>Loading conversation…</div>
         )}
         {!historyLoading && history?.length === 0 && (
-          <div style={{ fontFamily:SANS, fontSize:13, color:C.ink400, fontStyle:'italic', textAlign:'center', paddingTop:20 }}>
+          <div style={{ fontFamily:SANS, fontSize:17, color:C.ink400, fontStyle:'italic', textAlign:'center', paddingTop:16 }}>
             Ask your council anything about your portfolio or investing.
           </div>
         )}
@@ -74,18 +74,18 @@ export default function AskTab() {
             ? <UserMessage key={i} text={msg.content}/>
             : <HeroMessage key={i} hero={heroId} text={`"${msg.content}"`}/>
         ))}
-        {isPending && <div style={{ fontFamily:SANS, fontSize:13, color:C.ink400, fontStyle:'italic' }}>Thinking…</div>}
+        {isPending && <div style={{ fontFamily:SANS, fontSize:17, color:C.ink400, fontStyle:'italic' }}>Thinking…</div>}
         <div ref={bottomRef}/>
       </div>
 
-      <div style={{ padding:'12px 24px 20px', borderTop:`1px solid ${C.ink100}`, flexShrink:0 }}>
+      <div style={{ padding:'8px 12px 14px', borderTop:`1px solid ${C.ink100}`, flexShrink:0 }}>
         <div style={{ display:'flex', gap:8 }}>
           <input
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key==='Enter' && handleSend()}
             placeholder="Ask your council…"
-            style={{ flex:1, height:44, border:`1px solid ${C.ink200}`, borderRadius:4, padding:'0 14px', fontFamily:SANS, fontSize:14, color:C.ink900, background:C.white, outline:'none' }}
+            style={{ flex:1, height:44, border:`1px solid ${C.ink200}`, borderRadius:4, padding:'0 12px', fontFamily:SANS, fontSize:16, color:C.ink900, background:C.white, outline:'none' }}
           />
           <div onClick={() => handleSend()} style={{ width:44, height:44, background:C.ink900, borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', color:C.white, cursor:'pointer', fontSize:18, opacity:isPending?0.5:1 }}>→</div>
         </div>

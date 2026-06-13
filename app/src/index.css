@@ -13,10 +13,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Desktop: scale the whole UI up — component styles use fixed px sized for mobile */
-@media (min-width: 1024px) {
-  body { zoom: 1.25; }
-}
+/* Fluid zoom ladder — px-based component styles were authored at mobile scale.
+   --zoom mirrors the body zoom so viewport-relative calcs inside zoomed elements
+   can divide by it (e.g. calc(100dvh / var(--zoom) - offset)). */
+:root { --zoom: 1; }
+@media (min-width: 768px)  { :root { --zoom: 1.12; } body { zoom: 1.12; } }
+@media (min-width: 1024px) { :root { --zoom: 1.28; } body { zoom: 1.28; } }
+@media (min-width: 1440px) { :root { --zoom: 1.38; } body { zoom: 1.38; } }
 
 #root {
   display: flex;
