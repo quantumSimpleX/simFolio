@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { C, SANS, DISPLAY } from '../../tokens'
-import { CTA, Eyebrow, TermUnderline, MktStatus, ReceiptRow } from '../../components/Primitives'
+import { cn } from '../../lib/utils'
+import { CTA, Eyebrow, TermUnderline, ReceiptRow } from '../../components/Primitives'
 import { AppShell } from '../../components/AppShell'
+import { PriceCard } from '../../components/PriceCard'
 import { useIsMobile } from '../../hooks/useBreakpoint'
 import { SageMsg } from '../../components/HeroMessage'
 import { MiniChart } from '../../components/Charts'
@@ -64,18 +65,17 @@ export default function BuyScreen() {
   }
 
   const priceCard = (
-    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'16px 20px', background:C.white, border:`1px solid ${C.ink100}`, borderRadius:8 }}>
-      <div>
-        <div style={{ fontFamily:DISPLAY, fontWeight:700, fontSize:mobile?28:32, color:C.ink900, letterSpacing:'-0.02em' }}>{isLoading ? '…' : `$${price.toLocaleString()}`}</div>
-        <div style={{ fontFamily:SANS, fontSize:13, color:stock?.pos?C.aqua600:C.red, marginTop:3 }}>
-          {stock ? `${stock.pos?'+':''}${stock.change?.toFixed(2)} · ${stock.pos?'+':''}${stock.pct?.toFixed(1)}% today` : '—'}
-        </div>
-      </div>
-      <div style={{ textAlign:'right' }}>
-        <div style={{ fontFamily:SANS, fontSize:12, color:C.ink400 }}>{ticker} · {stock?.exchange ?? assetType}</div>
-        <div style={{ marginTop:4, display:'flex', justifyContent:'flex-end' }}><MktStatus open={canExec}/></div>
-      </div>
-    </div>
+    <PriceCard
+      price={price}
+      change={stock?.change}
+      pct={stock?.pct}
+      pos={stock?.pos}
+      isLoading={isLoading}
+      ticker={ticker}
+      exchange={stock?.exchange ?? assetType}
+      canExec={canExec}
+      mobile={mobile}
+    />
   )
 
   const orderForm = (
@@ -88,20 +88,20 @@ export default function BuyScreen() {
       }/>
 
       <div>
-        <div style={{ fontFamily:SANS, fontSize:13, color:C.ink500, marginBottom:8 }}>Quantity</div>
+        <div className="mb-2 font-sans text-[13px] text-ink-500">Quantity</div>
         <QtyInputBlock qty={qty} setQty={setQty}/>
       </div>
 
       <div>
-        <div style={{ fontFamily:SANS, fontSize:13, color:C.ink500, marginBottom:8 }}>Order type</div>
-        <div style={{ display:'flex', gap:10 }}>
+        <div className="mb-2 font-sans text-[13px] text-ink-500">Order type</div>
+        <div className="flex gap-2.5">
           <OrderTypeCard label="Market order" desc={canExec ? 'Execute now at current price' : 'Execute at next market open'} active={orderType==='MARKET'} onClick={() => setOrderType('MARKET')}/>
           <OrderTypeCard label="Limit order" desc="Only fill if price reaches your target" active={orderType==='LIMIT'} onClick={() => setOrderType('LIMIT')}/>
         </div>
         {orderType === 'MARKET' && (
-          <div style={{ marginTop:10, display:'flex', gap:8 }}>
-            <div style={{ width:20, height:20, borderRadius:'50%', background:C.aqua50, border:`1px solid ${C.aqua400}40`, display:'flex', alignItems:'center', justifyContent:'center', color:C.aqua400, fontSize:11, flexShrink:0 }}>◇</div>
-            <div style={{ fontFamily:SANS, fontSize:12, color:C.ink500, lineHeight:1.5, fontStyle:'italic' }}>
+          <div className="mt-2.5 flex gap-2">
+            <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-pill border border-aqua-400/40 bg-aqua-50 text-[11px] text-aqua-400">◇</div>
+            <div className="font-sans text-xs italic leading-relaxed text-ink-500">
               A <TermUnderline>market order</TermUnderline> fills immediately. The final price may vary slightly (<TermUnderline>slippage</TermUnderline>).
             </div>
           </div>
@@ -113,15 +113,15 @@ export default function BuyScreen() {
               value={limitPrice}
               onChange={e => setLimitPrice(e.target.value)}
               placeholder={`Max price (current: $${price})`}
-              style={{ marginTop:8, height:44, width:'100%', border:`1px solid ${C.ame400}`, borderRadius:4, padding:'0 14px', fontFamily:SANS, fontSize:14, color:C.ink900, outline:'none', background:C.white, boxSizing:'border-box' }}
+              className="mt-2 box-border h-11 w-full rounded-input border border-ame-400 bg-white px-3.5 font-sans text-sm text-ink-900 outline-none"
             />
             <TifToggle tif={tif} setTif={setTif}/>
           </>
         )}
       </div>
 
-      <div style={{ background:C.white, border:`1px solid ${C.ink100}`, borderRadius:8, padding:'0 20px' }}>
-        <div style={{ padding:'12px 0 4px' }}><Eyebrow>Order summary</Eyebrow></div>
+      <div className="rounded-card border border-ink-100 bg-white px-5">
+        <div className="pb-1 pt-3"><Eyebrow>Order summary</Eyebrow></div>
         <ReceiptRow label={`${qty} shares × $${price}`} value={`$${total}`}/>
         <ReceiptRow label={<TermUnderline>Transaction fee</TermUnderline>} value={`$${fee.toFixed(2)}`}/>
         <ReceiptRow label={canExec ? 'Total' : 'Total (estimated)'} value={canExec ? `$${grandTotal}` : `~$${grandTotal}`} bold/>
@@ -139,7 +139,7 @@ export default function BuyScreen() {
         onClick={handleBuy}
       />
       {cashAfter !== null && (
-        <div style={{ fontFamily:SANS, fontSize:12, color:C.ink400, textAlign:'center', marginTop:10 }}>
+        <div className="mt-2.5 text-center font-sans text-xs text-ink-400">
           Cash after: ${cashAfter} available
         </div>
       )}
@@ -149,17 +149,17 @@ export default function BuyScreen() {
   // ── Mobile: single column + fixed CTA footer ───────────────────────────────
   if (mobile) {
     const footer = (
-      <div style={{ background:C.white, borderTop:`1px solid ${C.ink100}`, padding:'12px 16px 20px' }}>
+      <div className="border-t border-ink-100 bg-white px-4 pb-5 pt-3">
         {buyCTA}
       </div>
     )
     return (
       <AppShell active="portfolio" footer={footer}>
-        <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:14 }}>
-            <div onClick={() => navigate(-1)} style={{ fontFamily:SANS, fontSize:14, color:C.ame400, cursor:'pointer' }}>← Back</div>
-            <div style={{ flex:1, textAlign:'center', fontFamily:SANS, fontWeight:700, fontSize:17, color:C.ink900 }}>Buy {ticker}</div>
-            <div style={{ width:40 }}/>
+        <div className="flex flex-col gap-[18px]">
+          <div className="flex items-center gap-3.5">
+            <div onClick={() => navigate(-1)} className="cursor-pointer font-sans text-sm text-ame-400">← Back</div>
+            <div className="flex-1 text-center font-sans text-[17px] font-bold text-ink-900">Buy {ticker}</div>
+            <div className="w-10"/>
           </div>
           {priceCard}
           {orderForm}
@@ -171,20 +171,20 @@ export default function BuyScreen() {
   // ── Desktop/tablet: order form + chart column ───────────────────────────────
   return (
     <AppShell active="portfolio" maxWidth={1200}>
-      <div style={{ display:'flex', gap:32, alignItems:'flex-start' }}>
-        <div style={{ width:480, flexShrink:0, display:'flex', flexDirection:'column', gap:24 }}>
+      <div className="flex items-start gap-8">
+        <div className="flex w-[480px] flex-shrink-0 flex-col gap-6">
           <div>
-            <div onClick={() => navigate(-1)} style={{ fontFamily:SANS, fontSize:13, color:C.ame400, cursor:'pointer', marginBottom:8 }}>← Back</div>
-            <div style={{ fontFamily:DISPLAY, fontWeight:700, fontSize:32, color:C.ink900, letterSpacing:'-0.02em', lineHeight:1 }}>Buy {ticker}</div>
+            <div onClick={() => navigate(-1)} className="mb-2 cursor-pointer font-sans text-[13px] text-ame-400">← Back</div>
+            <div className="font-display text-[32px] font-bold leading-none tracking-[-0.02em] text-ink-900">Buy {ticker}</div>
           </div>
           {priceCard}
           {orderForm}
           <div>{buyCTA}</div>
         </div>
 
-        <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:24, position:'sticky', top:28 }}>
+        <div className="sticky top-7 flex min-w-0 flex-1 flex-col gap-6">
           <Eyebrow>{stock?.name ?? ticker} — {ticker}</Eyebrow>
-          <div style={{ background:C.white, border:`1px solid ${C.ink100}`, borderRadius:8, padding:'20px 24px' }}>
+          <div className="rounded-card border border-ink-100 bg-white px-6 py-5">
             <MiniChart candles={candles} isLoading={candlesLoading} isError={candlesError}/>
           </div>
           <SageMsg text={`You're buying ${qty} shares — a solid start. If you're unsure about the quantity, you can always buy more later.`}/>
@@ -196,17 +196,17 @@ export default function BuyScreen() {
 
 function MarketClosedBanner() {
   return (
-    <div style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 14px', background:C.goldBg, border:`1px solid ${C.gold}30`, borderRadius:4 }}>
-      <div style={{ width:6, height:6, borderRadius:'50%', background:C.gold, flexShrink:0 }}/>
-      <div style={{ fontFamily:SANS, fontSize:13, color:C.gold }}>Markets closed · Order will execute at next market open</div>
+    <div className="flex items-center gap-2 rounded-input border border-gold/30 bg-goldBg px-3.5 py-2.5">
+      <div className="h-1.5 w-1.5 flex-shrink-0 rounded-pill bg-gold"/>
+      <div className="font-sans text-[13px] text-gold">Markets closed · Order will execute at next market open</div>
     </div>
   )
 }
 
 function QtyInputBlock({ qty, setQty }) {
   return (
-    <div style={{ border:`1.5px solid ${C.ame400}`, borderRadius:4, height:56, display:'flex', alignItems:'center', padding:'0 16px', background:C.white, boxShadow:`0 0 0 3px ${C.ame400}18`, justifyContent:'space-between' }}>
-      <div style={{ fontFamily:SANS, fontSize:11, color:C.ame400, fontWeight:600, letterSpacing:'0.12em', textTransform:'uppercase' }}>Shares</div>
+    <div className="flex h-14 items-center justify-between rounded-input border-[1.5px] border-ame-400 bg-white px-4 [box-shadow:0_0_0_3px_color-mix(in_srgb,var(--ame-400)_10%,transparent)]">
+      <div className="font-sans text-[11px] font-semibold uppercase tracking-[0.12em] text-ame-400">Shares</div>
       <input
         type="number"
         min="0.01"
@@ -218,7 +218,7 @@ function QtyInputBlock({ qty, setQty }) {
           else if (e.target.value === '') setQty('')
         }}
         onBlur={e => { if (!e.target.value || parseFloat(e.target.value) <= 0) setQty(1) }}
-        style={{ fontFamily:DISPLAY, fontWeight:700, fontSize:28, color:C.ink900, letterSpacing:'-0.02em', border:'none', outline:'none', background:'transparent', textAlign:'right', width:120 }}
+        className="w-[120px] border-none bg-transparent text-right font-display text-[28px] font-bold tracking-[-0.02em] text-ink-900 outline-none"
       />
     </div>
   )
@@ -226,10 +226,10 @@ function QtyInputBlock({ qty, setQty }) {
 
 export function TifToggle({ tif, setTif }) {
   return (
-    <div style={{ marginTop:8, display:'flex', alignItems:'center', gap:8 }}>
-      <div style={{ fontFamily:SANS, fontSize:12, color:C.ink400 }}>Good until</div>
+    <div className="mt-2 flex items-center gap-2">
+      <div className="font-sans text-xs text-ink-400">Good until</div>
       {[['GTC','Cancelled'], ['DAY','End of day']].map(([val, label]) => (
-        <div key={val} onClick={() => setTif(val)} style={{ padding:'3px 10px', border:`1px solid ${tif===val?C.ame400:C.ink100}`, borderRadius:999, background:tif===val?C.ame50:C.white, fontFamily:SANS, fontSize:12, fontWeight:tif===val?600:400, color:tif===val?C.ame600:C.ink500, cursor:'pointer', userSelect:'none' }}>
+        <div key={val} onClick={() => setTif(val)} className={cn('cursor-pointer select-none rounded-pill border px-2.5 py-[3px] font-sans text-xs', tif===val ? 'border-ame-400 bg-ame-50 font-semibold text-ame-600' : 'border-ink-100 bg-white font-normal text-ink-500')}>
           {label}
         </div>
       ))}
@@ -239,9 +239,9 @@ export function TifToggle({ tif, setTif }) {
 
 export function OrderTypeCard({ label, desc, active, onClick }) {
   return (
-    <div onClick={onClick} style={{ flex:1, padding:'12px 14px', border:`${active?2:1}px solid ${active?C.ame400:C.ink100}`, borderRadius:4, background:active?C.ame50:C.white, cursor:'pointer' }}>
-      <div style={{ fontFamily:SANS, fontSize:14, fontWeight:active?700:500, color:active?C.ame600:C.ink700, marginBottom:3 }}>{label}</div>
-      <div style={{ fontFamily:SANS, fontSize:12, color:active?C.ame400:C.ink400, lineHeight:1.4 }}>{desc}</div>
+    <div onClick={onClick} className={cn('flex-1 cursor-pointer rounded-input px-3.5 py-3', active ? 'border-2 border-ame-400 bg-ame-50' : 'border border-ink-100 bg-white')}>
+      <div className={cn('mb-[3px] font-sans text-sm', active ? 'font-bold text-ame-600' : 'font-medium text-ink-700')}>{label}</div>
+      <div className={cn('font-sans text-xs leading-snug', active ? 'text-ame-400' : 'text-ink-400')}>{desc}</div>
     </div>
   )
 }

@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { C, SANS } from '../../tokens'
+import { cn } from '../../lib/utils'
 import { Eyebrow, MktStatus } from '../../components/Primitives'
-import { StockRow } from '../../components/StockRow'
+import { WatchRow } from '../../components/WatchRow'
+import { SearchResultRow } from '../../components/SearchResultRow'
 import { AppShell } from '../../components/AppShell'
 import { PageHeader } from '../../components/Nav'
 import { useIsMobile } from '../../hooks/useBreakpoint'
@@ -13,71 +14,6 @@ import { useSymbolSearch } from '../../hooks/useSymbolSearch'
 import { INDEX_SYMBOLS } from '../../hooks/useMarketDataPreload'
 
 const INDEX_NAMES = { SPY: 'S&P 500', QQQ: 'NASDAQ', DIA: 'DOW' }
-
-function fmtPrice(v) { return `$${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }
-
-function fmtMktCap(v) {
-  if (!v) return null
-  if (v >= 1e12) return `$${(v / 1e12).toFixed(1)}T`
-  if (v >= 1e9)  return `$${(v / 1e9).toFixed(1)}B`
-  if (v >= 1e6)  return `$${(v / 1e6).toFixed(0)}M`
-  return null
-}
-
-function Fundamentals({ q }) {
-  if (!q) return '—'
-  const cap = fmtMktCap(q.marketCap)
-  const metrics = [
-    cap            ? { label: null,  value: cap,                  color: C.ink700  } : null,
-    q.peRatio > 0  ? { label: 'P/E', value: q.peRatio.toFixed(1), color: C.ame600  } : null,
-    q.eps          ? { label: 'EPS', value: q.eps.toFixed(2),     color: C.aqua600 } : null,
-    q.beta         ? { label: 'β',   value: q.beta.toFixed(2),    color: C.gold    } : null,
-  ].filter(Boolean)
-  if (!metrics.length) return '—'
-  return metrics.map((m, i) => (
-    <span key={m.label ?? 'cap'}>
-      {i > 0 && <span style={{ color: C.ink200, margin: '0 2px' }}>·</span>}
-      {m.label && <span style={{ color: C.ink400 }}>{m.label}:</span>}
-      <span style={{ color: m.color, fontWeight: 600 }}>{m.value}</span>
-    </span>
-  ))
-}
-
-function WatchRow({ sym, q, owned, onClick }) {
-  return (
-    <StockRow
-      ticker={sym}
-      name={q?.name}
-      subtitle={<Fundamentals q={q} />}
-      badge={owned && <div style={{ padding: '1px 6px', background: C.ame50, border: `1px solid ${C.ame100}`, borderRadius: 3, fontFamily: SANS, fontSize: 10, color: C.ame600, fontWeight: 600, flexShrink: 0 }}>Owned</div>}
-      rightTop={q ? fmtPrice(q.price) : '—'}
-      rightBottom={q ? `${q.pos ? '+' : ''}${q.change?.toFixed(2)} (${q.pos ? '+' : ''}${q.pct?.toFixed(1)}%)` : '—'}
-      rightBottomPos={q ? !!q.pos : null}
-      onClick={onClick}
-    />
-  )
-}
-
-function SearchResultRow({ r, q, watching, onClick }) {
-  return (
-    <div onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderTop: `1px solid ${C.ink100}`, cursor: 'pointer' }}>
-      <div style={{ width: 38, height: 38, background: C.ink50, borderRadius: 4, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: SANS, fontWeight: 700, fontSize: 11, color: C.ink500 }}>{r.symbol}</div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div style={{ fontFamily: SANS, fontWeight: 600, fontSize: 14, color: C.ink900, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.instrument_name}</div>
-          {watching && <div style={{ padding: '1px 5px', background: C.ame50, border: `1px solid ${C.ame100}`, borderRadius: 3, fontFamily: SANS, fontSize: 10, color: C.ame600, fontWeight: 600, flexShrink: 0 }}>Watching</div>}
-        </div>
-        <div style={{ fontFamily: SANS, fontSize: 11, color: C.ink400, marginTop: 1 }}>{r.exchange ?? r.type}</div>
-      </div>
-      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-        <div style={{ fontFamily: SANS, fontWeight: 600, fontSize: 14, color: C.ink900 }}>{q ? fmtPrice(q.price) : '—'}</div>
-        <div style={{ fontFamily: SANS, fontSize: 12, color: q?.pos ? C.aqua600 : C.red, marginTop: 1 }}>
-          {q ? `${q.pos ? '+' : ''}${q.pct?.toFixed(1)}%` : '—'}
-        </div>
-      </div>
-    </div>
-  )
-}
 
 export default function Markets() {
   const navigate = useNavigate()
@@ -105,21 +41,21 @@ export default function Markets() {
       <PageHeader title="Markets" right={<MktStatus open={marketOpen} />} />
 
       {/* Search */}
-      <div style={{ position: 'relative', maxWidth: 560, marginBottom: 24 }}>
-        <div style={{ height: 44, background: C.white, border: `1px solid ${search ? C.ame400 : C.ink200}`, borderRadius: 4, display: 'flex', alignItems: 'center', padding: '0 14px', gap: 10 }}>
-          <div style={{ fontFamily: SANS, fontSize: 18, color: C.ink300 }}>⌕</div>
+      <div className="relative mb-6 max-w-[560px]">
+        <div className={cn('flex h-11 items-center gap-2.5 rounded-input border bg-white px-3.5', search ? 'border-ame-400' : 'border-ink-200')}>
+          <div className="font-sans text-lg text-ink-300">⌕</div>
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && query) { const dest = searchResults[0]?.symbol ?? query; navigate(`/stock/${dest}`); setSearch('') } }}
             placeholder="Search ticker or company name…"
-            style={{ flex: 1, border: 'none', outline: 'none', fontFamily: SANS, fontSize: 15, color: C.ink900, background: 'transparent', minWidth: 0 }}
+            className="min-w-0 flex-1 border-none bg-transparent font-sans text-[15px] text-ink-900 outline-none"
           />
-          {search && <div onClick={() => setSearch('')} style={{ fontFamily: SANS, fontSize: 18, color: C.ink300, cursor: 'pointer' }}>×</div>}
+          {search && <div onClick={() => setSearch('')} className="cursor-pointer font-sans text-lg text-ink-300">×</div>}
         </div>
 
         {showDropdown && (
-          <div style={{ position: 'absolute', left: 0, right: 0, top: 52, background: C.white, border: `1px solid ${C.ink100}`, borderRadius: 4, boxShadow: '0 4px 12px rgba(0,0,0,0.08)', zIndex: 20, overflow: 'hidden' }}>
+          <div className="absolute inset-x-0 top-[52px] z-20 overflow-hidden rounded-input border border-ink-100 bg-white shadow-[0_4px_12px_rgba(0,0,0,0.08)]">
             {searchResults.map(r => (
               <SearchResultRow
                 key={r.symbol}
@@ -130,23 +66,23 @@ export default function Markets() {
               />
             ))}
             {searchResults.length === 0 && (
-              <div style={{ padding: '12px', fontFamily: SANS, fontSize: 13, color: C.ink400 }}>
+              <div className="p-3 font-sans text-[13px] text-ink-400">
                 No results for "{search.trim()}"
               </div>
             )}
             {searchResults.length === 0 && query.length <= 6 && (
               <>
-                <div style={{ borderTop: `1px solid ${C.ink100}` }} />
+                <div className="border-t border-ink-100" />
                 {isWatching(query) ? (
-                  <div onClick={() => { removeFromWatchlist(query); setSearch('') }} style={{ padding: '10px 12px', fontFamily: SANS, fontSize: 13, color: C.red, cursor: 'pointer', fontWeight: 600, borderBottom: `1px solid ${C.ink50}` }}>
+                  <div onClick={() => { removeFromWatchlist(query); setSearch('') }} className="cursor-pointer border-b border-ink-50 px-3 py-2.5 font-sans text-[13px] font-semibold text-red">
                     Remove {query} from watchlist
                   </div>
                 ) : (
-                  <div onClick={() => { addToWatchlist(query); setSearch('') }} style={{ padding: '10px 12px', fontFamily: SANS, fontSize: 13, color: C.ame400, cursor: 'pointer', fontWeight: 600, borderBottom: `1px solid ${C.ink50}` }}>
+                  <div onClick={() => { addToWatchlist(query); setSearch('') }} className="cursor-pointer border-b border-ink-50 px-3 py-2.5 font-sans text-[13px] font-semibold text-ame-400">
                     + Add {query} to watchlist
                   </div>
                 )}
-                <div onClick={() => { navigate(`/stock/${query}`); setSearch('') }} style={{ padding: '10px 12px', fontFamily: SANS, fontSize: 13, color: C.ink500, cursor: 'pointer' }}>
+                <div onClick={() => { navigate(`/stock/${query}`); setSearch('') }} className="cursor-pointer px-3 py-2.5 font-sans text-[13px] text-ink-500">
                   Go to {query} →
                 </div>
               </>
@@ -156,17 +92,17 @@ export default function Markets() {
       </div>
 
       {/* Indices — fluid grid */}
-      <div style={{ marginBottom: 8 }}><Eyebrow>Major indices</Eyebrow></div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 28 }}>
+      <div className="mb-2"><Eyebrow>Major indices</Eyebrow></div>
+      <div className="mb-7 grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
         {INDEX_SYMBOLS.map(sym => {
           const q = quoteMap[sym]
           return (
-            <div key={sym} style={{ background: C.white, border: `1px solid ${C.ink100}`, borderRadius: 8, padding: '12px 16px' }}>
+            <div key={sym} className="rounded-card border border-ink-100 bg-white px-4 py-3">
               <Eyebrow>{INDEX_NAMES[sym]}</Eyebrow>
-              <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 20, color: C.ink900, marginTop: 4 }}>
+              <div className="mt-1 font-sans text-xl font-bold text-ink-900">
                 {q ? `$${q.price.toLocaleString('en-US', { maximumFractionDigits: 0 })}` : '—'}
               </div>
-              <div style={{ fontFamily: SANS, fontSize: 13, color: q?.pos ? C.aqua600 : C.red, marginTop: 2 }}>
+              <div className={cn('mt-0.5 font-sans text-[13px]', q?.pos ? 'text-aqua-600' : 'text-red')}>
                 {q ? `${q.pos ? '+' : ''}${q.pct?.toFixed(2)}%` : '—'}
               </div>
             </div>
@@ -175,13 +111,13 @@ export default function Markets() {
       </div>
 
       {/* Watchlist — single column on mobile, two columns on wider screens */}
-      <div style={{ marginBottom: 4 }}><Eyebrow>Watchlist</Eyebrow></div>
+      <div className="mb-1"><Eyebrow>Watchlist</Eyebrow></div>
       {watchlist.length === 0 ? (
-        <div style={{ fontFamily: SANS, fontSize: 14, color: C.ink400, padding: '20px 0' }}>
+        <div className="py-5 font-sans text-sm text-ink-400">
           Search above to add stocks to your watchlist.
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(2, 1fr)', columnGap: 32 }}>
+        <div className={cn('grid gap-x-8', mobile ? 'grid-cols-1' : 'grid-cols-2')}>
           {watchlist.map(sym => (
             <WatchRow
               key={sym}

@@ -1,4 +1,4 @@
-import { C, SANS, DISPLAY } from '../tokens';
+import { C } from '../tokens';
 import { Logo, SimPill } from './Primitives';
 import QSWordmark from './QSWordmark';
 
@@ -11,36 +11,36 @@ const HEROES = [
 // Dark branding panel shared by the desktop welcome and onboarding layouts
 export default function BrandPanel() {
   return (
-    <div style={{ height:'100%', background:C.ink900, padding:'64px 72px', display:'flex', flexDirection:'column', boxSizing:'border-box' }}>
-      <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+    <div className="box-border flex h-full flex-col bg-ink-900 px-[72px] py-16">
+      <div className="flex flex-col gap-2">
         <Logo size={32} color={C.white}/>
-        <div style={{ display:'flex', alignItems:'center', gap:6, opacity:0.3, paddingLeft:43 }}>
-          <span style={{ fontFamily:SANS, fontSize:11, color:C.white }}>by</span>
+        <div className="flex items-center gap-1.5 pl-[43px] opacity-30">
+          <span className="font-sans text-[11px] text-white">by</span>
           <QSWordmark onDark={true} size={28}/>
         </div>
       </div>
-      <div style={{ marginTop:'auto', marginBottom:40 }}>
-        <div style={{ fontFamily:DISPLAY, fontWeight:700, fontSize:52, color:C.white, letterSpacing:'-0.025em', lineHeight:1.05, marginBottom:20 }}>
+      <div className="mb-10 mt-auto">
+        <div className="mb-5 font-display text-[52px] font-bold leading-[1.05] tracking-[-0.025em] text-white">
           Learn investing<br/>by doing it.
         </div>
-        <div style={{ fontFamily:SANS, fontSize:18, color:C.ink400, maxWidth:380, lineHeight:1.6 }}>
+        <div className="max-w-[380px] font-sans text-lg leading-relaxed text-ink-400">
           With legendary investors as your guides. No real money involved.
         </div>
       </div>
-      <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+      <div className="flex flex-col gap-3">
         {HEROES.map(h => (
-          <div key={h.initials} style={{ display:'flex', gap:14, padding:'14px 18px', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8 }}>
-            <div style={{ width:40, height:40, borderRadius:'50%', background:`${h.color}20`, border:`1.5px solid ${h.color}50`, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:SANS, fontWeight:700, fontSize:13, color:h.color, flexShrink:0 }}>{h.initials}</div>
-            <div style={{ flex:1 }}>
-              <div style={{ fontFamily:SANS, fontSize:15, fontWeight:600, color:C.white }}>{h.name}</div>
-              <div style={{ fontFamily:SANS, fontSize:13, color:h.color }}>{h.style}</div>
+          <div key={h.initials} className="flex gap-3.5 rounded-card border border-white/[0.08] bg-white/[0.04] px-[18px] py-3.5">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-pill font-sans text-[13px] font-bold" style={{ background:`${h.color}20`, border:`1.5px solid ${h.color}50`, color:h.color }}>{h.initials}</div>
+            <div className="flex-1">
+              <div className="font-sans text-[15px] font-semibold text-white">{h.name}</div>
+              <div className="font-sans text-[13px]" style={{ color:h.color }}>{h.style}</div>
             </div>
-            <div style={{ fontFamily:SANS, fontSize:12, fontStyle:'italic', color:'rgba(255,255,255,0.3)', maxWidth:160, textAlign:'right', lineHeight:1.4 }}>{h.quote}</div>
+            <div className="max-w-[160px] text-right font-sans text-xs italic leading-snug text-white/30">{h.quote}</div>
           </div>
         ))}
       </div>
-      <div style={{ fontFamily:SANS, fontSize:13, color:'rgba(255,255,255,0.25)', textAlign:'center', marginTop:4 }}>and 7 more in the library</div>
-      <div style={{ marginTop:32 }}><SimPill/></div>
+      <div className="mt-1 text-center font-sans text-[13px] text-white/25">and 7 more in the library</div>
+      <div className="mt-8"><SimPill/></div>
     </div>
   );
 }

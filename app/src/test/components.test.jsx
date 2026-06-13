@@ -1,0 +1,126 @@
+import { describe, it, expect, vi } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
+import { Fundamentals } from '../components/Fundamentals'
+import { WatchRow } from '../components/WatchRow'
+import { SearchResultRow } from '../components/SearchResultRow'
+import { WatchlistButton } from '../components/WatchlistButton'
+import { SellButton } from '../components/SellButton'
+import { PositionCard } from '../components/PositionCard'
+import { PriceCard } from '../components/PriceCard'
+import { StockRow } from '../components/StockRow'
+import { HoldingRow } from '../components/HoldingRow'
+import { QuickPrompts, ChatComposer, ChatMessages } from '../components/HeroChatPanel'
+
+function wrap(ui) {
+  return render(<MemoryRouter>{ui}</MemoryRouter>)
+}
+
+describe('Fundamentals', () => {
+  it('renders market cap, P/E, EPS, beta', () => {
+    render(<div><Fundamentals q={{ marketCap: 2.5e12, peRatio: 30, eps: 6.1, beta: 1.2 }} /></div>)
+    expect(screen.getByText('$2.5T')).toBeInTheDocument()
+    expect(screen.getByText('30.0')).toBeInTheDocument()
+    expect(screen.getByText('P/E:')).toBeInTheDocument()
+  })
+  it('handles missing quote gracefully', () => {
+    render(<div data-testid="f"><Fundamentals q={null} /></div>)
+    expect(screen.getByTestId('f').textContent).toBe('—')
+  })
+})
+
+describe('StockRow / HoldingRow', () => {
+  it('StockRow shows ticker, name, and right-side values', () => {
+    wrap(<StockRow ticker="AAPL" name="Apple Inc." rightTop="$213.00" rightBottom="+1.2%" rightBottomPos={true} />)
+    expect(screen.getByText('Apple Inc.')).toBeInTheDocument()
+    expect(screen.getByText('$213.00')).toBeInTheDocument()
+    expect(screen.getByText('+1.2%')).toBeInTheDocument()
+  })
+  it('StockRow fires onClick', () => {
+    const onClick = vi.fn()
+    wrap(<StockRow ticker="AAPL" name="Apple Inc." onClick={onClick} />)
+    fireEvent.click(screen.getByText('Apple Inc.'))
+    expect(onClick).toHaveBeenCalled()
+  })
+  it('HoldingRow formats shares and percent', () => {
+    wrap(<HoldingRow ticker="NVDA" name="NVIDIA" qty={5} value={1000} pct={12.3} pos={true} />)
+    expect(screen.getByText('5 shares')).toBeInTheDocument()
+    expect(screen.getByText('+12.3%')).toBeInTheDocument()
+  })
+})
+
+describe('WatchRow / SearchResultRow / WatchlistButton', () => {
+  it('WatchRow renders price, change, and Owned badge', () => {
+    wrap(<WatchRow sym="TSLA" q={{ name: 'Tesla', price: 250, change: 5, pct: 2, pos: true }} owned />)
+    expect(screen.getByText('Tesla')).toBeInTheDocument()
+    expect(screen.getByText('Owned')).toBeInTheDocument()
+  })
+  it('SearchResultRow renders instrument name and fires onClick', () => {
+    const onClick = vi.fn()
+    wrap(<SearchResultRow r={{ symbol: 'TSLA', instrument_name: 'Tesla Inc.', exchange: 'NASDAQ' }} q={{ price: 250, pct: 2, pos: true }} onClick={onClick} />)
+    expect(screen.getByText('Tesla Inc.')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('Tesla Inc.'))
+    expect(onClick).toHaveBeenCalled()
+  })
+  it('WatchlistButton reflects watching state and toggles', () => {
+    const onClick = vi.fn()
+    const { rerender } = wrap(<WatchlistButton watching={false} onClick={onClick} />)
+    expect(screen.getByText('+ Watchlist')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('+ Watchlist'))
+    expect(onClick).toHaveBeenCalled()
+    rerender(<MemoryRouter><WatchlistButton watching onClick={onClick} /></MemoryRouter>)
+    expect(screen.getByText('Watching')).toBeInTheDocument()
+  })
+  it('SellButton navigates via provided navigate', () => {
+    const navigate = vi.fn()
+    wrap(<SellButton ticker="AAPL" navigate={navigate} />)
+    fireEvent.click(screen.getByText('Sell'))
+    expect(navigate).toHaveBeenCalledWith('/sell/AAPL')
+  })
+})
+
+describe('PositionCard', () => {
+  it('shows gain with positive semantics', () => {
+    wrap(<PositionCard position={{ total_qty: '5', average_cost_basis: '100', pnl: 50, pct: 10, pos: true }} />)
+    expect(screen.getByText(/5 shares · avg \$100\.00/)).toBeInTheDocument()
+    expect(screen.getByText(/\+\$50\.00 \(\+10\.0%\)/)).toBeInTheDocument()
+  })
+})
+
+describe('PriceCard', () => {
+  it('shows price and day change', () => {
+    wrap(<PriceCard price={213} change={2} pct={1} pos={true} ticker="AAPL" exchange="NASDAQ" canExec />)
+    expect(screen.getByText('$213')).toBeInTheDocument()
+    expect(screen.getByText(/AAPL · NASDAQ/)).toBeInTheDocument()
+  })
+})
+
+describe('HeroChatPanel pieces', () => {
+  it('QuickPrompts fires onPick', () => {
+    const onPick = vi.fn()
+    wrap(<QuickPrompts onPick={onPick} />)
+    fireEvent.click(screen.getByText('Review my picks'))
+    expect(onPick).toHaveBeenCalledWith('Review my picks')
+  })
+  it('ChatComposer round-trips value and sends', () => {
+    const onChange = vi.fn()
+    const onSend = vi.fn()
+    wrap(<ChatComposer value="hi" onChange={onChange} onSend={onSend} />)
+    const input = screen.getByPlaceholderText(/Ask your council/i)
+    expect(input.value).toBe('hi')
+    fireEvent.change(input, { target: { value: 'hello' } })
+    expect(onChange).toHaveBeenCalledWith('hello')
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(onSend).toHaveBeenCalled()
+  })
+  it('ChatMessages renders hero (italic, quoted) and user bubbles', () => {
+    wrap(<ChatMessages heroId="warren" history={[{ role: 'user', content: 'What should I buy?' }, { role: 'assistant', content: 'Why this stock?' }]} isPending={false} />)
+    expect(screen.getByText('What should I buy?')).toBeInTheDocument()
+    expect(screen.getByText('"Why this stock?"')).toBeInTheDocument()
+    expect(screen.getByText('Warren Buffett')).toBeInTheDocument()
+  })
+  it('ChatMessages shows empty text and thinking indicator', () => {
+    wrap(<ChatMessages heroId="sage" history={[]} isPending emptyText="Ask anything." />)
+    expect(screen.getByText('Thinking…')).toBeInTheDocument()
+  })
+})
