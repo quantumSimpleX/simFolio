@@ -1,9 +1,9 @@
-import { C, SANS } from '../tokens';
 import { Logo, LangToggle, ThemeToggle } from './Primitives';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { cn } from '../lib/utils';
 
 export function BottomNav({ active='portfolio' }) {
   const navigate = useNavigate();
@@ -14,13 +14,17 @@ export function BottomNav({ active='portfolio' }) {
     { id:'ask',       label:'Ask',       icon:'◉', path:'/ask'       },
   ];
   return (
-    <div style={{ height:72, borderTop:`1px solid ${C.ink100}`, display:'flex', background:C.white, flexShrink:0 }}>
+    <div className="flex h-[72px] flex-shrink-0 border-t border-ink-100 bg-white">
       {tabs.map(t => {
         const isActive = t.id === active;
         return (
-          <div key={t.id} onClick={() => navigate(t.path)} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:4, cursor:'pointer', color:isActive?C.ink900:C.ink300 }}>
-            <div style={{ fontSize:22 }}>{t.icon}</div>
-            <div style={{ fontFamily:SANS, fontSize:11, fontWeight:isActive?600:400 }}>{t.label}</div>
+          <div
+            key={t.id}
+            onClick={() => navigate(t.path)}
+            className={cn('flex flex-1 cursor-pointer flex-col items-center justify-center gap-1', isActive ? 'text-ink-900' : 'text-ink-300')}
+          >
+            <div className="text-[22px]">{t.icon}</div>
+            <div className={cn('font-sans text-[11px]', isActive ? 'font-semibold' : 'font-normal')}>{t.label}</div>
           </div>
         );
       })}
@@ -46,39 +50,43 @@ export function TopNav({ active='portfolio' }) {
   // Mobile: compact bar — logo + toggles + avatar. Tabs live in BottomNav.
   if (bp === 'mobile') {
     return (
-      <div style={{ height:52, background:C.white, borderBottom:`1px solid ${C.ink100}`, display:'flex', alignItems:'center', padding:'0 16px', gap:12, flexShrink:0 }}>
-        <div onClick={() => navigate('/')} style={{ cursor:'pointer' }}>
+      <div className="flex h-[52px] flex-shrink-0 items-center gap-3 border-b border-ink-100 bg-white px-4">
+        <div onClick={() => navigate('/')} className="cursor-pointer">
           <Logo size={18}/>
         </div>
-        <div style={{ flex:1 }}/>
+        <div className="flex-1"/>
         <LangToggle/>
         <ThemeToggle/>
-        <div onClick={() => navigate('/profile')} title="Profile" style={{ width:30, height:30, borderRadius:'50%', background:C.ink900, display:'flex', alignItems:'center', justifyContent:'center', color:C.white, fontFamily:SANS, fontSize:13, fontWeight:700, cursor:'pointer' }}>{initials}</div>
+        <div onClick={() => navigate('/profile')} title="Profile" className="flex h-[30px] w-[30px] cursor-pointer items-center justify-center rounded-pill bg-ink-900 font-sans text-[13px] font-bold text-white">{initials}</div>
       </div>
     );
   }
 
   const tablet = bp === 'tablet';
   return (
-    <div style={{ height:64, background:C.white, borderBottom:`1px solid ${C.ink100}`, display:'flex', alignItems:'center', padding:tablet?'0 20px':'0 48px', gap:tablet?20:40, flexShrink:0 }}>
-      <div onClick={() => navigate('/')} style={{ cursor:'pointer' }}>
+    <div className={cn('flex h-16 flex-shrink-0 items-center border-b border-ink-100 bg-white', tablet ? 'gap-5 px-5' : 'gap-10 px-12')}>
+      <div onClick={() => navigate('/')} className="cursor-pointer">
         <Logo size={21}/>
       </div>
-      <div style={{ display:'flex', gap:tablet?16:28, flex:1 }}>
+      <div className={cn('flex flex-1', tablet ? 'gap-4' : 'gap-7')}>
         {tabs.map(t => {
           const isActive = t.id === active;
           return (
-            <div key={t.id} onClick={() => navigate(t.path)} style={{ fontFamily:SANS, fontSize:14, fontWeight:isActive?600:400, color:isActive?C.ink900:C.ink400, cursor:'pointer', paddingBottom:2, borderBottom:isActive?`2px solid ${C.ink900}`:'2px solid transparent', whiteSpace:'nowrap' }}>
+            <div
+              key={t.id}
+              onClick={() => navigate(t.path)}
+              className={cn('cursor-pointer whitespace-nowrap pb-0.5 font-sans text-sm', isActive ? 'border-b-2 border-ink-900 font-semibold text-ink-900' : 'border-b-2 border-transparent font-normal text-ink-400')}
+            >
               {t.label}
             </div>
           );
         })}
       </div>
-      <div style={{ display:'flex', alignItems:'center', gap:tablet?12:16 }}>
+      <div className={cn('flex items-center', tablet ? 'gap-3' : 'gap-4')}>
         <LangToggle/>
         <ThemeToggle/>
-        <div style={{ fontFamily:SANS, fontSize:14, color:C.ink500, whiteSpace:'nowrap' }}>Cash <span style={{ color:C.ink900, fontWeight:600 }}>{cashDisplay}</span></div>
-        <div onClick={() => navigate('/profile')} title="Profile" style={{ width:34, height:34, borderRadius:'50%', background:C.ink900, display:'flex', alignItems:'center', justifyContent:'center', color:C.white, fontFamily:SANS, fontSize:14, fontWeight:700, cursor:'pointer' }}>{initials}</div>
+        <div className="whitespace-nowrap font-sans text-sm text-ink-500">Cash <span className="font-semibold text-ink-900">{cashDisplay}</span></div>
+        <div onClick={() => navigate('/profile')} title="Profile" className="flex h-[34px] w-[34px] cursor-pointer items-center justify-center rounded-pill bg-ink-900 font-sans text-sm font-bold text-white">{initials}</div>
       </div>
     </div>
   );
@@ -87,8 +95,8 @@ export function TopNav({ active='portfolio' }) {
 // Shared page-title row so the main tab pages look identical at every width.
 export function PageHeader({ title, right }) {
   return (
-    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
-      <div style={{ fontFamily:SANS, fontWeight:700, fontSize:24, color:C.ink900 }}>{title}</div>
+    <div className="mb-4 flex items-center justify-between">
+      <div className="font-sans text-2xl font-bold text-ink-900">{title}</div>
       {right}
     </div>
   );
@@ -97,10 +105,10 @@ export function PageHeader({ title, right }) {
 export function BackHeader({ title, right, onBack }) {
   const navigate = useNavigate();
   return (
-    <div style={{ padding:'0 24px 14px', display:'flex', alignItems:'center', gap:14, flexShrink:0, borderBottom:`1px solid ${C.ink100}` }}>
-      <div onClick={onBack || (() => navigate(-1))} style={{ fontFamily:SANS, fontSize:14, color:C.ame400, cursor:'pointer', flexShrink:0 }}>← Back</div>
-      <div style={{ flex:1, textAlign:'center', fontFamily:SANS, fontSize:17, fontWeight:700, color:C.ink900 }}>{title}</div>
-      {right && <div style={{ flexShrink:0 }}>{right}</div>}
+    <div className="flex flex-shrink-0 items-center gap-3.5 border-b border-ink-100 px-6 pb-3.5">
+      <div onClick={onBack || (() => navigate(-1))} className="flex-shrink-0 cursor-pointer font-sans text-sm text-ame-400">← Back</div>
+      <div className="flex-1 text-center font-sans text-[17px] font-bold text-ink-900">{title}</div>
+      {right && <div className="flex-shrink-0">{right}</div>}
     </div>
   );
 }
