@@ -277,7 +277,7 @@ export function ProgressDots({ step=1, total=8 }) {
   return (
     <div style={{ display:'flex', gap:4, alignItems:'center' }}>
       {Array.from({ length:total }, (_,i) => (
-        <div key={i} style={{ width:i<step?20:5, height:5, borderRadius:3, background:i<step?C.ame400:C.ink100, transition:'width 0.3s' }}/>
+        <div key={i} style={{ width:i<step?20:5, height:5, borderRadius:999, background:i<step?C.ame400:C.ink100, transition:'width 0.3s' }}/>
       ))}
       <div style={{ fontFamily:SANS, fontSize:12, color:C.ink400, marginLeft:4 }}>{step} of {total}</div>
     </div>
@@ -286,7 +286,7 @@ export function ProgressDots({ step=1, total=8 }) {
 
 export function GoalCard({ label, selected, compact=false, onClick }) {
   return (
-    <div onClick={onClick} style={{ display:'flex', alignItems:'center', gap:12, padding:compact?'10px 14px':'13px 16px', background:selected?C.ame50:C.white, border:`${selected?2:1}px solid ${selected?C.ame400:C.ink100}`, borderRadius:6, cursor:'pointer' }}>
+    <div data-testid="goal-card" onClick={onClick} style={{ display:'flex', alignItems:'center', gap:12, padding:compact?'10px 14px':'13px 16px', background:selected?C.ame50:C.white, border:`${selected?2:1}px solid ${selected?C.ame400:C.ink100}`, borderRadius:8, cursor:'pointer' }}>
       <div style={{ width:compact?16:18, height:compact?16:18, borderRadius:'50%', flexShrink:0, border:`2px solid ${selected?C.ame400:C.ink300}`, background:selected?C.ame400:'transparent', display:'flex', alignItems:'center', justifyContent:'center' }}>
         {selected && <div style={{ width:6, height:6, borderRadius:'50%', background:C.white }}/>}
       </div>

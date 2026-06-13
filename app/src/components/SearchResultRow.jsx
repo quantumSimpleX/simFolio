@@ -10,7 +10,7 @@ export function SearchResultRow({ r, q, watching, onClick }) {
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           <div className="truncate font-sans text-sm font-semibold text-ink-900">{r.instrument_name}</div>
-          {watching && <div className="flex-shrink-0 rounded-[3px] border border-ame-100 bg-ame-50 px-[5px] py-px font-sans text-[10px] font-semibold text-ame-600">Watching</div>}
+          {watching && <div className="flex-shrink-0 rounded-input border border-ame-100 bg-ame-50 px-[5px] py-px font-sans text-[10px] font-semibold text-ame-600">Watching</div>}
         </div>
         <div className="mt-px font-sans text-[11px] text-ink-400">{r.exchange ?? r.type}</div>
       </div>

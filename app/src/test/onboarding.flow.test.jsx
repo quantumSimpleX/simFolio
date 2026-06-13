@@ -23,7 +23,7 @@ async function answerCurrentQuestion() {
     return
   }
   // single-choice GoalCards auto-advance ~180ms after click
-  const card = document.querySelector('div[style*="border-radius: 6px"]')
+  const card = document.querySelector('[data-testid="goal-card"]')
   expect(card).toBeTruthy()
   fireEvent.click(card)
   await new Promise(r => setTimeout(r, 220))

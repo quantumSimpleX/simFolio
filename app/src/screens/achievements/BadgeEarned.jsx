@@ -76,7 +76,7 @@ export default function BadgeEarned() {
 
             {/* Text */}
             <div className="text-center">
-              <div className="mb-2.5 font-sans text-[11px] font-semibold uppercase tracking-[0.16em]" style={{ color: m.eyebrowColor }}>{m.eyebrow}</div>
+              <div className="mb-2.5 font-sans text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: m.eyebrowColor }}>{m.eyebrow}</div>
               <DialogPrimitive.Title className="font-display text-4xl font-bold leading-none tracking-[-0.02em] text-white">{m.title}</DialogPrimitive.Title>
               <div className="mt-2 font-sans text-[15px] leading-normal text-ink-400">{m.desc}</div>
             </div>

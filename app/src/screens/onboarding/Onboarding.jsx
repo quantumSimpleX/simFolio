@@ -253,7 +253,7 @@ function SageHeader({ avatarSize, isDesktop, children }) {
       <GuideAvatar size={avatarSize}/>
       <div className={cn('flex-1', isDesktop && 'pt-1')}>
         <div
-          className="font-sans font-semibold uppercase tracking-[0.12em] text-ink-400"
+          className="font-sans font-semibold uppercase tracking-[0.14em] text-ink-400"
           style={{ fontSize: fluid(11, 13), marginBottom: isDesktop ? 8 : 6 }}
         >Sage</div>
         <div className="font-sans leading-normal text-ink-600" style={{ fontSize: fluid(15, 22) }}>{children}</div>

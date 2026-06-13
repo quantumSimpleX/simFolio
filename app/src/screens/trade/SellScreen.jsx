@@ -115,7 +115,7 @@ export default function SellScreen() {
       <div>
         <div className="mb-2 font-sans text-[13px] text-ink-500">Shares to sell (of {maxQty})</div>
         <div className="flex h-14 items-center justify-between rounded-input border-[1.5px] border-red bg-white px-4">
-          <div className="font-sans text-[11px] font-semibold uppercase tracking-[0.12em] text-red">Shares</div>
+          <div className="font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-red">Shares</div>
           <div className="font-display text-[28px] font-bold tracking-[-0.02em] text-ink-900">{qty}</div>
         </div>
         <div className="mt-2 flex gap-2">

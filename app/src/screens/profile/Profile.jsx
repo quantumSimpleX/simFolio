@@ -69,8 +69,8 @@ export default function Profile() {
             <div className="mt-1 font-sans text-[13px] text-ink-400">
               {toNextMedal === 10 && medalCount === 0 ? '10 badges → first medal' : `${toNextMedal} more → next medal`}
             </div>
-            <div className="mt-2.5 h-[5px] rounded-[3px] bg-ink-100">
-              <div className="h-full rounded-[3px] bg-ame-400" style={{ width: `${((earnedCount % 10) / 10) * 100}%` }}/>
+            <div className="mt-2.5 h-[5px] rounded-pill bg-ink-100">
+              <div className="h-full rounded-pill bg-ame-400" style={{ width: `${((earnedCount % 10) / 10) * 100}%` }}/>
             </div>
           </div>
           <div className="flex items-end gap-3">
