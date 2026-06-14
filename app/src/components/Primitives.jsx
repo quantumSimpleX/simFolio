@@ -13,6 +13,9 @@ import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group';
 import {
   Tooltip, TooltipTrigger, TooltipContent, TooltipProvider,
 } from './ui/tooltip';
+import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
+import { useIsMobile } from '../hooks/useBreakpoint';
 
 // Map display text → glossary key
 const TERM_MAP = {
@@ -68,7 +71,7 @@ export function Mark({ size = 40 }) {
 export function SimPill() {
   return (
     <Badge variant="sim" size="sim">
-      <span style={{ width:5, height:5, borderRadius:'50%', background:C.ame400 }}/>
+      <span className="h-[5px] w-[5px] rounded-full bg-ame-400"/>
       Simulated only — no real money
     </Badge>
   );
@@ -134,10 +137,10 @@ export function SocialBtn({ provider }) {
 
 export function Divider({ label='or with email' }) {
   return (
-    <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-      <div style={{ flex:1, height:1, background:C.ink100 }}/>
-      <div style={{ fontFamily:SANS, fontSize:12, color:C.ink400 }}>{label}</div>
-      <div style={{ flex:1, height:1, background:C.ink100 }}/>
+    <div className="flex items-center gap-3">
+      <div className="h-px flex-1 bg-ink-100"/>
+      <div className="font-sans text-xs text-ink-400">{label}</div>
+      <div className="h-px flex-1 bg-ink-100"/>
     </div>
   );
 }
@@ -190,36 +193,70 @@ export function Eyebrow({ children, style={} }) {
   );
 }
 
+const TRIGGER_CLS = 'cursor-pointer border-b-[1.5px] border-dotted border-ame-400';
+
+function GlossaryEntry({ entry }) {
+  return (
+    <>
+      <span className="mb-1 block font-sans text-xs font-bold text-ink-900">{entry.title}</span>
+      <span className="block font-sans text-xs leading-relaxed text-ink-600">{entry.definition}</span>
+    </>
+  );
+}
+
 export function TermUnderline({ children, termKey }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const { lang } = useLang();
+  const isMobile = useIsMobile();
 
   const key = termKey || TERM_MAP[String(children).toLowerCase()] || TERM_MAP[String(children).toLowerCase().replace(/[^a-z0-9 ]/g,'')];
   const def = key ? glossary[key] : null;
-  const entry = def ? (def[lang] || def.en) : null;
 
-  // close on outside click
+  // close on outside click (desktop tooltip)
   useEffect(() => {
-    if (!open) return;
+    if (!open || isMobile) return;
     function handler(e) {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false);
     }
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
+  }, [open, isMobile]);
 
-  if (!entry) {
-    return <span className="cursor-pointer border-b-[1.5px] border-dotted border-ame-400">{children}</span>;
+  if (!def) {
+    return <span className={TRIGGER_CLS}>{children}</span>;
   }
 
+  // Mobile: full-width bottom sheet with EN / 繁中 language tabs.
+  if (isMobile) {
+    return (
+      <Sheet>
+        <SheetTrigger asChild>
+          <span className={TRIGGER_CLS}>{children}</span>
+        </SheetTrigger>
+        <SheetContent side="bottom">
+          <Tabs defaultValue={lang === 'zh-TW' ? 'zh-TW' : 'en'} className="mt-4">
+            <TabsList>
+              <TabsTrigger value="en">EN</TabsTrigger>
+              <TabsTrigger value="zh-TW">繁中</TabsTrigger>
+            </TabsList>
+            <TabsContent value="en" className="mt-3"><GlossaryEntry entry={def.en} /></TabsContent>
+            <TabsContent value="zh-TW" className="mt-3"><GlossaryEntry entry={def['zh-TW'] || def.en} /></TabsContent>
+          </Tabs>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  // Desktop: tooltip in the active language.
+  const entry = def[lang] || def.en;
   return (
     <TooltipProvider delayDuration={0}>
       <Tooltip open={open} onOpenChange={setOpen}>
         <TooltipTrigger asChild>
           <span
             ref={ref}
-            className="cursor-pointer border-b-[1.5px] border-dotted border-ame-400"
+            className={TRIGGER_CLS}
             onMouseEnter={() => setOpen(true)}
             onMouseLeave={() => setOpen(false)}
           >
@@ -227,8 +264,7 @@ export function TermUnderline({ children, termKey }) {
           </span>
         </TooltipTrigger>
         <TooltipContent>
-          <span className="mb-1 block font-sans text-xs font-bold text-ink-900">{entry.title}</span>
-          <span className="block font-sans text-xs leading-relaxed text-ink-600">{entry.definition}</span>
+          <GlossaryEntry entry={entry} />
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

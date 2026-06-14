@@ -25,6 +25,8 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.js'],
+    // Edge-function tests under supabase/ run with `deno test`, not Vitest (they use Deno APIs).
+    exclude: ['**/node_modules/**', '**/dist/**', 'supabase/**'],
     alias: [
       // All tests run against a mocked Supabase client — no network
       { find: /^(.*)\/lib\/supabase$/, replacement: fileURLToPath(new URL('./src/test/supabaseMock.js', import.meta.url)) },

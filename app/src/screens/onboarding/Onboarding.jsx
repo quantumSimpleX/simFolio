@@ -4,7 +4,8 @@ import BrandPanel from '../../components/BrandPanel';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
-import { matchHeroes, rankHeroesForSelection, HERO_DATA } from '../../data/heroes';
+import { matchHeroes, resolveSelectionHeroes, heroIdFromName, HERO_DATA } from '../../data/heroes';
+import { useHeroRanking } from '../../hooks/useHeroRanking';
 import { cn } from '../../lib/utils';
 
 const NONE_GOAL = 'None of the above';
@@ -78,6 +79,17 @@ export default function Onboarding() {
   const [saving, setSaving] = useState(false);
 
   const current = QUESTIONS[step];
+
+  // Hero selection grid: when the user named an investor we recognise, pin that hero right after
+  // Warren (no LLM call); otherwise rank the pool via the LLM. The hook always resolves to a
+  // complete Warren-first list, falling back to deterministic ranking if the model is unavailable.
+  const mentionId = heroIdFromName(answers.heroMention);
+  const useLLM = !mentionId;
+  const { heroIds: rankedHeroIds, isLoading: rankingLoading } =
+    useHeroRanking(answers, { enabled: showHeroes && useLLM });
+  const selectionHeroIds = useLLM
+    ? rankedHeroIds
+    : resolveSelectionHeroes({ llmIds: [mentionId], answers });
 
   function advance(value) {
     const newAnswers = { ...answers, [current.key]: value };
@@ -185,7 +197,7 @@ export default function Onboarding() {
   }
 
   if (showHeroes) {
-    return <HeroSelect heroIds={rankHeroesForSelection(answers)} onChoose={handleHeroChosen} saving={saving} onBack={() => setShowHeroes(false)}/>;
+    return <HeroSelect heroIds={selectionHeroIds} loading={useLLM && rankingLoading} onChoose={handleHeroChosen} saving={saving} onBack={() => setShowHeroes(false)}/>;
   }
 
   if (showStock) {
@@ -381,7 +393,7 @@ function MultiGoalPicker({ choices, value, onChange }) {
   );
 }
 
-function HeroSelect({ heroIds, onChoose, saving, onBack }) {
+function HeroSelect({ heroIds, loading, onChoose, saving, onBack }) {
   const [picked, setPicked] = useState(null);
   const isDesktop = useIsDesktop();
   const avatarSize = isDesktop ? 48 : 34;
@@ -391,9 +403,16 @@ function HeroSelect({ heroIds, onChoose, saving, onBack }) {
       <BackButton onBack={onBack}/>
 
       <SageHeader avatarSize={avatarSize} isDesktop={isDesktop}>
-        Maybe you can ask some of these experts to help you?
+        {loading ? 'Let me think about who could help you…' : 'Maybe you can ask some of these experts to help you?'}
       </SageHeader>
 
+      {loading ? (
+        <div className="grid grid-cols-2 gap-2.5">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="h-[112px] animate-pulse rounded-card border-[1.5px] border-ink-100 bg-ink-50"/>
+          ))}
+        </div>
+      ) : (
       <div className="grid grid-cols-2 gap-2.5">
         {heroIds.map(id => {
           const h = HERO_DATA[id];
@@ -417,6 +436,7 @@ function HeroSelect({ heroIds, onChoose, saving, onBack }) {
           );
         })}
       </div>
+      )}
 
       <CTA
         label={picked ? `Ask ${HERO_DATA[picked].name}  →` : 'Pick an expert to continue'}

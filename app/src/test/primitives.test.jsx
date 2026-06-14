@@ -85,6 +85,20 @@ describe('Primitives', () => {
     fireEvent.mouseEnter(screen.getByText('mystery-term'))
   })
 
+  it('TermUnderline opens a bottom sheet with EN/繁中 tabs on mobile', () => {
+    const original = window.innerWidth
+    window.innerWidth = 375
+    try {
+      renderWithProviders(<TermUnderline>slippage</TermUnderline>)
+      fireEvent.click(screen.getByText('slippage'))
+      expect(screen.getByText('EN')).toBeInTheDocument()
+      expect(screen.getByText('繁中')).toBeInTheDocument()
+      expect(document.body.textContent).toMatch(/difference between/i)
+    } finally {
+      window.innerWidth = original
+    }
+  })
+
   it('LangToggle and ThemeToggle toggle through context', () => {
     const { container } = renderWithProviders(<><LangToggle/><ThemeToggle/></>)
     fireEvent.click(screen.getByText('繁中'))

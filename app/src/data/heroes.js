@@ -94,22 +94,142 @@ export const HERO_DATA = {
     matchFor: ['Build long-term wealth', 'Just exploring for now'],
     knownFor: 'Tesla, CRISPR, blockchain — transformative technologies',
   },
+  templeton: {
+    id: 'templeton',
+    initials: 'JT',
+    name: 'Sir John Templeton',
+    color: 'var(--aqua-600)',
+    philosophy: 'Buy at the point of maximum pessimism. Hunt for bargains globally, where others are too fearful to look. The four most dangerous words in investing are "this time it\'s different".',
+    bio: 'Pioneer of international mutual funds. Famously bought beaten-down stocks during market panics and held for the long term.',
+    style: 'Contrarian · global · bargain-hunting',
+    knownFor: 'Buying during panics, pioneering global diversification',
+  },
+  tudorjones: {
+    id: 'tudorjones',
+    initials: 'PT',
+    name: 'Paul Tudor Jones',
+    color: 'var(--gold)',
+    philosophy: 'Play great defense, not great offense. Cut losses fast, ride winners, and respect the trend. The most important rule is to protect your capital.',
+    bio: 'Macro trader who famously predicted and profited from the 1987 Black Monday crash. Founder of Tudor Investment Corporation.',
+    style: 'Macro · technical · risk-first trading',
+    knownFor: 'Calling the 1987 crash, disciplined risk management',
+  },
+  druckenmiller: {
+    id: 'druckenmiller',
+    initials: 'SD',
+    name: 'Stanley Druckenmiller',
+    color: 'var(--ame-600)',
+    philosophy: 'When you are right, bet big. Concentrate into your highest-conviction macro ideas and size up when the odds are in your favour. Preserve capital first, then go for home runs.',
+    bio: 'Ran Soros\'s Quantum Fund and his own Duquesne Capital with a decades-long streak of no losing years.',
+    style: 'Global macro · high-conviction · concentrated',
+    knownFor: 'Decades with zero down years, big concentrated bets',
+  },
+  tepper: {
+    id: 'tepper',
+    initials: 'DT',
+    name: 'David Tepper',
+    color: 'var(--ink-600)',
+    philosophy: 'Buy fear. The best opportunities come from distressed and beaten-down assets when everyone else is panicking. Be willing to be greedy when others are terrified.',
+    bio: 'Founder of Appaloosa Management. Made enormous gains buying discounted bank stocks during the 2008 crisis.',
+    style: 'Distressed · contrarian · opportunistic',
+    knownFor: 'Buying distressed banks in 2008 for outsized gains',
+  },
+  icahn: {
+    id: 'icahn',
+    initials: 'CI',
+    name: 'Carl Icahn',
+    color: 'var(--ame-500)',
+    philosophy: 'Find undervalued companies and push management to unlock value. A good activist forces change where boards are complacent.',
+    bio: 'Legendary activist investor and corporate raider who forces public companies to restructure for shareholder value.',
+    style: 'Activist · contrarian · value-unlocking',
+    knownFor: 'Activist campaigns forcing corporate restructuring',
+  },
+  ackman: {
+    id: 'ackman',
+    initials: 'BA',
+    name: 'Bill Ackman',
+    color: 'var(--ame-400)',
+    philosophy: 'Concentrate in a handful of high-quality, simple, predictable businesses — then engage actively when change is needed. Conviction over diversification.',
+    bio: 'Founder of Pershing Square. Known for large, highly public, concentrated activist positions.',
+    style: 'Concentrated activist · high-conviction · long-term',
+    knownFor: 'Bold public campaigns through Pershing Square',
+  },
+  loeb: {
+    id: 'loeb',
+    initials: 'DL',
+    name: 'Daniel Loeb',
+    color: 'var(--ink-400)',
+    philosophy: 'Find the catalyst. Event-driven situations — restructurings, spin-offs, management changes — create mispricings worth pressing hard.',
+    bio: 'Founder of Third Point. Famous for sharp, aggressive letters to corporate boards demanding change.',
+    style: 'Event-driven · activist · catalyst-focused',
+    knownFor: 'Aggressive activist letters and event-driven bets',
+  },
+  chamath: {
+    id: 'chamath',
+    initials: 'CP',
+    name: 'Chamath Palihapitiya',
+    color: 'var(--aqua-400)',
+    philosophy: 'Back bold, world-changing technology early. Growth and venture-style conviction can compound into generational outcomes — if you can stomach the volatility.',
+    bio: 'Venture and growth investor who popularized SPACs during the tech boom. Founder of Social Capital.',
+    style: 'Growth capital · venture · high-risk innovation',
+    knownFor: 'Popularizing SPACs, early-stage tech bets',
+  },
+  simons: {
+    id: 'simons',
+    initials: 'JS',
+    name: 'Jim Simons',
+    color: 'var(--ink-600)',
+    philosophy: 'Let the data decide. Systematic, quantitative models exploit tiny statistical edges across thousands of trades — emotion has no place in the process.',
+    bio: 'Mathematician and founder of Renaissance Technologies, whose Medallion Fund is the most successful quant fund in history.',
+    style: 'Quantitative · systematic · data-driven',
+    knownFor: 'The Medallion Fund, mathematical trading',
+  },
+  griffin: {
+    id: 'griffin',
+    initials: 'KG',
+    name: 'Kenneth C. Griffin',
+    color: 'var(--ame-600)',
+    philosophy: 'Diversify across many uncorrelated strategies and manage risk relentlessly. Edge comes from operational excellence and rigorous research at scale.',
+    bio: 'Founder of Citadel, one of the world\'s leading multi-strategy hedge funds and a dominant market maker.',
+    style: 'Multi-strategy · quantitative · risk-managed',
+    knownFor: 'Building Citadel into an elite multi-strategy fund',
+  },
+  livermore: {
+    id: 'livermore',
+    initials: 'JL',
+    name: 'Jesse Livermore',
+    color: 'var(--gold)',
+    philosophy: 'The trend is your friend until it ends. Read price action, trade with the market\'s direction, and never fight the tape. Patience and timing are everything.',
+    bio: 'Early-1900s speculator who made and lost several fortunes reading price trends and market psychology.',
+    style: 'Momentum · price action · speculative',
+    knownFor: 'Tape reading and legendary momentum trades',
+  },
+  burry: {
+    id: 'burry',
+    initials: 'MB',
+    name: 'Michael Burry',
+    color: 'var(--ink-400)',
+    philosophy: 'Do your own deep research and trust the numbers, even against the entire market. Asymmetric bets against consensus can pay off enormously when you are right.',
+    bio: 'Value investor and founder of Scion Capital who famously forecast and bet against the 2008 subprime collapse.',
+    style: 'Deep value · contrarian · research-intensive',
+    knownFor: 'Shorting the 2008 subprime mortgage bubble',
+  },
 }
 
 // Affinity of each hero to the onboarding goal choices (order = strength)
 const GOAL_AFFINITY = {
-  'Shielding purchasing power from inflation': ['bogle', 'ray', 'warren', 'graham'],
-  'Harnessing exponential compound wealth growth': ['warren', 'munger', 'cathie', 'bogle'],
-  'Generating reliable passive dividend income': ['bogle', 'warren', 'graham', 'ray'],
-  'Spreading risk through asset diversification': ['ray', 'bogle', 'soros'],
-  'Owning pieces of profitable global corporations': ['warren', 'munger', 'lynch', 'graham'],
+  'Shielding purchasing power from inflation': ['bogle', 'ray', 'warren', 'graham', 'templeton'],
+  'Harnessing exponential compound wealth growth': ['warren', 'munger', 'cathie', 'bogle', 'chamath', 'ackman'],
+  'Generating reliable passive dividend income': ['bogle', 'warren', 'graham', 'ray', 'templeton'],
+  'Spreading risk through asset diversification': ['ray', 'bogle', 'soros', 'griffin', 'simons'],
+  'Owning pieces of profitable global corporations': ['warren', 'munger', 'lynch', 'graham', 'templeton', 'icahn'],
 }
 
 const HORIZON_AFFINITY = {
-  'Less than a year': ['lynch', 'soros', 'cathie'],
-  '1 – 3 years': ['lynch', 'graham', 'ray'],
-  '3 – 10 years': ['warren', 'bogle', 'munger'],
-  '10+ years': ['warren', 'bogle', 'munger', 'cathie'],
+  'Less than a year': ['lynch', 'soros', 'cathie', 'tudorjones', 'livermore', 'druckenmiller'],
+  '1 – 3 years': ['lynch', 'graham', 'ray', 'tepper', 'loeb'],
+  '3 – 10 years': ['warren', 'bogle', 'munger', 'simons', 'griffin'],
+  '10+ years': ['warren', 'bogle', 'munger', 'cathie', 'templeton', 'burry'],
 }
 
 // Ranked hero ids for the onboarding selection grid.
@@ -153,4 +273,51 @@ export function matchHeroes(answers) {
 
   // Tech interest / exploring → Cathie
   return ['cathie', 'lynch', 'warren']
+}
+
+// The pool the LLM ranks from: every selectable hero except Sage and Warren Buffett.
+// Sent to the rank-heroes edge function so heroes.js stays the single source of truth.
+export function candidateHeroes() {
+  return Object.values(HERO_DATA)
+    .filter(h => h.id !== 'sage' && h.id !== 'warren')
+    .map(({ id, name, style, philosophy }) => ({ id, name, style, philosophy }))
+}
+
+// Resolve a partial/unreliable LLM ranking into a final 8-hero selection list.
+// Always returns ['warren', ...up to 7 non-Warren ids], deduped, with Warren first and never
+// duplicated. Invalid ids are dropped; any shortfall is filled from the rule-based ranking so the
+// grid is always complete even when the LLM fails or returns junk.
+export function resolveSelectionHeroes({ llmIds = [], answers = {} } = {}) {
+  const valid = new Set(
+    Object.keys(HERO_DATA).filter(id => id !== 'sage' && id !== 'warren'),
+  )
+  const seen = new Set()
+  const picked = []
+
+  const take = id => {
+    if (valid.has(id) && !seen.has(id) && picked.length < 7) {
+      seen.add(id)
+      picked.push(id)
+    }
+  }
+
+  if (Array.isArray(llmIds)) llmIds.forEach(take)
+
+  if (picked.length < 7) {
+    rankHeroesForSelection(answers, Object.keys(HERO_DATA).length)
+      .filter(id => id !== 'warren')
+      .forEach(take)
+  }
+
+  return ['warren', ...picked]
+}
+
+// Map a free-text / chosen "investor I admire" answer to a hero id, or null if none matches.
+export function heroIdFromName(name) {
+  if (!name) return null
+  const n = name.toLowerCase()
+  const match = Object.values(HERO_DATA).find(
+    h => h.id !== 'sage' && (h.name.toLowerCase().includes(n) || n.includes(h.id)),
+  )
+  return match ? match.id : null
 }

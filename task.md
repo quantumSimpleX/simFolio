@@ -149,6 +149,48 @@ The browser only ever talks to Supabase with the anon key + the user's JWT.
 - Only **educational tooltips** and **onboarding** are bilingual; **hero responses stay English**.
 - Create `app/src/data/glossary.json` (PRD Appendix A1 structure: `{ term: { en, zh-TW } }`) covering
   the ~15 terms the handoff lists (market_order, limit_order, slippage, cost_basis, P/E, ETF, …).
+## Feature — LLM Hero Ranking (onboarding)
+
+When the user does not name an admired investor, rank the top 7 of the 19 non-Warren heroes via the
+LLM using all onboarding answers; the selection grid shows Warren + those 7. Falls back to
+deterministic rule-based ranking when the LLM is unavailable. (Plan: `i-want-you-to-dynamic-thompson.md`.)
+
+- [x] HR-1  Expand HERO_DATA to 20 heroes (heroes.js) from mentor.md; extend affinity maps for fallback.
+- [x] HR-2  Add resolveSelectionHeroes() + candidateHeroes() + heroIdFromName() pure helpers to heroes.js.
+- [x] HR-3  Create edge function app/supabase/functions/rank-heroes/ (OpenRouter, JWT, parse.ts/parseRankedIds).
+- [x] HR-4  Add useHeroRanking.js hook (React Query, fallback-on-error, enabled gating).
+- [x] HR-5  Wire ranking into Onboarding HeroSelect (LLM when no heroMention; loading skeleton + fallback).
+- [x] HR-6  Update MVP PRD Hero Library (20) + Recommendation Engine (LLM ranking requirement).
+- [x] HR-7  Add hero-chat personas + avatars for the 14 non-default heroes. `HERO_PERSONAS` in
+            `hero-chat/index.ts` now covers graham, soros, templeton, tudorjones, druckenmiller, tepper,
+            icahn, ackman, loeb, chamath, simons, griffin, livermore, burry (no longer Sage fallback);
+            `HERO_MAP` in `HeroMessage.jsx` gained matching initials + QSXC colors so each renders its own
+            avatar. (Edge fn needs `supabase functions deploy hero-chat` to take effect in prod.)
+- [x] HR-8  Tests: unit (resolver, HERO_DATA, heroIdFromName), hook (success/malformed/error/disabled/no-session),
+            Deno parser; ≥85% line coverage on new app/src feature files; suite green; build + lint clean.
+            **Result: 188/188 Vitest pass (100%). Coverage — heroes.js 93.18% lines, useHeroRanking.js 100% lines
+            (both ≥85%); global 84.95% (80% gate cleared). Lint + build clean. Deno parse.test.ts (8 cases)
+            runs via `deno test` — not installed in this env, run manually.**
+
+### QA findings — Round 1 (from test run)
+- **[fixed] Brittle pre-existing test `rankHeroesForSelection > ranks diversification-aligned heroes higher`.**
+  Adding `griffin`/`simons` to the diversification affinity list pushed `cathie` out of the default
+  top-8 for that goal, so `ids.indexOf('cathie')` became `-1` and `indexOf('ray') < -1` failed.
+  Implementation is correct (Ray still ranks above Cathie); the assertion was brittle. Re-anchored the
+  test to compare positions within the full 21-long ordering (`count = 21`) so both heroes are present.
+- **[fixed] Deno `parse.test.ts` was picked up by Vitest** (matches `**/*.test.ts`) and failed as a suite
+  because it uses Deno APIs. Added `test.exclude: [...,'supabase/**']` to `vite.config.js` so edge-function
+  tests run only under `deno test`. (Coverage gate untouched.)
+- **Outcome:** 188/188 Vitest pass (100% > 95% target). No remaining failures.
+
+### QA findings — Round 2 (HR-7 personas/avatars + full re-run)
+- HR-7 added 14 chat personas + 14 avatar entries. No new tests required: `hero-chat` is Deno (excluded
+  from Vitest) and `HERO_MAP` is static data exercised on `HeroMessage` render.
+- **Re-run:** 188/188 Vitest pass (100%). Coverage — heroes.js 93.18%, useHeroRanking.js 100% lines;
+  global 84.95% lines (80% gate cleared). `npm run lint` clean, `npm run build` ✓. Deno parser test still
+  pending manual `deno test` (Deno not installed in this env).
+- **Outcome:** All HR tasks (HR-1…HR-8) complete; pass rate 100% > 95% target.
+
 - `LanguageContext` holds `lang` (`en` | `zh-TW`), persists to `users.language_preference`, and powers
   the existing `TermUnderline` tooltip primitive (desktop card / mobile bottom sheet with EN/繁中 tabs)
   and the onboarding strings. Wire the existing `LangToggle` (currently inert).

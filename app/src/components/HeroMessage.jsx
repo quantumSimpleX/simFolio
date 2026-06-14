@@ -10,6 +10,20 @@ const HERO_MAP = {
   bogle:  { initials:'JB', name:'John Bogle',     color:C.gold },
   cathie: { initials:'CW', name:'Cathie Wood',    color:C.aqua400 },
   ray:    { initials:'RD', name:'Ray Dalio',      color:C.gold },
+  graham: { initials:'BG', name:'Benjamin Graham',         color:C.ink400 },
+  soros:  { initials:'GS', name:'George Soros',            color:C.ame600 },
+  templeton:     { initials:'JT', name:'Sir John Templeton',    color:C.aqua600 },
+  tudorjones:    { initials:'PT', name:'Paul Tudor Jones',      color:C.gold },
+  druckenmiller: { initials:'SD', name:'Stanley Druckenmiller', color:C.ame600 },
+  tepper: { initials:'DT', name:'David Tepper',            color:C.ink600 },
+  icahn:  { initials:'CI', name:'Carl Icahn',              color:C.ame500 },
+  ackman: { initials:'BA', name:'Bill Ackman',             color:C.ame400 },
+  loeb:   { initials:'DL', name:'Daniel Loeb',             color:C.ink400 },
+  chamath:{ initials:'CP', name:'Chamath Palihapitiya',    color:C.aqua400 },
+  simons: { initials:'JS', name:'Jim Simons',              color:C.ink600 },
+  griffin:{ initials:'KG', name:'Kenneth C. Griffin',      color:C.ame600 },
+  livermore:     { initials:'JL', name:'Jesse Livermore',       color:C.gold },
+  burry:  { initials:'MB', name:'Michael Burry',           color:C.ink400 },
 };
 
 export function HeroMessage({ hero='warren', text, time, isNew=false }) {

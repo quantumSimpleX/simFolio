@@ -14,6 +14,7 @@ import { useAchievements } from '../hooks/useAchievements'
 import { useHeroSelections } from '../hooks/useHeroSelections'
 import { useSymbolSearch } from '../hooks/useSymbolSearch'
 import { usePlaceOrder } from '../hooks/usePlaceOrder'
+import { useHeroRanking } from '../hooks/useHeroRanking'
 import { useAuth } from '../context/AuthContext'
 
 // Exposes both the live session and the mutation so tests can wait for the
@@ -256,5 +257,56 @@ describe('usePlaceOrder', () => {
     await expect(
       act(async () => { await result.current.m.mutateAsync({ ticker: 'AAPL', qty: 1 }) }),
     ).rejects.toThrow('Insufficient funds')
+  })
+})
+
+describe('useHeroRanking', () => {
+  beforeEach(() => supabase.functions.invoke.mockClear())
+
+  it('returns Warren + the LLM-ranked 7 on success', async () => {
+    const ranked = ['burry', 'simons', 'griffin', 'tepper', 'icahn', 'ackman', 'loeb']
+    supabase.functions.invoke.mockResolvedValueOnce({ data: { ranked }, error: null })
+    const { result } = renderHook(() => useHeroRanking({ goal: ['x'] }, { enabled: true }), { wrapper: makeWrapper() })
+    await waitFor(() => expect(result.current.heroIds[1]).toBe('burry'))
+    expect(result.current.heroIds[0]).toBe('warren')
+    expect(result.current.heroIds).toHaveLength(8)
+    expect(result.current.heroIds.slice(1)).toEqual(ranked)
+    expect(supabase.functions.invoke).toHaveBeenCalledWith('rank-heroes', expect.objectContaining({
+      body: expect.objectContaining({ candidates: expect.any(Array) }),
+    }))
+  })
+
+  it('falls back to a complete list on a malformed payload', async () => {
+    supabase.functions.invoke.mockResolvedValueOnce({ data: { ranked: 'nope' }, error: null })
+    const { result } = renderHook(() => useHeroRanking({ goal: ['x'] }, { enabled: true }), { wrapper: makeWrapper() })
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+    expect(result.current.heroIds[0]).toBe('warren')
+    expect(result.current.heroIds).toHaveLength(8)
+    expect(new Set(result.current.heroIds).size).toBe(8)
+    expect(result.current.isError).toBe(false)
+  })
+
+  it('falls back without throwing on a transport error', async () => {
+    supabase.functions.invoke.mockResolvedValueOnce({ data: null, error: new Error('boom') })
+    const { result } = renderHook(() => useHeroRanking({ goal: ['x'] }, { enabled: true }), { wrapper: makeWrapper() })
+    await waitFor(() => expect(result.current.isError).toBe(true))
+    expect(result.current.heroIds[0]).toBe('warren')
+    expect(result.current.heroIds).toHaveLength(8)
+  })
+
+  it('does not call the edge function when disabled', async () => {
+    const { result } = renderHook(() => useHeroRanking({ goal: ['x'] }, { enabled: false }), { wrapper: makeWrapper() })
+    await waitFor(() => expect(result.current.heroIds[0]).toBe('warren'))
+    expect(result.current.heroIds).toHaveLength(8)
+    expect(supabase.functions.invoke).not.toHaveBeenCalled()
+  })
+
+  it('skips the call and falls back when there is no auth session', async () => {
+    supabase.auth.getSession.mockResolvedValueOnce({ data: { session: null } })
+    supabase.auth.signInAnonymously.mockResolvedValueOnce({ data: { session: null }, error: null })
+    const { result } = renderHook(() => useHeroRanking({ goal: ['x'] }, { enabled: true }), { wrapper: makeWrapper() })
+    await waitFor(() => expect(result.current.heroIds[0]).toBe('warren'))
+    expect(result.current.heroIds).toHaveLength(8)
+    expect(supabase.functions.invoke).not.toHaveBeenCalled()
   })
 })

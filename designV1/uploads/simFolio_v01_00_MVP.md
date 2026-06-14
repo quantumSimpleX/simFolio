@@ -94,24 +94,49 @@ Heroes provide educational perspectives, not financial advice.
 - Traditional Chinese (Taiwan)
 
 ### Recommendation Engine
-Recommend 3 Heroes based on:
+Recommend Heroes based on:
 - Capital available
 - Time horizon
 - Goals
 - Risk profile
 - Interests
 
+#### LLM Hero Ranking
+When the user does **not** explicitly name an admired investor during the interview, the system sends
+all onboarding answers (goals, time horizon, trading frequency, experience, capital, interests) and
+the hero library **excluding Warren Buffett** to the LLM, which ranks the **top 7** best-fit advisors
+using its pretrained knowledge of each investor. The selection list presented to the user consists of
+**Warren Buffett plus those 7** heroes (8 total). If the LLM is unavailable or returns an unusable
+response, the system falls back to deterministic rule-based ranking so onboarding never blocks. If the
+user **does** name a recognised investor, that hero is pinned (after Warren) without an LLM call.
+
 ## Hero Library
 
-Initial curated Heroes:
-- Warren Buffett
-- Charlie Munger
-- Peter Lynch
-- John Bogle
-- Ray Dalio
-- Cathie Wood
+The curated library contains **20 legendary investors** (plus Sage, a fictional onboarding guide who
+is not selectable as an advisor):
 
-Users may request another well-known investor if they admire someone specific.
+- Warren Buffett — value investing
+- Charlie Munger — value investing & mental models
+- Benjamin Graham — traditional value investing
+- Peter Lynch — growth at a reasonable price
+- Sir John Templeton — contrarian & global investing
+- George Soros — global macro trading
+- Ray Dalio — global macro & risk parity
+- Paul Tudor Jones — macro & technical trading
+- Stanley Druckenmiller — global macro
+- David Tepper — distressed asset investing
+- Carl Icahn — activist investing
+- Bill Ackman — concentrated activist investing
+- Daniel Loeb — event-driven & activist investing
+- Cathie Wood — aggressive growth / disruptive innovation
+- Chamath Palihapitiya — growth & venture capital
+- Jim Simons — quantitative & algorithmic trading
+- Kenneth C. Griffin — multi-strategy quantitative trading
+- John C. (Jack) Bogle — passive index investing
+- Jesse Livermore — momentum & price-action trading
+- Michael Burry — value & credit-default-swap investing
+
+Users may also request another well-known investor if they admire someone specific.
 
 ## Hero Council
 
