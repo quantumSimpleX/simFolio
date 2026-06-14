@@ -39,6 +39,12 @@ serve(async (req) => {
     const validIds = candidates.map(c => c.id)
     const { system, user: userPrompt } = buildRankingPrompt(answers ?? {}, candidates)
 
+    // --- DEBUG: input to the LLM hero-matcher ---
+    console.log('[rank-heroes] INPUT answers:', JSON.stringify(answers ?? {}))
+    console.log('[rank-heroes] INPUT candidate ids:', JSON.stringify(validIds))
+    console.log('[rank-heroes] INPUT system prompt:\n' + system)
+    console.log('[rank-heroes] INPUT user prompt:\n' + userPrompt)
+
     // Reuse hero-chat's fallback chain; a model only counts as a success when it yields at least
     // one valid ranked id, otherwise we fall through to the next model.
     const llm = await callLLMWithFallback<string[]>({
@@ -54,6 +60,12 @@ serve(async (req) => {
       },
     })
     const ranked = llm.value ?? []
+
+    // --- DEBUG: output from the LLM hero-matcher ---
+    console.log('[rank-heroes] OUTPUT model used:', llm.model)
+    console.log('[rank-heroes] OUTPUT raw content:', llm.content)
+    console.log('[rank-heroes] OUTPUT parsed ranked ids:', JSON.stringify(ranked))
+    if (llm.failures.length) console.log('[rank-heroes] OUTPUT model failures:', JSON.stringify(llm.failures))
 
     // Always 200 with whatever we ranked (possibly []). The client fills any shortfall from its
     // deterministic fallback, so onboarding never blocks on the model.
