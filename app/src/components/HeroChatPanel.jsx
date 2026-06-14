@@ -63,21 +63,25 @@ export function ChatMessages({ history, heroId, isPending, lastModel, historyLoa
   const heroName = HERO_DATA[heroId]?.name ?? 'your council'
 
   return (
-    <div ref={containerRef} className={cn('flex flex-col gap-2.5 overflow-auto', className)}>
-      {historyLoading && (
-        <div className="pt-4 text-center font-sans text-[17px] text-ink-400">Loading conversation…</div>
-      )}
-      {!historyLoading && emptyText && history?.length === 0 && (
-        <div className="pt-4 text-center font-sans text-[17px] italic text-ink-400">{emptyText}</div>
-      )}
-      {(history ?? []).map((msg, i) => {
-        if (msg.role === 'user') return <UserMessage key={i} text={msg.content}/>
-        // Prefer the model persisted with the message; fall back to the live model
-        // of the latest reply (covers the moment before it's persisted/refetched).
-        const model = msg.model ?? (i === (history.length - 1) ? lastModel : null)
-        return <HeroMessage key={i} hero={heroId} text={`"${msg.content}"`} modelTag={modelLabel(model)}/>
-      })}
-      {isPending && <div className="font-sans text-[17px] italic text-ink-400">Calling {heroName}…</div>}
+    <div ref={containerRef} className={cn('flex flex-col overflow-auto', className)}>
+      {/* mt-auto anchors messages to the bottom (like a messaging app): few messages
+          sit just above the composer and new ones push up; the top stays scrollable. */}
+      <div className="mt-auto flex flex-col gap-2.5">
+        {historyLoading && (
+          <div className="pt-4 text-center font-sans text-[17px] text-ink-400">Loading conversation…</div>
+        )}
+        {!historyLoading && emptyText && history?.length === 0 && (
+          <div className="pt-4 text-center font-sans text-[17px] italic text-ink-400">{emptyText}</div>
+        )}
+        {(history ?? []).map((msg, i) => {
+          if (msg.role === 'user') return <UserMessage key={i} text={msg.content}/>
+          // Prefer the model persisted with the message; fall back to the live model
+          // of the latest reply (covers the moment before it's persisted/refetched).
+          const model = msg.model ?? (i === (history.length - 1) ? lastModel : null)
+          return <HeroMessage key={i} hero={heroId} text={`"${msg.content}"`} modelTag={modelLabel(model)}/>
+        })}
+        {isPending && <div className="font-sans text-[17px] italic text-ink-400">Calling {heroName}…</div>}
+      </div>
     </div>
   )
 }
