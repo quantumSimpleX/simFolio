@@ -130,11 +130,19 @@ serve(async (req) => {
       })
     }
 
-    // Persist both turns
-    await adminClient.from('hero_conversations').insert([
+    // Persist both turns, tagging the assistant turn with the model that answered.
+    // Falls back without `model` if that column hasn't been added yet
+    // (ALTER TABLE hero_conversations ADD COLUMN model VARCHAR(80)).
+    const turns = [
       { user_id: uid, hero_id, role: 'user', content: message },
-      { user_id: uid, hero_id, role: 'assistant', content: reply },
-    ])
+      { user_id: uid, hero_id, role: 'assistant', content: reply, model: usedModel },
+    ]
+    const { error: insertErr } = await adminClient.from('hero_conversations').insert(turns)
+    if (insertErr && String(insertErr.message).includes('model')) {
+      await adminClient.from('hero_conversations').insert(
+        turns.map(({ model, ...rest }) => rest),
+      )
+    }
 
     console.log('[hero-chat] replied with model:', usedModel)
     return new Response(JSON.stringify({ reply, model: usedModel }), {

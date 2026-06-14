@@ -10,11 +10,24 @@ export function useHeroHistory(heroId) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('hero_conversations')
-        .select('role, content, created_at')
+        .select('role, content, created_at, model')
         .eq('user_id', user.id)
         .eq('hero_id', heroId)
         .order('created_at', { ascending: true })
         .limit(50)
+      // Retry without `model` if the column hasn't been added yet, so chat
+      // history keeps working before the migration is applied.
+      if (error?.message?.includes('model')) {
+        const retry = await supabase
+          .from('hero_conversations')
+          .select('role, content, created_at')
+          .eq('user_id', user.id)
+          .eq('hero_id', heroId)
+          .order('created_at', { ascending: true })
+          .limit(50)
+        if (retry.error) throw retry.error
+        return retry.data ?? []
+      }
       if (error) throw error
       return data ?? []
     },

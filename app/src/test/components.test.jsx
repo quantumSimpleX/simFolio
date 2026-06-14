@@ -127,21 +127,26 @@ describe('HeroChatPanel pieces', () => {
     wrap(<ChatMessages heroId="nobody" history={[]} isPending emptyText="Ask anything." />)
     expect(screen.getByText('Calling your council…')).toBeInTheDocument()
   })
-  it('ChatMessages shows which model answered the latest reply (provider prefix stripped)', () => {
+  it('ChatMessages badges a reply with its persisted model (abbreviated)', () => {
+    wrap(<ChatMessages heroId="warren" history={[{ role: 'assistant', content: 'Why?', model: 'meta-llama/llama-3.3-70b-instruct:free' }]} isPending={false} />)
+    expect(screen.getByText('Llama')).toBeInTheDocument()
+  })
+  it('ChatMessages falls back to the live lastModel for the latest unbadged reply', () => {
     wrap(<ChatMessages heroId="warren" history={[{ role: 'assistant', content: 'Why?' }]} isPending={false} lastModel="openai/gpt-oss-120b:free" />)
-    expect(screen.getByText('answered by gpt-oss-120b:free')).toBeInTheDocument()
+    expect(screen.getByText('GPT-OSS')).toBeInTheDocument()
   })
-  it('ChatMessages hides the model label while a reply is pending', () => {
-    wrap(<ChatMessages heroId="warren" history={[{ role: 'assistant', content: 'Why?' }]} isPending lastModel="openai/gpt-oss-120b:free" />)
-    expect(screen.queryByText(/answered by/)).not.toBeInTheDocument()
-  })
-  it('ChatMessages omits the model label when no model is set', () => {
+  it('ChatMessages shows no model badge when none is known', () => {
     wrap(<ChatMessages heroId="warren" history={[{ role: 'assistant', content: 'Why?' }]} isPending={false} />)
-    expect(screen.queryByText(/answered by/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Llama|GPT-OSS|Gemma|Nemotron/)).not.toBeInTheDocument()
   })
-  it('modelLabel strips the provider prefix and is empty for falsy input', () => {
-    expect(modelLabel('openai/gpt-oss-120b:free')).toBe('gpt-oss-120b:free')
-    expect(modelLabel('anthropic/claude-opus-4-8')).toBe('claude-opus-4-8')
+  it('modelLabel abbreviates each vendor in the fallback chain', () => {
+    expect(modelLabel('google/gemma-4-31b-it:free')).toBe('Gemma')
+    expect(modelLabel('openai/gpt-oss-120b:free')).toBe('GPT-OSS')
+    expect(modelLabel('meta-llama/llama-3.3-70b-instruct:free')).toBe('Llama')
+    expect(modelLabel('nvidia/nemotron-3-ultra-550b-a55b:free')).toBe('Nemotron')
+  })
+  it('modelLabel falls back to the bare name and is empty for falsy input', () => {
+    expect(modelLabel('someorg/mystery-model-7b:free')).toBe('mystery-model-7b')
     expect(modelLabel('')).toBe('')
     expect(modelLabel(undefined)).toBe('')
   })

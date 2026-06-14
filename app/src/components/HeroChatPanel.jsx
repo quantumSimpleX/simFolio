@@ -3,10 +3,20 @@ import { cn } from '../lib/utils'
 import { HeroMessage, UserMessage } from './HeroMessage'
 import { HERO_DATA } from '../data/heroes'
 
-// Strip the provider prefix from an OpenRouter model id for a compact label.
-// 'openai/gpt-oss-120b:free' -> 'gpt-oss-120b:free'
+// Ultra-short, human-readable abbreviation for an OpenRouter model id, so the
+// chat can show which model in the fallback chain answered without clutter.
+// 'openai/gpt-oss-120b:free' -> 'GPT-OSS'; unknown ids fall back to the bare
+// model name (provider prefix and ':free' suffix stripped).
 export function modelLabel(model) {
-  return model ? String(model).split('/').pop() : ''
+  if (!model) return ''
+  const id = String(model).toLowerCase()
+  if (id.includes('gemma')) return 'Gemma'
+  if (id.includes('gemini')) return 'Gemini'
+  if (id.includes('nemotron')) return 'Nemotron'   // before llama: nvidia ids can contain both
+  if (id.includes('gpt')) return 'GPT-OSS'
+  if (id.includes('llama')) return 'Llama'
+  if (id.includes('claude')) return 'Claude'
+  return String(model).split('/').pop().replace(/:free$/, '')
 }
 
 const QUICK_PROMPTS = ['Review my picks', 'Too concentrated?', 'Am I diversified?']
@@ -38,6 +48,16 @@ export function ChatComposer({ value, onChange, onSend, isPending }) {
   )
 }
 
+// Tiny pill showing which model in the fallback chain produced a reply.
+export function ModelBadge({ model }) {
+  if (!model) return null
+  return (
+    <div className="self-start rounded-pill bg-ink-50 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-ink-400">
+      {modelLabel(model)}
+    </div>
+  )
+}
+
 // Scrolling message list. Renders user/hero bubbles, a loading + empty state,
 // a "Calling {hero}…" indicator while a reply is pending, and a small label of
 // which model answered the latest reply (the chat falls back across a chain of LLMs).
@@ -55,15 +75,19 @@ export function ChatMessages({ history, heroId, isPending, lastModel, historyLoa
       {!historyLoading && emptyText && history?.length === 0 && (
         <div className="pt-4 text-center font-sans text-[17px] italic text-ink-400">{emptyText}</div>
       )}
-      {(history ?? []).map((msg, i) => (
-        msg.role === 'user'
-          ? <UserMessage key={i} text={msg.content}/>
-          : <HeroMessage key={i} hero={heroId} text={`"${msg.content}"`}/>
-      ))}
+      {(history ?? []).map((msg, i) => {
+        if (msg.role === 'user') return <UserMessage key={i} text={msg.content}/>
+        // Prefer the model persisted with the message; fall back to the live model
+        // of the latest reply (covers the moment before it's persisted/refetched).
+        const model = msg.model ?? (i === (history.length - 1) ? lastModel : null)
+        return (
+          <div key={i} className="flex flex-col gap-1">
+            <HeroMessage hero={heroId} text={`"${msg.content}"`}/>
+            {model && <ModelBadge model={model}/>}
+          </div>
+        )
+      })}
       {isPending && <div className="font-sans text-[17px] italic text-ink-400">Calling {heroName}…</div>}
-      {!isPending && lastModel && (history?.length ?? 0) > 0 && (
-        <div className="font-mono text-[11px] text-ink-400">answered by {modelLabel(lastModel)}</div>
-      )}
       <div ref={bottomRef}/>
     </div>
   )
