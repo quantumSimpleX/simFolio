@@ -10,7 +10,7 @@ import { PositionCard } from '../components/PositionCard'
 import { PriceCard } from '../components/PriceCard'
 import { StockRow } from '../components/StockRow'
 import { HoldingRow } from '../components/HoldingRow'
-import { QuickPrompts, ChatComposer, ChatMessages } from '../components/HeroChatPanel'
+import { QuickPrompts, ChatComposer, ChatMessages, modelLabel } from '../components/HeroChatPanel'
 
 function wrap(ui) {
   return render(<MemoryRouter>{ui}</MemoryRouter>)
@@ -119,8 +119,30 @@ describe('HeroChatPanel pieces', () => {
     expect(screen.getByText('"Why this stock?"')).toBeInTheDocument()
     expect(screen.getByText('Warren Buffett')).toBeInTheDocument()
   })
-  it('ChatMessages shows empty text and thinking indicator', () => {
-    wrap(<ChatMessages heroId="sage" history={[]} isPending emptyText="Ask anything." />)
-    expect(screen.getByText('Thinking…')).toBeInTheDocument()
+  it('ChatMessages shows a "Calling {hero}…" indicator while pending', () => {
+    wrap(<ChatMessages heroId="warren" history={[{ role: 'user', content: 'Hi' }]} isPending />)
+    expect(screen.getByText('Calling Warren Buffett…')).toBeInTheDocument()
+  })
+  it('ChatMessages falls back to "your council" when the hero is unknown', () => {
+    wrap(<ChatMessages heroId="nobody" history={[]} isPending emptyText="Ask anything." />)
+    expect(screen.getByText('Calling your council…')).toBeInTheDocument()
+  })
+  it('ChatMessages shows which model answered the latest reply (provider prefix stripped)', () => {
+    wrap(<ChatMessages heroId="warren" history={[{ role: 'assistant', content: 'Why?' }]} isPending={false} lastModel="openai/gpt-oss-120b:free" />)
+    expect(screen.getByText('answered by gpt-oss-120b:free')).toBeInTheDocument()
+  })
+  it('ChatMessages hides the model label while a reply is pending', () => {
+    wrap(<ChatMessages heroId="warren" history={[{ role: 'assistant', content: 'Why?' }]} isPending lastModel="openai/gpt-oss-120b:free" />)
+    expect(screen.queryByText(/answered by/)).not.toBeInTheDocument()
+  })
+  it('ChatMessages omits the model label when no model is set', () => {
+    wrap(<ChatMessages heroId="warren" history={[{ role: 'assistant', content: 'Why?' }]} isPending={false} />)
+    expect(screen.queryByText(/answered by/)).not.toBeInTheDocument()
+  })
+  it('modelLabel strips the provider prefix and is empty for falsy input', () => {
+    expect(modelLabel('openai/gpt-oss-120b:free')).toBe('gpt-oss-120b:free')
+    expect(modelLabel('anthropic/claude-opus-4-8')).toBe('claude-opus-4-8')
+    expect(modelLabel('')).toBe('')
+    expect(modelLabel(undefined)).toBe('')
   })
 })

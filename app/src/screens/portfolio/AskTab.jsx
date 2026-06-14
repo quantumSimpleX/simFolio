@@ -19,7 +19,7 @@ export default function AskTab() {
     : 'No positions yet.';
 
   const { data: history, isLoading: historyLoading } = useHeroHistory(heroId);
-  const { mutate: sendMessage, isPending } = useHeroChat(heroId, portfolioContext);
+  const { mutate: sendMessage, isPending, data: lastReply } = useHeroChat(heroId, portfolioContext);
 
   function handleSend(text) {
     const msg = (text || input).trim();
@@ -53,6 +53,7 @@ export default function AskTab() {
         history={history}
         heroId={heroId}
         isPending={isPending}
+        lastModel={lastReply?.model}
         historyLoading={historyLoading}
         emptyText="Ask your council anything about your portfolio or investing."
       />

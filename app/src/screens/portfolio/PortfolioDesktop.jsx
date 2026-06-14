@@ -57,7 +57,7 @@ export default function PortfolioDesktop() {
     : 'No positions yet.';
 
   const { data: history } = useHeroHistory(heroId);
-  const { mutate: sendMessage, isPending } = useHeroChat(heroId, portfolioContext);
+  const { mutate: sendMessage, isPending, data: lastReply } = useHeroChat(heroId, portfolioContext);
 
   const [input, setInput] = useState('');
   const [activeTab, setActiveTab] = useState('Council');
@@ -151,6 +151,7 @@ export default function PortfolioDesktop() {
             history={history}
             heroId={heroId}
             isPending={isPending}
+            lastModel={lastReply?.model}
           />
           <div className="border-t border-ink-100 px-3 pb-3 pt-2">
             <ChatComposer value={input} onChange={setInput} onSend={() => handleSend()} isPending={isPending}/>

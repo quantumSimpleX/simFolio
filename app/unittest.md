@@ -75,6 +75,12 @@ Behavior assertions stay **identical**; touch only selectors broken by markup ch
 - **Badges**: `BadgeGlyphForIndex` maps index→glyph+color; earned vs unearned opacity; Medal/Trophy render.
 - **HeroChatPanel**: renders `HeroMessage`/`UserMessage`/`SageMsg`; composer submit fires handler;
   hero message rendered italic + question form (assert text content, not style).
+  - **Pending indicator**: while `isPending`, shows `Calling {hero name}…` (e.g. "Calling Warren
+    Buffett…"); falls back to "Calling your council…" for an unknown `heroId`.
+  - **Model label**: after a reply (`!isPending`, history non-empty), shows `answered by {model}`
+    with the OpenRouter provider prefix stripped (`openai/gpt-oss-120b:free` → `gpt-oss-120b:free`),
+    surfacing which model in the fallback chain answered. Hidden while pending and when no model is set.
+  - **modelLabel(model)**: pure helper — strips the `provider/` prefix; returns `''` for falsy input.
 
 ### B4. `context.test.jsx` — providers
 - **AuthContext**: `signIn`/`signUp`/`signOut` update `user` via Supabase mock; error path surfaces error.

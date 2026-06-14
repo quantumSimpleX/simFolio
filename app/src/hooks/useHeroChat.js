@@ -36,7 +36,7 @@ export function useHeroChat(heroId, portfolioContext) {
       if (error) throw error
       if (data.error) throw new Error(data.error)
       console.log('[HeroChat] reply from model:', data.model)
-      return data.reply
+      return { reply: data.reply, model: data.model }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['hero-history', user?.id, heroId] })
