@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { callLLMWithFallback } from '../_shared/llm.ts'
 
 const OPENROUTER_KEY   = Deno.env.get('OPENROUTER_API_KEY') ?? ''
 const SUPABASE_URL     = Deno.env.get('SUPABASE_URL') ?? ''
@@ -9,17 +10,6 @@ const cors = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
-
-// Fallback chain: the biggest free OpenRouter model from each of four vendors,
-// tried in order until one returns content. Order: Google → OpenAI → Meta → NVIDIA.
-// NOTE: the NVIDIA 550B model is very large and can exceed the edge function
-// wall-clock limit — it sits last as a final fallback only.
-const MODELS = [
-  'google/gemma-4-31b-it:free',
-  'openai/gpt-oss-120b:free',
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'nvidia/nemotron-3-ultra-550b-a55b:free',
-]
 
 const HERO_PERSONAS: Record<string, string> = {
   sage: `You are Sage, a neutral, warm, and encouraging financial education guide. You are NOT an investor persona — you are a guide helping a beginner learn how to invest. You use plain language, ask Socratic questions, and never give directives. Always speak in first person.`,
@@ -101,34 +91,20 @@ serve(async (req) => {
       { role: 'user', content: message },
     ]
 
-    let reply: string | null = null
-    let usedModel: string | null = null
-    const failures: string[] = []
-    for (const model of MODELS) {
-      const llmRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${OPENROUTER_KEY}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://simfolio.app',
-          'X-Title': 'simFolio',
-        },
-        body: JSON.stringify({ model, messages: [{ role: 'system', content: systemPrompt }, ...messages] }),
-      })
-      const llmData = await llmRes.json()
-      const content = llmData.choices?.[0]?.message?.content
-      if (content) { reply = content; usedModel = model; break }
-      const why = llmData.error?.message ?? `HTTP ${llmRes.status}`
-      failures.push(`${model}: ${why}`)
-      console.warn('[hero-chat] model failed —', model, why)
-    }
+    const llm = await callLLMWithFallback({
+      messages: [{ role: 'system', content: systemPrompt }, ...messages],
+      apiKey: OPENROUTER_KEY,
+      label: 'hero-chat',
+    })
 
-    if (!reply) {
-      return new Response(JSON.stringify({ error: `All models failed. ${failures.join(' | ')}` }), {
+    if (!llm.ok) {
+      return new Response(JSON.stringify({ error: `All models failed. ${llm.failures.join(' | ')}` }), {
         status: 502,
         headers: { ...cors, 'Content-Type': 'application/json' },
       })
     }
+    const reply = llm.value
+    const usedModel = llm.model
 
     // Persist both turns, tagging the assistant turn with the model that answered.
     // Falls back without `model` if that column hasn't been added yet

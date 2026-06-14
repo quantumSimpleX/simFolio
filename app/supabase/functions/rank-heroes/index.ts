@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { buildRankingPrompt, parseRankedIds, type Candidate } from './parse.ts'
+import { callLLMWithFallback } from '../_shared/llm.ts'
 
 const OPENROUTER_KEY   = Deno.env.get('OPENROUTER_API_KEY') ?? ''
 const SUPABASE_URL     = Deno.env.get('SUPABASE_URL') ?? ''
@@ -10,15 +11,6 @@ const cors = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
-
-// Same fallback chain as hero-chat: biggest free model per vendor, tried in
-// order (Google → OpenAI → Meta → NVIDIA) until one returns a usable ranking.
-const MODELS = [
-  'google/gemma-4-31b-it:free',
-  'openai/gpt-oss-120b:free',
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'nvidia/nemotron-3-ultra-550b-a55b:free',
-]
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
@@ -47,35 +39,21 @@ serve(async (req) => {
     const validIds = candidates.map(c => c.id)
     const { system, user: userPrompt } = buildRankingPrompt(answers ?? {}, candidates)
 
-    let ranked: string[] = []
-    const failures: string[] = []
-    for (const model of MODELS) {
-      const llmRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${OPENROUTER_KEY}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://simfolio.app',
-          'X-Title': 'simFolio',
-        },
-        body: JSON.stringify({
-          model,
-          messages: [
-            { role: 'system', content: system },
-            { role: 'user', content: userPrompt },
-          ],
-        }),
-      })
-      const llmData = await llmRes.json()
-      const content = llmData.choices?.[0]?.message?.content
-      if (content) {
-        ranked = parseRankedIds(content, validIds)
-        if (ranked.length > 0) break
-      }
-      const why = llmData.error?.message ?? `HTTP ${llmRes.status}`
-      failures.push(`${model}: ${why}`)
-      console.warn('[rank-heroes] model failed —', model, why)
-    }
+    // Reuse hero-chat's fallback chain; a model only counts as a success when it yields at least
+    // one valid ranked id, otherwise we fall through to the next model.
+    const llm = await callLLMWithFallback<string[]>({
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: userPrompt },
+      ],
+      apiKey: OPENROUTER_KEY,
+      label: 'rank-heroes',
+      validate: (content) => {
+        const ids = parseRankedIds(content, validIds)
+        return ids.length > 0 ? ids : null
+      },
+    })
+    const ranked = llm.value ?? []
 
     // Always 200 with whatever we ranked (possibly []). The client fills any shortfall from its
     // deterministic fallback, so onboarding never blocks on the model.
