@@ -48,27 +48,22 @@ export function ChatComposer({ value, onChange, onSend, isPending }) {
   )
 }
 
-// Tiny pill showing which model in the fallback chain produced a reply.
-export function ModelBadge({ model }) {
-  if (!model) return null
-  return (
-    <div className="self-start rounded-pill bg-ink-50 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-ink-400">
-      {modelLabel(model)}
-    </div>
-  )
-}
-
 // Scrolling message list. Renders user/hero bubbles, a loading + empty state,
 // a "Calling {hero}…" indicator while a reply is pending, and a small label of
 // which model answered the latest reply (the chat falls back across a chain of LLMs).
 export function ChatMessages({ history, heroId, isPending, lastModel, historyLoading = false, emptyText, className }) {
-  const bottomRef = useRef(null)
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [history])
+  const containerRef = useRef(null)
+  // Keep the latest message in view by scrolling the chat container itself —
+  // never scrollIntoView (which also scrolls the whole page, landing it mid-screen on load).
+  useEffect(() => {
+    const el = containerRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [history, isPending])
 
   const heroName = HERO_DATA[heroId]?.name ?? 'your council'
 
   return (
-    <div className={cn('flex flex-col gap-2.5 overflow-auto', className)}>
+    <div ref={containerRef} className={cn('flex flex-col gap-2.5 overflow-auto', className)}>
       {historyLoading && (
         <div className="pt-4 text-center font-sans text-[17px] text-ink-400">Loading conversation…</div>
       )}
@@ -80,15 +75,9 @@ export function ChatMessages({ history, heroId, isPending, lastModel, historyLoa
         // Prefer the model persisted with the message; fall back to the live model
         // of the latest reply (covers the moment before it's persisted/refetched).
         const model = msg.model ?? (i === (history.length - 1) ? lastModel : null)
-        return (
-          <div key={i} className="flex flex-col gap-1">
-            <HeroMessage hero={heroId} text={`"${msg.content}"`}/>
-            {model && <ModelBadge model={model}/>}
-          </div>
-        )
+        return <HeroMessage key={i} hero={heroId} text={`"${msg.content}"`} modelTag={modelLabel(model)}/>
       })}
       {isPending && <div className="font-sans text-[17px] italic text-ink-400">Calling {heroName}…</div>}
-      <div ref={bottomRef}/>
     </div>
   )
 }

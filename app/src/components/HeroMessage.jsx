@@ -26,7 +26,7 @@ const HERO_MAP = {
   burry:  { initials:'MB', name:'Michael Burry',           color:C.ink400 },
 };
 
-export function HeroMessage({ hero='warren', text, time, isNew=false }) {
+export function HeroMessage({ hero='warren', text, time, isNew=false, modelTag }) {
   const h = HERO_MAP[hero] ?? HERO_MAP.warren;
   return (
     <div className="flex gap-2.5">
@@ -35,7 +35,8 @@ export function HeroMessage({ hero='warren', text, time, isNew=false }) {
         <div className="mb-1 flex items-center gap-2">
           <div className="font-sans text-[17px] font-semibold text-ink-700">{h.name}</div>
           {time && <div className="font-sans text-[13px] text-ink-300">{time}</div>}
-          {isNew && <div className="ml-auto h-1.5 w-1.5 rounded-pill bg-ame-400"/>}
+          {modelTag && <div className="ml-auto font-mono text-[9px] uppercase tracking-wide text-ink-300">{modelTag}</div>}
+          {isNew && <div className={cn('h-1.5 w-1.5 rounded-pill bg-ame-400', !modelTag && 'ml-auto')}/>}
         </div>
         <div className="font-sans text-lg italic leading-relaxed text-ink-600">{text}</div>
       </div>
