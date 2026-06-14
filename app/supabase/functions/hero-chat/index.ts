@@ -10,11 +10,15 @@ const cors = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Single model by design (user preference): OpenAI's largest free open-weight
-// model. Fast enough for chat; bigger free models (Nemotron Ultra 550B) exceed
-// the edge function wall-clock limit.
+// Fallback chain: the biggest free OpenRouter model from each of four vendors,
+// tried in order until one returns content. Order: Google → OpenAI → Meta → NVIDIA.
+// NOTE: the NVIDIA 550B model is very large and can exceed the edge function
+// wall-clock limit — it sits last as a final fallback only.
 const MODELS = [
+  'google/gemma-4-31b-it:free',
   'openai/gpt-oss-120b:free',
+  'meta-llama/llama-3.3-70b-instruct:free',
+  'nvidia/nemotron-3-ultra-550b-a55b:free',
 ]
 
 const HERO_PERSONAS: Record<string, string> = {

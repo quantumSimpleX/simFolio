@@ -11,9 +11,13 @@ const cors = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Same model strategy as hero-chat: OpenAI's largest free open-weight model.
+// Same fallback chain as hero-chat: biggest free model per vendor, tried in
+// order (Google → OpenAI → Meta → NVIDIA) until one returns a usable ranking.
 const MODELS = [
+  'google/gemma-4-31b-it:free',
   'openai/gpt-oss-120b:free',
+  'meta-llama/llama-3.3-70b-instruct:free',
+  'nvidia/nemotron-3-ultra-550b-a55b:free',
 ]
 
 serve(async (req) => {
