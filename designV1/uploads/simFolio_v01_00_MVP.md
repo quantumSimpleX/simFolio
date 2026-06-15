@@ -183,17 +183,20 @@ written by a Hero, by Sage, or by the user — the platform must render that ass
 **underlined, clickable link** inline in the message.
 
 Requirements:
-- Detection covers explicit cashtags (`$AAPL`), recognized company/common names
-  (e.g. "Apple", "NVIDIA", "Bitcoin"), and bare ticker symbols the system knows
-  (the curated asset registry plus the user's own holdings and watchlist symbols).
-- Beyond the known set, any other candidate mentioned in chat — an unknown cashtag,
-  ALL-CAPS token, or capitalized company name (e.g. "Palantir") — is **validated
-  against live market data** (the same symbol search the Markets page uses) and is
-  linked only if it resolves to a real US stock/ETF. Lookups are cached so each term
-  is resolved once.
-- Common English words and finance acronyms (e.g. "AI", "CEO", "ETF", "NOW" as prose)
-  must not be falsely linked when they appear as bare tokens; an explicit cashtag is
-  always honored. Unrecognized candidates simply render as plain text.
+- **Hero/Sage replies mark assets explicitly.** The LLM is instructed to wrap every
+  company name or ticker it mentions in square brackets as a single unit — e.g.
+  `[Apple]`, `[Berkshire Hathaway]`, `[NVDA]`, `[Bitcoin]`. The client links the whole
+  bracketed entity and strips the brackets from the displayed text. This avoids fragile
+  client-side name parsing and handles multi-word company names reliably.
+- A bracketed entity is linked directly when it is a known symbol/name (curated registry
+  or the user's holdings/watchlist); otherwise it is **validated against live market
+  data** (the same symbol search the Markets page uses) and linked only if it resolves to
+  a real US stock/ETF. Lookups are cached so each term is resolved once. Bracketed text
+  that is not a tradable asset renders as plain text (brackets always stripped).
+- In **unbracketed** text (the user's own messages, or legacy replies), detection is
+  conservative and precise: explicit cashtags (`$AAPL`), curated registry names, and
+  known/owned tickers. Common English words and finance acronyms ("AI", "CEO", "ETF",
+  "NOW" as prose) are never linked; the client does not guess unknown company names.
 - Clicking (or keyboard-activating) a linked asset **anywhere in the chat window**
   performs the same action as searching that asset on the Markets page: it opens the
   asset's detail view (`/stock/<TICKER>`).

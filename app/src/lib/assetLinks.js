@@ -1,26 +1,22 @@
 // Asset linkification for chat messages.
 //
-// Scans free-form chat text (hero replies + user questions) for stock / ETF /
-// crypto mentions and reports their positions so the UI can render them as
-// clickable links. A click opens the same destination as a Markets search hit:
-// the stock detail page (`/stock/<TICKER>`).
+// Hero replies mark every asset the model mentions with square brackets, e.g.
+// "I admire [Apple] and [Berkshire Hathaway], especially [BRK.B]." (see the
+// hero-chat edge function). This module turns those bracketed entities — and,
+// in unbracketed text such as the user's own messages, explicit cashtags /
+// known tickers / registry names — into clickable links that open the asset's
+// detail page (`/stock/<TICKER>`), the same destination as a Markets search hit.
 //
-// Detection produces two kinds of spans:
-//   • TRUSTED — we already know the ticker without a network call: explicit
-//     cashtags for known symbols, recognized company/common names from the
-//     registry, and bare tickers that match the registry or the user's own
-//     holdings/watchlist. These link immediately.
-//   • VALIDATE — a candidate that *looks* like an asset but isn't in the
-//     registry: an unknown cashtag, an unknown ALL-CAPS token, or a
-//     capitalized proper noun (e.g. "Palantir"). These carry a `query` to be
-//     confirmed against live market data before linking (see
-//     `lib/resolveSymbol.js` + `hooks/useAssetResolution.js`).
+// Each span is either:
+//   • TRUSTED  — ticker is known without a network call (registry, the user's
+//     holdings/watchlist, or an explicit known cashtag). Links immediately.
+//   • VALIDATE — a bracketed entity (or unknown cashtag) whose ticker must be
+//     confirmed against live market data before linking. The whole bracketed
+//     string is searched as one unit, so multi-word names just work.
 
 // Curated registry of well-known assets: ticker -> recognizable names/aliases.
-// This is a fast-path only — anything outside it can still link via live
-// validation; the registry just avoids a lookup for the obvious cases.
+// Fast path only — anything else still resolves via live validation.
 export const ASSET_REGISTRY = [
-  // Stocks
   { ticker: 'AAPL', names: ['Apple'] },
   { ticker: 'MSFT', names: ['Microsoft'] },
   { ticker: 'NVDA', names: ['NVIDIA', 'Nvidia'] },
@@ -36,46 +32,22 @@ export const ASSET_REGISTRY = [
   { ticker: 'V', names: ['Visa'] },
   { ticker: 'DIS', names: ['Disney'] },
   { ticker: 'KO', names: ['Coca-Cola', 'Coca Cola'] },
-  // ETFs
   { ticker: 'SPY', names: ['S&P 500', 'S&P500'] },
   { ticker: 'QQQ', names: ['NASDAQ 100', 'Nasdaq 100'] },
   { ticker: 'VTI', names: ['Total Stock Market'] },
   { ticker: 'VOO', names: ['Vanguard S&P 500'] },
-  // Crypto
   { ticker: 'BTC', names: ['Bitcoin'] },
   { ticker: 'ETH', names: ['Ethereum'] },
 ]
 
 // Uppercase tokens that look like tickers but are common words/acronyms in
-// investing prose — never treated as a bare-ticker candidate.
+// investing prose — never matched as a bare ticker in unbracketed text.
 const STOPWORDS = new Set([
   'A', 'I', 'AN', 'AS', 'AT', 'BE', 'BY', 'DO', 'GO', 'IF', 'IN', 'IS', 'IT',
   'ME', 'MY', 'NO', 'OF', 'ON', 'OR', 'SO', 'TO', 'UP', 'US', 'WE', 'AM',
   'NEW', 'NOW', 'CEO', 'CFO', 'CTO', 'IPO', 'ETF', 'ETFS', 'AI', 'USA', 'GDP',
   'PE', 'EPS', 'API', 'URL', 'OK', 'ALL', 'AND', 'THE', 'FOR', 'YOU', 'BUY',
-  'ROI', 'YOY', 'EBIT', 'FDA', 'SEC', 'IRA', 'Q1', 'Q2', 'Q3', 'Q4',
-])
-
-// Frequent English words that are often capitalized (sentence starts, etc.) but
-// are not companies. Filtering them keeps us from spending a live lookup on
-// obvious non-assets. Live validation is the real filter — this is just thrift.
-const COMMON_WORDS = new Set([
-  'the', 'and', 'but', 'for', 'nor', 'yet', 'this', 'that', 'these', 'those',
-  'with', 'from', 'into', 'over', 'your', 'you', 'they', 'them', 'their',
-  'what', 'when', 'where', 'why', 'how', 'who', 'which', 'while', 'would',
-  'could', 'should', 'will', 'shall', 'may', 'might', 'must', 'can', 'are',
-  'was', 'were', 'has', 'have', 'had', 'his', 'her', 'its', 'our', 'one',
-  'two', 'three', 'many', 'much', 'more', 'most', 'some', 'any', 'all', 'not',
-  'now', 'then', 'than', 'here', 'there', 'about', 'after', 'before', 'because',
-  'think', 'thought', 'consider', 'remember', 'imagine', 'look', 'looking',
-  'great', 'good', 'better', 'best', 'value', 'price', 'market', 'markets',
-  'stock', 'stocks', 'share', 'shares', 'company', 'companies', 'business',
-  'invest', 'investing', 'investment', 'money', 'cash', 'risk', 'return',
-  'returns', 'growth', 'income', 'asset', 'assets', 'fund', 'funds', 'index',
-  'portfolio', 'dividend', 'dividends', 'earnings', 'profit', 'loss', 'losses',
-  'buy', 'sell', 'hold', 'own', 'long', 'short', 'term', 'years', 'year',
-  'first', 'last', 'next', 'never', 'always', 'every', 'each', 'both',
-  'warren', 'buffett', 'charlie', 'munger', 'peter', 'lynch', 'sage',
+  'ROI', 'YOY', 'EBIT', 'FDA', 'SEC', 'IRA',
 ])
 
 function escapeRegExp(s) {
@@ -112,50 +84,70 @@ function buildNameMatcher() {
   NAME_REGEX = new RegExp(`(?<![\\w$])(${names.map(escapeRegExp).join('|')})(?![\\w])`, 'gi')
 }
 
+// Resolve a bare entity string (bracket inner, cashtag symbol) against the
+// fast-path tables. Returns a known ticker, or null if it needs validation.
+function fastResolve(entity, tickerMap) {
+  const stripped = entity.trim().replace(/^\$/, '')
+  const byName = NAME_LOOKUP.get(stripped.toLowerCase())
+  if (byName) return byName
+  const up = stripped.toUpperCase()
+  if (tickerMap.has(up)) return tickerMap.get(up)
+  return null
+}
+
 /**
  * Analyze `text` and return ordered, non-overlapping asset spans.
  * @param {string} text
  * @param {{ knownTickers?: string[] }} [opts] user holdings/watchlist tickers
- * @returns {Array<{ start:number, end:number,
- *   kind:'trusted'|'validate', ticker?:string, query?:string,
- *   vtype?:'cashtag'|'ticker'|'name' }>}
+ * @returns {Array<{ start:number, end:number, display:string,
+ *   ticker?:string, query?:string, vtype?:'entity'|'ticker' }>}
  */
 export function findAssetSpans(text, { knownTickers = [] } = {}) {
   if (!text || typeof text !== 'string') return []
   buildNameMatcher()
   const tickerMap = buildTickerMap(knownTickers)
   const cand = []
+  const brackets = []   // ranges to exclude from the unbracketed scan
 
-  // 1. Cashtags: $AAPL, $BRK.B. Known symbol -> trusted; otherwise validate.
+  // 1. Bracketed entities marked by the LLM — the primary mechanism. The whole
+  //    inner string (incl. multi-word names) is one unit; brackets are stripped.
+  const bracket = /\[([^[\]]+)\]/g
+  for (let m; (m = bracket.exec(text)); ) {
+    const inner = m[1].trim()
+    if (!inner) continue
+    const span = { start: m.index, end: m.index + m[0].length, display: inner, priority: 0 }
+    brackets.push([span.start, span.end])
+    const known = fastResolve(inner, tickerMap)
+    if (known) cand.push({ ...span, ticker: known })
+    else cand.push({ ...span, vtype: 'entity', query: inner })
+  }
+
+  const inBracket = (s, e) => brackets.some(([bs, be]) => s < be && e > bs)
+  const pushTrusted = (start, end, ticker, priority) => {
+    if (!inBracket(start, end)) cand.push({ start, end, display: text.slice(start, end), ticker, priority })
+  }
+
+  // 2. Unbracketed text (user messages, legacy replies): precise, low-noise.
+  //    Cashtags — known -> trusted, unknown -> validate as a ticker.
   const cashtag = /\$([A-Za-z]{1,5}(?:\.[A-Za-z])?)\b/g
   for (let m; (m = cashtag.exec(text)); ) {
     const up = m[1].toUpperCase()
-    const span = { start: m.index, end: m.index + m[0].length }
-    if (tickerMap.has(up)) cand.push({ ...span, kind: 'trusted', ticker: tickerMap.get(up), priority: 0 })
-    else cand.push({ ...span, kind: 'validate', vtype: 'cashtag', query: up, priority: 3 })
+    const start = m.index, end = m.index + m[0].length
+    if (inBracket(start, end)) continue
+    if (tickerMap.has(up)) cand.push({ start, end, display: m[0], ticker: tickerMap.get(up), priority: 1 })
+    else cand.push({ start, end, display: m[0], vtype: 'ticker', query: up, priority: 4 })
   }
-
-  // 2. Registry company / common names -> trusted.
+  // Registry company / common names.
   for (let m; (m = NAME_REGEX.exec(text)); ) {
     const ticker = NAME_LOOKUP.get(m[1].toLowerCase())
-    if (ticker) cand.push({ start: m.index, end: m.index + m[0].length, kind: 'trusted', ticker, priority: 1 })
+    if (ticker) pushTrusted(m.index, m.index + m[0].length, ticker, 2)
   }
-
-  // 3. Bare uppercase tokens. Known -> trusted; unknown 2-5 letters -> validate.
+  // Bare known tickers (registry or the user's own symbols), minus stopwords.
   const bare = /(?<![\w$])([A-Z]{1,5}(?:\.[A-Z])?)(?![\w])/g
   for (let m; (m = bare.exec(text)); ) {
     const up = m[1].toUpperCase()
     if (STOPWORDS.has(up)) continue
-    const span = { start: m.index, end: m.index + m[0].length }
-    if (tickerMap.has(up)) cand.push({ ...span, kind: 'trusted', ticker: tickerMap.get(up), priority: 2 })
-    else if (m[1].length >= 2) cand.push({ ...span, kind: 'validate', vtype: 'ticker', query: up, priority: 4 })
-  }
-
-  // 4. Capitalized proper nouns (e.g. "Palantir") -> validate as a name.
-  const proper = /(?<![\w$])([A-Z][a-z]{2,})(?![\w])/g
-  for (let m; (m = proper.exec(text)); ) {
-    if (COMMON_WORDS.has(m[1].toLowerCase())) continue
-    cand.push({ start: m.index, end: m.index + m[0].length, kind: 'validate', vtype: 'name', query: m[1], priority: 5 })
+    if (tickerMap.has(up)) pushTrusted(m.index, m.index + m[0].length, tickerMap.get(up), 3)
   }
 
   // Resolve overlaps: earlier start wins; then higher priority (lower number);

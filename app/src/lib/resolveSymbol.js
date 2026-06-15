@@ -18,21 +18,28 @@ function saveCache(cache) {
 }
 
 // Pick the ticker a candidate resolves to from filtered symbol_search rows.
+// `type`:
+//   'ticker' / 'cashtag' — match an exact US symbol only.
+//   'entity' (a bracketed mention) — try an exact symbol first, then match by
+//     company-name prefix/contains; handles both "AAPL" and "Berkshire Hathaway".
 export function matchRows(rows, query, type) {
   const us = rows.filter(d =>
     (d.instrument_type === 'Common Stock' || d.instrument_type === 'ETF') &&
     d.country === 'United States')
+  const cleaned = String(query).trim().replace(/^\$/, '')
+
+  const up = cleaned.toUpperCase()
+  const bySymbol = us.find(r => String(r.symbol).toUpperCase() === up)
   if (type === 'ticker' || type === 'cashtag') {
-    const up = String(query).toUpperCase()
-    const hit = us.find(r => String(r.symbol).toUpperCase() === up)
-    return hit ? String(hit.symbol).toUpperCase() : null
+    return bySymbol ? String(bySymbol.symbol).toUpperCase() : null
   }
-  // name: require the instrument name to start with the candidate (word-ish),
-  // falling back to a contains match — avoids linking incidental words.
-  const q = String(query).toLowerCase()
-  const hit = us.find(r => (r.instrument_name || '').toLowerCase().startsWith(q)) ||
-              us.find(r => (r.instrument_name || '').toLowerCase().includes(q))
-  return hit ? String(hit.symbol).toUpperCase() : null
+
+  // entity: prefer an exact symbol, else match the instrument name.
+  if (bySymbol) return String(bySymbol.symbol).toUpperCase()
+  const q = cleaned.toLowerCase()
+  const byName = us.find(r => (r.instrument_name || '').toLowerCase().startsWith(q)) ||
+                 us.find(r => (r.instrument_name || '').toLowerCase().includes(q))
+  return byName ? String(byName.symbol).toUpperCase() : null
 }
 
 export async function resolveSymbol(query, type) {

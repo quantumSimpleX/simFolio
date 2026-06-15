@@ -300,3 +300,36 @@ live market data** instead of relying on a static list alone.
 - **Note:** validation depends on `VITE_TWELVEDATA_API_KEY` and is best-effort — on rate-limit/no-key,
   unknown candidates gracefully render as plain text (trusted/registry/holdings still link offline).
 - **Outcome:** 239/239 Vitest pass (100% > 95% target).
+
+### Iteration 3 — LLM bracket markers (reliable multi-word detection)
+Reported gap: client-side detection of company names (esp. multi-word) was poor. New mechanism: the
+LLM wraps every asset it mentions in `[...]`; the client links the whole bracketed entity and strips
+the brackets — no fragile name parsing.
+
+- [x] AM-13 `hero-chat/index.ts`: add a system-prompt rule to wrap every company/stock/ETF/crypto
+            name or ticker in square brackets as one unit (multi-word included), and bracket nothing
+            that isn't a tradable asset. (Needs `supabase functions deploy hero-chat` in prod.)
+- [x] AM-14 `lib/assetLinks.js`: `findAssetSpans()` now parses `[...]` entities first (whole unit,
+            display strips brackets) → fast-path resolve or validate as `entity`. Unbracketed text
+            keeps only precise trusted detection (known cashtag / registry name / known-or-owned
+            ticker) + unknown-cashtag validation. Dropped the noisy proper-noun + unknown-ALL-CAPS
+            guessing and the `COMMON_WORDS` list.
+- [x] AM-15 `lib/resolveSymbol.js`: `matchRows` handles the `entity` type (exact symbol → name
+            prefix/contains) and strips a leading `$`.
+- [x] AM-16 `components/AssetText.jsx`: renders each span's `display` (brackets stripped whether or
+            not it resolves); trusted spans link synchronously, entities link once validated.
+- [x] AM-17 Tests reworked for the bracket model (bracketed trusted/validate, unbracketed precise,
+            brackets-stripped-on-fail, matchRows entity + `$` strip).
+- [x] AM-18 PRD updated to specify the bracket-marker mechanism.
+            **Result: 238/238 Vitest pass (100% > 95%). Coverage — assetLinks.js / AssetText.jsx /
+            resolveSymbol.js all 100% lines; global 87.05% (80% gate cleared). New files lint clean.
+            `npm run build` ✓.**
+
+### QA findings — iteration 3
+- Behavior change is intentional: **unbracketed** company names are no longer guessed (that was the
+  "poor detection" the user hit). In practice hero replies are bracketed by the LLM, so multi-word
+  names like "Berkshire Hathaway" now link reliably as one entity.
+- **Dependencies:** linking bracketed *unknown* entities still needs `VITE_TWELVEDATA_API_KEY`
+  (best-effort; falls back to plain text). The prompt change requires redeploying the `hero-chat`
+  edge function to take effect in production.
+- **Outcome:** 238/238 Vitest pass (100% > 95% target).

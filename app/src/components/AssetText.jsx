@@ -15,7 +15,7 @@ export function AssetText({ text, extraTickers = [], onAssetClick }) {
   const spans = findAssetSpans(str, { knownTickers: extraTickers })
 
   const toValidate = spans
-    .filter(s => s.kind === 'validate')
+    .filter(s => s.vtype)
     .map(s => ({ query: s.query, type: s.vtype }))
   const resolved = useAssetResolution(toValidate)
 
@@ -25,12 +25,14 @@ export function AssetText({ text, extraTickers = [], onAssetClick }) {
   let cursor = 0
   let key = 0
   for (const s of spans) {
-    const ticker = s.kind === 'trusted'
-      ? s.ticker
-      : resolved.get(resolutionKey(s.vtype, s.query))
-    if (!ticker) continue   // not (yet) confirmed — leave as plain text
-
+    // Emit the raw text before this span (preserves any non-bracket characters).
     if (s.start > cursor) nodes.push(<span key={key++}>{str.slice(cursor, s.start)}</span>)
+    cursor = s.end
+
+    const ticker = s.ticker ?? resolved.get(resolutionKey(s.vtype, s.query))
+    // The display text strips brackets; show it plain when not (yet) confirmed.
+    if (!ticker) { nodes.push(<span key={key++}>{s.display}</span>); continue }
+
     nodes.push(
       <span
         key={key++}
@@ -43,10 +45,9 @@ export function AssetText({ text, extraTickers = [], onAssetClick }) {
         }}
         className="cursor-pointer font-semibold not-italic text-ame-400 underline decoration-ame-400 underline-offset-2"
       >
-        {str.slice(s.start, s.end)}
+        {s.display}
       </span>,
     )
-    cursor = s.end
   }
   if (cursor < str.length) nodes.push(<span key={key}>{str.slice(cursor)}</span>)
   return nodes
