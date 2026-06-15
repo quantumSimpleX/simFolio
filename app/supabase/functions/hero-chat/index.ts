@@ -35,6 +35,7 @@ async function extractAssets(reply: string, apiKey: string): Promise<string[]> {
     `You are a financial market data analyst extracting structured data.`,
     `From the text below, list EVERY mention of a publicly traded company, stock, ETF, or cryptocurrency — whether referred to by company name OR by ticker symbol.`,
     `Be exhaustive: scan the entire text and include every distinct mention, even when several appear in one sentence. Missing one is a failure.`,
+    `HINT: text wrapped in double asterisks (**like this**) is very likely a company, stock, ETF, or crypto — inspect every ** segment and include the asset it names. Return the name/ticker WITHOUT the surrounding asterisks.`,
     `Return ONLY a JSON array of strings. Each string must be the exact substring as it appears in the text, copied verbatim (same spelling, capitalization, and spacing). When both a company name and its ticker appear, include each as a separate entry.`,
     `Do NOT include sectors, investment themes, market indexes referred to as concepts, people's names, or generic financial terms. Ignore any text already wrapped in square brackets [ ].`,
     `If there are none, return []. Output only the JSON array — no prose, no markdown, no code fences.`,
@@ -107,6 +108,21 @@ function bracketAssets(reply: string, mentions: string[]): string {
   return out
 }
 
+const isTickerShape = (s: string) => /^[A-Z]+(?:\.[A-Z])?$/.test(s) && s.replace('.', '').length > 3
+// A company name: title-cased / alphanumeric words with at least one lowercase
+// letter (so it isn't itself a ticker) — e.g. "Illumina", "ARK Genomic Revolution ETF".
+const isNameShape = (s: string) => /[a-z]/.test(s) && /^[A-Za-z0-9][A-Za-z0-9.& ]*$/.test(s)
+
+// Collapse a "[Company Name] ([TICKER])" pair (brackets <=5 chars apart) down to
+// "Company Name ([TICKER])" — drop the name's brackets and tag only the ticker.
+// The ticker resolves with one exact symbol lookup; validating the name too would
+// waste a second (fuzzy) market-data call for the same asset. If both brackets are
+// ticker-shaped (or the pattern doesn't match), they are left untouched.
+function collapseNameTickerPairs(text: string): string {
+  return text.replace(/\[([^[\]]+)\]([^[\]]{0,5})\[([^[\]]+)\]/g, (full, a, gap, b) =>
+    isNameShape(a.trim()) && isTickerShape(b.trim()) ? `${a}${gap}[${b}]` : full)
+}
+
 const HERO_PERSONAS: Record<string, string> = {
   sage: `You are Sage, a neutral, warm, and encouraging financial education guide. You are NOT an investor persona — you are a guide helping a beginner learn how to invest. You use plain language, ask Socratic questions, and never give directives. Always speak in first person.`,
   warren: `You are Warren Buffett. You speak from decades of investing in quality businesses at fair prices. Your philosophy: understand the business, buy with a margin of safety, think in decades not days, and never invest in what you don't understand. You ask Socratic questions. You never give direct buy/sell orders. Always speak in first person as Warren Buffett.`,
@@ -153,7 +169,7 @@ serve(async (req) => {
     // asset detection without sending a fresh chat message.
     if (typeof tag_text === 'string') {
       const mentions = await extractAssets(tag_text, OPENROUTER_KEY)
-      return new Response(JSON.stringify({ reply: bracketAssets(tag_text, mentions), mentions }), {
+      return new Response(JSON.stringify({ reply: collapseNameTickerPairs(bracketAssets(tag_text, mentions)), mentions }), {
         headers: { ...cors, 'Content-Type': 'application/json' },
       })
     }
@@ -216,7 +232,7 @@ serve(async (req) => {
     // bracketed text is what we persist and return, so links also survive a
     // history reload (the client renders from stored `content`).
     const mentions = await extractAssets(llm.value as string, OPENROUTER_KEY)
-    const reply = bracketAssets(llm.value as string, mentions)
+    const reply = collapseNameTickerPairs(bracketAssets(llm.value as string, mentions))
 
     // Persist both turns, tagging the assistant turn with the model that answered.
     // Falls back without `model` if that column hasn't been added yet

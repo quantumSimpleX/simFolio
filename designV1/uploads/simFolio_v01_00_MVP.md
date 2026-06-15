@@ -193,11 +193,14 @@ Requirements:
   is far more reliable than asking it to decorate its own prose mid-sentence, and it
   handles multi-word company names cleanly. (The same analyst pass can re-tag any past
   reply via a `tag_text` request, so existing history can be backfilled.)
-- A bracketed entity is linked directly when it is a known symbol/name (curated registry
-  or the user's holdings/watchlist); otherwise it is **validated against live market
-  data** (the same symbol search the Markets page uses) and linked only if it resolves to
-  a real US stock/ETF. Lookups are cached so each term is resolved once. Bracketed text
-  that is not a tradable asset renders as plain text (brackets always stripped).
+- A bracketed entity links directly when it is a known symbol/name (curated registry or the
+  user's holdings/watchlist) — no network call. Otherwise, **only ticker-shaped mentions are
+  validated** against live market data (the same symbol search the Markets page uses): an
+  ALL-CAPS token of 1–5 letters (optional `.X` suffix) gets one cheap exact-symbol lookup and
+  links if it resolves. Bracketed multi-word **company names are not fuzzy-searched** — they
+  render as plain text. In practice a hero gives the ticker alongside the name, so the asset
+  still links via its ticker; the edge function also collapses a `[Name] ([TICKER])` pair to
+  `Name ([TICKER])` so only the ticker is tagged. Lookups are cached; brackets always stripped.
 - In **unbracketed** text (the user's own messages, or legacy/untagged replies), detection
   is precise: explicit cashtags (`$AAPL`), curated registry names, known/owned tickers, and
   — as a deterministic safety net for ticker-shaped tokens the analyst may miss — any
@@ -210,6 +213,9 @@ Requirements:
   asset's detail view (`/stock/<TICKER>`).
 - Links are styled with the brand amethyst accent and an underline, distinct from the
   dotted-amethyst educational tooltip underline.
+- Chat text is rendered as light markdown: `**bold**` renders bold (asterisks stripped), with
+  asset links preserved inside. The analyst pass is also told that `**`-wrapped text is a strong
+  asset candidate, improving recall on names the persona emphasized.
 
 ## Hero Commentary Engine
 

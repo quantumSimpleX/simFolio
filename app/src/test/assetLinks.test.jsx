@@ -24,10 +24,16 @@ describe('findAssetSpans — bracketed entities', () => {
     expect(trusted('Consider [NVDA] and [BRK.B]').map(s => s.ticker)).toEqual(['NVDA', 'BRK.B'])
   })
 
-  it('flags an unknown bracketed entity (multi-word) for validation as one unit', () => {
+  it('validates a bracketed ticker-shaped token (any length — analyst-vouched)', () => {
+    expect(validates('[GH] and [ILMN]').map(s => `${s.vtype}:${s.query}`)).toEqual(['ticker:GH', 'ticker:ILMN'])
+  })
+
+  it('does NOT validate a bracketed multi-word company name — renders plain, brackets stripped', () => {
     const m = findAssetSpans('Look at [Palantir Technologies] today')
     expect(m).toHaveLength(1)
-    expect(m[0]).toMatchObject({ vtype: 'entity', query: 'Palantir Technologies', display: 'Palantir Technologies' })
+    expect(m[0]).toMatchObject({ display: 'Palantir Technologies' })
+    expect(m[0].vtype).toBeUndefined()
+    expect(m[0].ticker).toBeUndefined()
   })
 
   it('trims whitespace and ignores empty brackets', () => {
@@ -35,12 +41,13 @@ describe('findAssetSpans — bracketed entities', () => {
     expect(findAssetSpans('[ Apple ]')[0]).toMatchObject({ ticker: 'AAPL', display: 'Apple' })
   })
 
-  it('parses a realistic reply with adjacent bracketed name + ticker', () => {
+  it('validates only the ticker-shaped brackets in a reply; names render plain', () => {
     const text = 'I like [Illumina] and [Guardant Health], plus [ARK Genomic Revolution ETF] ([ARKG]).'
     const m = findAssetSpans(text)
+    // Every bracket becomes a span (brackets stripped from display)…
     expect(m.map(s => s.display)).toEqual(['Illumina', 'Guardant Health', 'ARK Genomic Revolution ETF', 'ARKG'])
-    // All unknown to the registry → each queued for live validation as one unit.
-    expect(m.every(s => s.vtype === 'entity')).toBe(true)
+    // …but only the ticker-shaped one is sent for validation.
+    expect(m.filter(s => s.vtype).map(s => `${s.vtype}:${s.query}`)).toEqual(['ticker:ARKG'])
   })
 })
 
@@ -196,29 +203,45 @@ describe('AssetText — trusted (synchronous) links', () => {
     wrap(<AssetText text="$AAPL" />)
     expect(screen.getByText('$AAPL')).toHaveAttribute('data-ticker', 'AAPL')
   })
+
+  it('renders **bold** markdown as <strong> and still links assets inside it', () => {
+    wrap(<AssetText text="**Consider [Apple]** today" onAssetClick={vi.fn()} />)
+    const link = screen.getByText('Apple')
+    expect(link).toHaveAttribute('data-ticker', 'AAPL')
+    expect(link.closest('strong')).toBeInTheDocument()
+    // The asterisks themselves are not shown.
+    expect(screen.queryByText(/\*\*/)).not.toBeInTheDocument()
+  })
+
+  it('links only the ticker in a collapsed "Name ([TICKER])" reply', () => {
+    // Edge function collapses "[Illumina] ([ILMN])" -> "Illumina ([ILMN])".
+    const m = findAssetSpans('Illumina ([ILMN])')
+    expect(m).toHaveLength(1)
+    expect(m[0]).toMatchObject({ vtype: 'ticker', query: 'ILMN', display: 'ILMN' })
+  })
 })
 
 describe('AssetText — live-validated bracketed entities', () => {
   beforeEach(() => { localStorage.clear() })
 
-  it('links an unknown multi-word company once validated, brackets stripped', async () => {
+  it('links a bracketed ticker once validated, brackets stripped', async () => {
     globalThis.fetch = vi.fn(async () => ({ ok: true, json: async () => ({ data: ROWS }) }))
     const onAssetClick = vi.fn()
-    wrap(<AssetText text="Look at [Palantir Technologies]" onAssetClick={onAssetClick} />)
-    const link = await screen.findByText('Palantir Technologies')
+    wrap(<AssetText text="Look at [PLTR]" onAssetClick={onAssetClick} />)
+    const link = await screen.findByText('PLTR')
     await waitFor(() => expect(link).toHaveAttribute('data-ticker', 'PLTR'))
     expect(screen.queryByText(/\[/)).not.toBeInTheDocument()
     fireEvent.click(link)
     expect(onAssetClick).toHaveBeenCalledWith('PLTR')
   })
 
-  it('strips brackets and shows plain text when an entity does not resolve', async () => {
+  it('renders a bracketed company name as plain text — no link, no validation call', async () => {
     globalThis.fetch = vi.fn(async () => ({ ok: true, json: async () => ({ data: [] }) }))
     wrap(<AssetText text="the [whole market] today" onAssetClick={vi.fn()} />)
-    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled())
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
     expect(screen.queryByText(/\[/)).not.toBeInTheDocument()
     expect(screen.getByText(/whole market/)).toBeInTheDocument()
+    expect(globalThis.fetch).not.toHaveBeenCalled()   // names are never fuzzy-searched
   })
 })
 

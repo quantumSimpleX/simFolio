@@ -118,8 +118,12 @@ export function findAssetSpans(text, { knownTickers = [] } = {}) {
     const span = { start: m.index, end: m.index + m[0].length, display: inner, priority: 0 }
     brackets.push([span.start, span.end])
     const known = fastResolve(inner, tickerMap)
-    if (known) cand.push({ ...span, ticker: known })
-    else cand.push({ ...span, vtype: 'entity', query: inner })
+    if (known) cand.push({ ...span, ticker: known })            // registry / owned — free
+    else if (looksLikeTicker(inner)) cand.push({ ...span, vtype: 'ticker', query: inner })
+    // Otherwise it's a company name with no ticker: strip the brackets and render
+    // it as plain text. We deliberately do NOT fuzzy-search names against market
+    // data — only ticker-shaped mentions are validated (one cheap exact lookup).
+    else cand.push({ ...span })
   }
 
   const inBracket = (s, e) => brackets.some(([bs, be]) => s < be && e > bs)
@@ -171,6 +175,13 @@ export function findAssetSpans(text, { knownTickers = [] } = {}) {
     lastEnd = c.end
   }
   return chosen
+}
+
+// Stock-symbol format check: an ALL-CAPS ticker-shaped token (1–5 letters, with
+// an optional ".X" class suffix, e.g. AAPL, GH, BRK.B). Used to decide which
+// bracketed mentions are worth a market-data lookup — company names are not.
+export function looksLikeTicker(s) {
+  return /^[A-Z]{1,5}(?:\.[A-Z])?$/.test(String(s).trim())
 }
 
 // Stable cache key for a validation candidate.

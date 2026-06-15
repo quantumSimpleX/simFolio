@@ -383,3 +383,30 @@ mistake from the repo root — redeployed from `app/`.
 - Live `tag_text` check confirmed bracketing of multi-word names + tickers after deploy.
 - **Cost:** extraction prefers larger free models (slower/heavier) but stays within the wall-clock
   budget (550B model excluded). Format net adds no LLM cost (client-side + cached validation).
+
+### Iteration 6 — fewer API calls, markdown bold, ticker-only validation
+
+Decisions: (a) validate **only ticker-shaped** brackets — skip fuzzy company-name lookups; (b)
+render `**bold**` markdown; (c) hint the analyst that `**`-wrapped text is a strong asset candidate.
+
+- [x] AM-29 `hero-chat/index.ts`: `collapseNameTickerPairs()` rewrites `[Name] ([TICKER])`
+            (brackets <=5 chars apart, name = title-case, ticker = caps+optional `.`, len>3) to
+            `Name ([TICKER])` — tags only the ticker. Applied in both the chat flow and `tag_text`.
+- [x] AM-30 `_shared/llm.ts`: optional `temperature` already added (iter 5); reused here.
+- [x] AM-31 `hero-chat`: analyst prompt gains a `**`-hint line (fixes missed
+            "iShares MSCI Global Impact ETF (MPCT)") — return the name/ticker without asterisks.
+- [x] AM-32 `lib/assetLinks.js`: new exported `looksLikeTicker()` (1–5 caps, optional `.X`).
+            Bracket branch now: registry/owned → free link; ticker-shaped → validate (one exact
+            lookup); company name → plain text, NO fuzzy search. `entity` type no longer produced
+            (matchRows still supports it for the symbol-search page / tests).
+- [x] AM-33 `components/AssetText.jsx`: renders `**bold**` as `<strong>` (asterisks stripped),
+            linkifying assets inside; single `useAssetResolution` across all bold/plain segments.
+- [x] AM-34 Tests updated (ticker-only validation, bracketed name → plain/no-fetch, bold render,
+            collapsed pair); docs updated.
+
+### QA findings — iteration 6
+- **244/244** Vitest pass; lint clean on changed files; `hero-chat` redeployed.
+- **API-call saving:** a `[Name] ([TICKER])` pair now costs **one** exact lookup instead of a
+  fuzzy name search + a ticker lookup. A bracketed name with no ticker won't link (accepted
+  tradeoff per the chosen strategy).
+- Client changes need a Vercel deploy (push) to reach production; edge change is already live.
