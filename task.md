@@ -410,3 +410,15 @@ render `**bold**` markdown; (c) hint the analyst that `**`-wrapped text is a str
   fuzzy name search + a ticker lookup. A bracketed name with no ticker won't link (accepted
   tradeoff per the chosen strategy).
 - Client changes need a Vercel deploy (push) to reach production; edge change is already live.
+
+### Iteration 7 — split combined name+ticker mentions
+
+Live `**`-hint test showed the analyst returning a whole bold segment as one mention
+(`"iShares MSCI Global Impact ETF (MPCT)"`), which bracketed as a single non-ticker entity →
+wouldn't link (the ticker was buried inside).
+
+- [x] AM-35 `hero-chat/index.ts`: `normalizeMentions()` deterministically splits `Name (TICKER)`
+            into two atomic entries and strips stray asterisks; applied before bracketing in both
+            the chat flow and `tag_text`. Prompt also tightened ("a SINGLE name OR a SINGLE ticker,
+            never combined") with a `**bold**` example.
+- Edge-only change (no client change); 244/244 Vitest still pass; `hero-chat` redeployed.

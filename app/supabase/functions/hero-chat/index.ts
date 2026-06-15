@@ -36,11 +36,11 @@ async function extractAssets(reply: string, apiKey: string): Promise<string[]> {
     `From the text below, list EVERY mention of a publicly traded company, stock, ETF, or cryptocurrency — whether referred to by company name OR by ticker symbol.`,
     `Be exhaustive: scan the entire text and include every distinct mention, even when several appear in one sentence. Missing one is a failure.`,
     `HINT: text wrapped in double asterisks (**like this**) is very likely a company, stock, ETF, or crypto — inspect every ** segment and include the asset it names. Return the name/ticker WITHOUT the surrounding asterisks.`,
-    `Return ONLY a JSON array of strings. Each string must be the exact substring as it appears in the text, copied verbatim (same spelling, capitalization, and spacing). When both a company name and its ticker appear, include each as a separate entry.`,
+    `Return ONLY a JSON array of strings. Each entry must be a SINGLE company name OR a SINGLE ticker symbol — never combine them, and never include surrounding punctuation or parentheses. When a name and its ticker appear together (e.g. "Illumina (ILMN)" or inside **bold**), return TWO separate entries: the name, and the ticker. Copy each verbatim (same spelling and capitalization).`,
     `Do NOT include sectors, investment themes, market indexes referred to as concepts, people's names, or generic financial terms. Ignore any text already wrapped in square brackets [ ].`,
     `If there are none, return []. Output only the JSON array — no prose, no markdown, no code fences.`,
     ``,
-    `Example text: "I hold Apple (AAPL) and Microsoft, and like the Vanguard S&P 500 ETF (VOO); avoid meme stocks."`,
+    `Example text: "I hold **Apple (AAPL)** and Microsoft, and like the Vanguard S&P 500 ETF (VOO); avoid meme stocks."`,
     `Example output: ["Apple","AAPL","Microsoft","Vanguard S&P 500 ETF","VOO"]`,
   ].join('\n')
 
@@ -66,6 +66,25 @@ async function extractAssets(reply: string, apiKey: string): Promise<string[]> {
   })
 
   return res.ok && res.value ? res.value : []
+}
+
+// Deterministic safety net for analyst output: split a "Name (TICKER)" mention
+// into two atomic entries (the name and the ticker) and strip stray asterisks,
+// so a name+ticker that arrives as one string still gets the ticker tagged.
+function normalizeMentions(raw: string[]): string[] {
+  const out: string[] = []
+  for (const r of raw) {
+    const m = r.trim().replace(/^\*+|\*+$/g, '').trim()
+    if (!m) continue
+    const paren = m.match(/^(.+?)\s*\(([A-Za-z][A-Za-z.]{0,5})\)$/)
+    if (paren) {
+      out.push(paren[1].trim())   // company name
+      out.push(paren[2].trim())   // ticker symbol
+    } else {
+      out.push(m)
+    }
+  }
+  return out
 }
 
 // Wrap each analyst-identified mention in square brackets so the client links it.
@@ -168,7 +187,7 @@ serve(async (req) => {
     // call, no persistence — useful for backfilling history and for testing the
     // asset detection without sending a fresh chat message.
     if (typeof tag_text === 'string') {
-      const mentions = await extractAssets(tag_text, OPENROUTER_KEY)
+      const mentions = normalizeMentions(await extractAssets(tag_text, OPENROUTER_KEY))
       return new Response(JSON.stringify({ reply: collapseNameTickerPairs(bracketAssets(tag_text, mentions)), mentions }), {
         headers: { ...cors, 'Content-Type': 'application/json' },
       })
@@ -231,7 +250,7 @@ serve(async (req) => {
     // Pass 2: tag the assets the analyst finds so the client can link them. The
     // bracketed text is what we persist and return, so links also survive a
     // history reload (the client renders from stored `content`).
-    const mentions = await extractAssets(llm.value as string, OPENROUTER_KEY)
+    const mentions = normalizeMentions(await extractAssets(llm.value as string, OPENROUTER_KEY))
     const reply = collapseNameTickerPairs(bracketAssets(llm.value as string, mentions))
 
     // Persist both turns, tagging the assistant turn with the model that answered.
