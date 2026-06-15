@@ -2,6 +2,15 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { callLLMWithFallback } from '../_shared/llm.ts'
 
+// Extraction is a precision task — prefer the strongest free models first so a
+// small model's incomplete (but valid-JSON) answer isn't accepted early. Skips
+// the 550B model (too slow for a second call within the wall-clock budget).
+const EXTRACT_MODELS = [
+  'openai/gpt-oss-120b:free',
+  'meta-llama/llama-3.3-70b-instruct:free',
+  'google/gemma-4-31b-it:free',
+]
+
 const OPENROUTER_KEY   = Deno.env.get('OPENROUTER_API_KEY') ?? ''
 const SUPABASE_URL     = Deno.env.get('SUPABASE_URL') ?? ''
 const SERVICE_ROLE_KEY = Deno.env.get('APP_SERVICE_ROLE_KEY') ?? ''
@@ -23,17 +32,22 @@ function escapeRegExp(s: string): string {
 // if every model fails, we return [] and the reply is shown without links.
 async function extractAssets(reply: string, apiKey: string): Promise<string[]> {
   const sys = [
-    `You are a financial market data analyst.`,
-    `Read the text below and identify every mention of a publicly traded company, stock, ETF, or cryptocurrency — whether referred to by company name OR by ticker symbol.`,
+    `You are a financial market data analyst extracting structured data.`,
+    `From the text below, list EVERY mention of a publicly traded company, stock, ETF, or cryptocurrency — whether referred to by company name OR by ticker symbol.`,
+    `Be exhaustive: scan the entire text and include every distinct mention, even when several appear in one sentence. Missing one is a failure.`,
     `Return ONLY a JSON array of strings. Each string must be the exact substring as it appears in the text, copied verbatim (same spelling, capitalization, and spacing). When both a company name and its ticker appear, include each as a separate entry.`,
-    `Do NOT include sectors, investment themes, market indexes referred to as concepts, people's names, or generic financial terms.`,
-    `Ignore any text already wrapped in square brackets [ ] — it has already been tagged; do not list it.`,
+    `Do NOT include sectors, investment themes, market indexes referred to as concepts, people's names, or generic financial terms. Ignore any text already wrapped in square brackets [ ].`,
     `If there are none, return []. Output only the JSON array — no prose, no markdown, no code fences.`,
+    ``,
+    `Example text: "I hold Apple (AAPL) and Microsoft, and like the Vanguard S&P 500 ETF (VOO); avoid meme stocks."`,
+    `Example output: ["Apple","AAPL","Microsoft","Vanguard S&P 500 ETF","VOO"]`,
   ].join('\n')
 
   const res = await callLLMWithFallback<string[]>({
     apiKey,
     label: 'hero-chat:extract',
+    models: EXTRACT_MODELS,
+    temperature: 0,
     messages: [
       { role: 'system', content: sys },
       { role: 'user', content: reply },

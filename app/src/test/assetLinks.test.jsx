@@ -60,9 +60,17 @@ describe('findAssetSpans — unbracketed precise detection', () => {
     expect(m).toEqual([{ start: 3, end: 7, display: 'PLTR', ticker: 'PLTR' }])
   })
 
-  it('does NOT guess unknown company names or acronyms in unbracketed prose', () => {
+  it('flags an unknown ALL-CAPS ticker-shaped token (>=3 letters) for validation', () => {
+    expect(validates('I bought PLTR today').map(s => `${s.vtype}:${s.query}`)).toEqual(['ticker:PLTR'])
+    expect(validates('the (ARKG) fund').map(s => `${s.vtype}:${s.query}`)).toEqual(['ticker:ARKG'])
+  })
+
+  it('does not flag a 2-letter caps token or a stopword acronym', () => {
+    expect(findAssetSpans('GE and ETF here')).toEqual([])
+  })
+
+  it('does NOT guess unknown company names (mixed-case) in unbracketed prose', () => {
     expect(findAssetSpans('I think Palantir and the CEO are great')).toEqual([])
-    expect(findAssetSpans('AI and the ETF discussion')).toEqual([])
   })
 
   it('does not match a ticker embedded in a larger word', () => {

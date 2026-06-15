@@ -198,10 +198,13 @@ Requirements:
   data** (the same symbol search the Markets page uses) and linked only if it resolves to
   a real US stock/ETF. Lookups are cached so each term is resolved once. Bracketed text
   that is not a tradable asset renders as plain text (brackets always stripped).
-- In **unbracketed** text (the user's own messages, or legacy replies), detection is
-  conservative and precise: explicit cashtags (`$AAPL`), curated registry names, and
-  known/owned tickers. Common English words and finance acronyms ("AI", "CEO", "ETF",
-  "NOW" as prose) are never linked; the client does not guess unknown company names.
+- In **unbracketed** text (the user's own messages, or legacy/untagged replies), detection
+  is precise: explicit cashtags (`$AAPL`), curated registry names, known/owned tickers, and
+  — as a deterministic safety net for ticker-shaped tokens the analyst may miss — any
+  ALL-CAPS token of 3+ letters (e.g. `ARKG`, `PLTR`), which is then confirmed against live
+  market data and linked only if it resolves. Common English words and finance acronyms
+  ("AI", "CEO", "ETF", "NOW" as prose) are excluded; the client does not guess unknown
+  mixed-case company names in unbracketed prose.
 - Clicking (or keyboard-activating) a linked asset **anywhere in the chat window**
   performs the same action as searching that asset on the Markets page: it opens the
   asset's detail view (`/stock/<TICKER>`).

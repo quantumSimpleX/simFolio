@@ -142,12 +142,19 @@ export function findAssetSpans(text, { knownTickers = [] } = {}) {
     const ticker = NAME_LOOKUP.get(m[1].toLowerCase())
     if (ticker) pushTrusted(m.index, m.index + m[0].length, ticker, 2)
   }
-  // Bare known tickers (registry or the user's own symbols), minus stopwords.
+  // Bare tickers. Known symbols (registry / the user's own) link immediately;
+  // unknown ALL-CAPS tokens that *look* like a ticker (>=3 letters) are flagged
+  // for live validation and link only if they resolve to a real symbol. Both
+  // skip common words / finance acronyms (STOPWORDS).
   const bare = /(?<![\w$])([A-Z]{1,5}(?:\.[A-Z])?)(?![\w])/g
   for (let m; (m = bare.exec(text)); ) {
     const up = m[1].toUpperCase()
     if (STOPWORDS.has(up)) continue
-    if (tickerMap.has(up)) pushTrusted(m.index, m.index + m[0].length, tickerMap.get(up), 3)
+    const start = m.index, end = m.index + m[0].length
+    if (tickerMap.has(up)) { pushTrusted(start, end, tickerMap.get(up), 3); continue }
+    if (up.replace('.', '').length >= 3 && !inBracket(start, end)) {
+      cand.push({ start, end, display: m[0], vtype: 'ticker', query: up, priority: 5 })
+    }
   }
 
   // Resolve overlaps: earlier start wins; then higher priority (lower number);

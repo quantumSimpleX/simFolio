@@ -362,3 +362,24 @@ live validation pipeline is unchanged).
   analyst pass is small and uses the same free fallback chain.
 - **Dependency unchanged:** requires redeploying `hero-chat` (`supabase functions deploy hero-chat`)
   to take effect in production; linking unknown entities still needs `VITE_TWELVEDATA_API_KEY`.
+
+### Iteration 5 — extraction reliability + deterministic format net
+
+Deployed iteration 4 found assets unreliably (e.g. 1 of 4 in one reply): `callLLMWithFallback`
+accepts the first model returning valid JSON, and the chain led with the smallest model, whose
+incomplete-but-valid array was accepted. Root `supabase/` (stale dup) had also been deployed by
+mistake from the repo root — redeployed from `app/`.
+
+- [x] AM-25 `_shared/llm.ts`: optional `temperature` (additive; other callers unaffected).
+- [x] AM-26 `hero-chat/index.ts`: extraction now uses `EXTRACT_MODELS` (gpt-oss-120b → llama-70b →
+            gemma-31b, strongest first), `temperature: 0`, and an exhaustive prompt + worked example.
+- [x] AM-27 `lib/assetLinks.js`: unbracketed scan now flags unknown ALL-CAPS tokens of 3+ letters as
+            `ticker` validation candidates (STOPWORDS-guarded), catching ticker-shaped misses like
+            `ARKG`/`PLTR`; still links only if live market data confirms them.
+- [x] AM-28 Tests for the format net (flag `PLTR`/`ARKG`; ignore 2-letter & stopwords); doc updated.
+
+### QA findings — iteration 5
+- **241/241** Vitest pass (+2). Build/parser otherwise unchanged.
+- Live `tag_text` check confirmed bracketing of multi-word names + tickers after deploy.
+- **Cost:** extraction prefers larger free models (slower/heavier) but stays within the wall-clock
+  budget (550B model excluded). Format net adds no LLM cost (client-side + cached validation).
