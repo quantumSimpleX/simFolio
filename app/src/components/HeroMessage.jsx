@@ -30,7 +30,7 @@ export function HeroMessage({ hero='warren', text, time, isNew=false, modelTag }
   const h = HERO_MAP[hero] ?? HERO_MAP.warren;
   return (
     <div className="flex gap-2.5">
-      <HeroAvatar initials={h.initials} color={h.color} size={30}/>
+      <HeroAvatar id={hero} initials={h.initials} color={h.color} size={30}/>
       <div className="flex-1">
         <div className="mb-1 flex items-center gap-2">
           <div className="font-sans text-[17px] font-semibold text-ink-700">{h.name}</div>

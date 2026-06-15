@@ -1,11 +1,11 @@
 import { C } from '../tokens';
-import { Logo, SimPill } from './Primitives';
+import { Logo, SimPill, HeroAvatar } from './Primitives';
 import QSWordmark from './QSWordmark';
 
 const HEROES = [
-  { initials:'WB', name:'Warren Buffett',  style:'Value investing · long-term',  color:C.ame400, quote:'"Price is what you pay. Value is what you get."' },
-  { initials:'CW', name:'Cathie Wood',      style:'Disruptive technology · growth', color:C.aqua400, quote:'"Innovation solves problems. Invest in the future."' },
-  { initials:'RD', name:'Ray Dalio',        style:'Macro · diversification',        color:C.gold,    quote:'"Diversify well and you will do well."' },
+  { id:'warren', initials:'WB', name:'Warren Buffett',  style:'Value investing · long-term',  color:C.ame400, quote:'"Price is what you pay. Value is what you get."' },
+  { id:'cathie', initials:'CW', name:'Cathie Wood',      style:'Disruptive technology · growth', color:C.aqua400, quote:'"Innovation solves problems. Invest in the future."' },
+  { id:'ray',    initials:'RD', name:'Ray Dalio',        style:'Macro · diversification',        color:C.gold,    quote:'"Diversify well and you will do well."' },
 ];
 
 // Dark branding panel shared by the desktop welcome and onboarding layouts
@@ -29,8 +29,8 @@ export default function BrandPanel() {
       </div>
       <div className="flex flex-col gap-3">
         {HEROES.map(h => (
-          <div key={h.initials} className="flex gap-3.5 rounded-card border border-white/[0.08] bg-white/[0.04] px-[18px] py-3.5">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-pill font-sans text-[13px] font-bold" style={{ background:`${h.color}20`, border:`1.5px solid ${h.color}50`, color:h.color }}>{h.initials}</div>
+          <div key={h.id} className="flex gap-3.5 rounded-card border border-white/[0.08] bg-white/[0.04] px-[18px] py-3.5">
+            <HeroAvatar id={h.id} initials={h.initials} color={h.color} size={40}/>
             <div className="flex-1">
               <div className="font-sans text-[15px] font-semibold text-white">{h.name}</div>
               <div className="font-sans text-[13px]" style={{ color:h.color }}>{h.style}</div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Logo, SimPill, CTA, GoalCard, ProgressDots, GuideAvatar } from '../../components/Primitives';
+import { Logo, SimPill, CTA, GoalCard, ProgressDots, GuideAvatar, HeroAvatar } from '../../components/Primitives';
 import BrandPanel from '../../components/BrandPanel';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -70,6 +70,7 @@ const QUESTIONS = buildQuestions();
 export default function Onboarding() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isDesktop = useIsDesktop();
   const [step, setStep] = useState(0);
   const [selected, setSelected] = useState(null);
   const [answers, setAnswers] = useState({});
@@ -160,9 +161,13 @@ export default function Onboarding() {
     // Always keep a local copy so the profile page works even if the DB save fails
     try { localStorage.setItem('simfolio_onboarding_answers', JSON.stringify(fullAnswers)); } catch { /* ignore */ }
 
+    // After picking a hero (no stocks), land where the user can chat: the portfolio page on
+    // desktop (hero sidebar), the dedicated Ask page on mobile.
+    const heroDest = isDesktop ? '/portfolio' : '/ask';
+
     if (!user) {
       if (stockList.length > 0) navigate(`/buy/${stockList[0]}`);
-      else navigate('/portfolio');
+      else navigate(heroDest);
       return;
     }
     if (saving) return;
@@ -189,7 +194,7 @@ export default function Onboarding() {
         heroIds.slice(0, 1).map(id => ({ user_id: user.id, hero_id: id }))
       );
       if (stockList.length > 0) navigate(`/buy/${stockList[0]}`);
-      else navigate('/portfolio');
+      else navigate(heroDest);
     } catch (err) {
       console.error('Onboarding save error:', err);
       setSaving(false);
@@ -197,7 +202,11 @@ export default function Onboarding() {
   }
 
   if (showHeroes) {
-    return <HeroSelect heroIds={selectionHeroIds} loading={useLLM && rankingLoading} onChoose={handleHeroChosen} saving={saving} onBack={() => setShowHeroes(false)}/>;
+    // Named a recognised investor → introduce just that one hero, no grid to choose from.
+    if (mentionId) {
+      return <HeroIntro heroId={mentionId} onContinue={() => handleHeroChosen(mentionId)} saving={saving} onBack={() => setShowHeroes(false)}/>;
+    }
+    return <HeroSelect heroIds={selectionHeroIds} loading={rankingLoading} onChoose={handleHeroChosen} saving={saving} onBack={() => setShowHeroes(false)}/>;
   }
 
   if (showStock) {
@@ -393,6 +402,43 @@ function MultiGoalPicker({ choices, value, onChange }) {
   );
 }
 
+// Single-hero intro: shown when the user named an investor we recognise. One detailed card,
+// then Continue straight to the chat (no grid to pick from).
+function HeroIntro({ heroId, onContinue, saving, onBack }) {
+  const isDesktop = useIsDesktop();
+  const avatarSize = isDesktop ? 48 : 34;
+  const h = HERO_DATA[heroId];
+
+  return (
+    <ScreenShell>
+      <BackButton onBack={onBack}/>
+
+      <SageHeader avatarSize={avatarSize} isDesktop={isDesktop}>
+        Look who we got here? {h.name} is here to help you.
+      </SageHeader>
+
+      <div className="flex flex-col gap-4 rounded-card border-[1.5px] border-ame-400 bg-ame-50 p-5">
+        <div className="flex items-center gap-4">
+          <HeroAvatar id={heroId} initials={h.initials} color={h.color} size={isDesktop ? 104 : 80}/>
+          <div className="font-sans font-semibold text-ink-900" style={{ fontSize: fluid(22, 28) }}>{h.name}</div>
+        </div>
+        <div>
+          <div className="mb-1 font-sans text-[11px] uppercase tracking-[0.14em] text-ink-400">Investment style</div>
+          <div className="font-sans leading-snug text-ink-900" style={{ fontSize: fluid(14, 16) }}>{h.style}</div>
+        </div>
+        {h.knownFor && (
+          <div>
+            <div className="mb-1 font-sans text-[11px] uppercase tracking-[0.14em] text-ink-400">Known for</div>
+            <div className="font-sans leading-snug text-ink-900" style={{ fontSize: fluid(14, 16) }}>{h.knownFor}</div>
+          </div>
+        )}
+      </div>
+
+      <CTA label={`Ask ${h.name}  →`} full loading={saving} onClick={onContinue}/>
+    </ScreenShell>
+  );
+}
+
 function HeroSelect({ heroIds, loading, onChoose, saving, onBack }) {
   const [picked, setPicked] = useState(null);
   const isDesktop = useIsDesktop();
@@ -403,13 +449,13 @@ function HeroSelect({ heroIds, loading, onChoose, saving, onBack }) {
       <BackButton onBack={onBack}/>
 
       <SageHeader avatarSize={avatarSize} isDesktop={isDesktop}>
-        {loading ? 'Let me think about who could help you…' : 'Maybe you can ask some of these experts to help you?'}
+        {loading ? 'Let me make some calls to find a few experts who could help you…' : 'Maybe you can ask some of these experts to help you?'}
       </SageHeader>
 
       {loading ? (
         <div className="grid grid-cols-2 gap-2.5">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-[112px] animate-pulse rounded-card border-[1.5px] border-ink-100 bg-ink-50"/>
+            <div key={i} className="h-[88px] animate-pulse rounded-card border-[1.5px] border-ink-100 bg-ink-50"/>
           ))}
         </div>
       ) : (
@@ -422,16 +468,15 @@ function HeroSelect({ heroIds, loading, onChoose, saving, onBack }) {
               key={id}
               onClick={() => setPicked(id)}
               className={cn(
-                'flex cursor-pointer flex-col gap-2 rounded-card border-[1.5px] px-3.5 pb-3 pt-3.5',
+                'flex cursor-pointer items-center gap-3 rounded-card border-[1.5px] p-3',
                 isPicked ? 'border-ame-400 bg-ame-50' : 'border-ink-200 bg-white',
               )}
             >
-              <div
-                className="flex h-9 w-9 items-center justify-center rounded-pill font-sans text-sm font-bold text-white"
-                style={{ background: h.color }}
-              >{h.initials}</div>
-              <div className="font-sans font-semibold text-ink-900" style={{ fontSize: fluid(15, 17) }}>{h.name}</div>
-              <div className="font-sans leading-snug text-ink-400" style={{ fontSize: fluid(12, 14) }}>{h.style}</div>
+              <HeroAvatar id={id} initials={h.initials} color={h.color} size={isDesktop ? 64 : 52}/>
+              <div className="min-w-0 flex-1">
+                <div className="font-sans font-semibold text-ink-900" style={{ fontSize: fluid(15, 17) }}>{h.name}</div>
+                <div className="mt-0.5 font-sans leading-snug text-ink-400" style={{ fontSize: fluid(12, 14) }}>{h.style}</div>
+              </div>
             </div>
           );
         })}

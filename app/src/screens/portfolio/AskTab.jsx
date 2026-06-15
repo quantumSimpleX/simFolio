@@ -4,6 +4,7 @@ import { QuickPrompts, ChatComposer, ChatMessages } from '../../components/HeroC
 import { useHeroChat, useHeroHistory } from '../../hooks/useHeroChat';
 import { useHeroSelections } from '../../hooks/useHeroSelections';
 import { usePortfolio } from '../../hooks/usePortfolio';
+import { HeroAvatar } from '../../components/Primitives';
 
 export default function AskTab() {
   const { heroes } = useHeroSelections();
@@ -36,7 +37,9 @@ export default function AskTab() {
       <div className="flex flex-shrink-0 items-center gap-2.5 px-3 py-2">
         <div className="flex">
           {heroes.slice(0,3).map((h, i) => (
-            <div key={h.id} className="flex h-[34px] w-[34px] items-center justify-center rounded-pill font-sans text-xs font-bold" style={{ background:`${h.color}12`, border:`1.5px solid ${h.color}35`, color:h.color, marginLeft:i>0?-8:0 }}>{h.initials}</div>
+            <div key={h.id} style={{ marginLeft:i>0?-8:0 }}>
+              <HeroAvatar id={h.id} initials={h.initials} color={h.color} size={34}/>
+            </div>
           ))}
         </div>
         <div>

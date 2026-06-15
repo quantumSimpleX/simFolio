@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { cn } from '../../lib/utils';
-import { Eyebrow } from '../../components/Primitives';
+import { Eyebrow, HeroAvatar } from '../../components/Primitives';
 import { AppShell } from '../../components/AppShell';
 import { ChartPanel, RangeButtons } from '../../components/Charts';
 import { HoldingRow } from '../../components/HoldingRow';
@@ -137,7 +137,9 @@ export default function PortfolioDesktop() {
           <div className="flex items-center gap-2.5 border-b border-ink-100 px-3 py-2">
             <div className="flex">
               {heroes.slice(0,3).map((h,i) => (
-                <div key={h.id} className="flex h-[30px] w-[30px] items-center justify-center rounded-pill font-sans text-[11px] font-bold" style={{ background:`${h.color}12`, border:`1.5px solid ${h.color}35`, color:h.color, marginLeft:i>0?-8:0 }}>{h.initials}</div>
+                <div key={h.id} style={{ marginLeft:i>0?-8:0 }}>
+                  <HeroAvatar id={h.id} initials={h.initials} color={h.color} size={30}/>
+                </div>
               ))}
             </div>
             <div>

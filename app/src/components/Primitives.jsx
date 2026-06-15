@@ -8,7 +8,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
-import { Avatar, AvatarFallback } from './ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group';
 import {
   Tooltip, TooltipTrigger, TooltipContent, TooltipProvider,
@@ -289,11 +289,17 @@ export function StatusPill({ status }) {
   );
 }
 
-export function HeroAvatar({ initials, color, size=36 }) {
+export function HeroAvatar({ id, initials, color, size=36 }) {
+  // Real heroes have a grayscale portrait at /heroes/<id>.jpg; Sage (and any
+  // missing photo) falls back to the colored initials chip.
+  const hasPhoto = id && id !== 'sage';
   return (
     <Avatar
       style={{ width:size, height:size, background:`${color}12`, border:`1.5px solid ${color}35` }}
     >
+      {hasPhoto && (
+        <AvatarImage src={`/heroes/${id}.jpg`} alt={initials} className="object-cover" />
+      )}
       <AvatarFallback style={{ background:'transparent', color, fontSize:size*0.36 }}>
         {initials}
       </AvatarFallback>
