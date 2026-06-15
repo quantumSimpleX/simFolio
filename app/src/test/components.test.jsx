@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Fundamentals } from '../components/Fundamentals'
 import { WatchRow } from '../components/WatchRow'
 import { SearchResultRow } from '../components/SearchResultRow'
@@ -13,7 +14,8 @@ import { HoldingRow } from '../components/HoldingRow'
 import { QuickPrompts, ChatComposer, ChatMessages, modelLabel } from '../components/HeroChatPanel'
 
 function wrap(ui) {
-  return render(<MemoryRouter>{ui}</MemoryRouter>)
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  return render(<QueryClientProvider client={qc}><MemoryRouter>{ui}</MemoryRouter></QueryClientProvider>)
 }
 
 describe('Fundamentals', () => {

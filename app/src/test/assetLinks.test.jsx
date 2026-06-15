@@ -1,123 +1,101 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { findAssetMentions, splitTextWithAssets, ASSET_REGISTRY } from '../lib/assetLinks'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { findAssetSpans, resolutionKey, ASSET_REGISTRY } from '../lib/assetLinks'
+import { matchRows, resolveSymbol } from '../lib/resolveSymbol'
 import { AssetText } from '../components/AssetText'
 import { HeroMessage, UserMessage } from '../components/HeroMessage'
 
-const tickers = m => m.map(x => x.ticker)
+const trustedTickers = text =>
+  findAssetSpans(text).filter(s => s.kind === 'trusted').map(s => s.ticker)
+const validateQueries = text =>
+  findAssetSpans(text).filter(s => s.kind === 'validate').map(s => `${s.vtype}:${s.query}`)
 
-describe('findAssetMentions — detection signals', () => {
-  it('detects an explicit cashtag', () => {
-    const m = findAssetMentions('I like $AAPL here')
-    expect(tickers(m)).toEqual(['AAPL'])
-    expect(m[0]).toMatchObject({ start: 7, end: 12 })
+// ─── findAssetSpans: trusted (no-network) detection ──────────────────────────
+describe('findAssetSpans — trusted detection', () => {
+  it('detects a cashtag for a known symbol', () => {
+    const m = findAssetSpans('I like $AAPL here')
+    expect(m).toEqual([{ start: 7, end: 12, kind: 'trusted', ticker: 'AAPL' }])
   })
 
-  it('honors a cashtag even for an unknown symbol', () => {
-    expect(tickers(findAssetMentions('what about $ZZZZ?'))).toEqual(['ZZZZ'])
+  it('detects a registry company name case-insensitively', () => {
+    expect(trustedTickers('Apple has a moat')).toEqual(['AAPL'])
+    expect(trustedTickers('i hold nvidia')).toEqual(['NVDA'])
+    expect(trustedTickers('Bitcoin is volatile')).toEqual(['BTC'])
   })
 
-  it('detects a company / common name case-insensitively', () => {
-    expect(tickers(findAssetMentions('Apple has a moat'))).toEqual(['AAPL'])
-    expect(tickers(findAssetMentions('i hold nvidia'))).toEqual(['NVDA'])
-    expect(tickers(findAssetMentions('Bitcoin is volatile'))).toEqual(['BTC'])
+  it('detects a bare registry ticker', () => {
+    expect(trustedTickers('NVDA looks strong')).toEqual(['NVDA'])
   })
 
-  it('detects a bare known ticker', () => {
-    expect(tickers(findAssetMentions('NVDA looks strong'))).toEqual(['NVDA'])
-  })
-
-  it('matches a dotted ticker (BRK.B) as a cashtag and bare token', () => {
-    expect(tickers(findAssetMentions('$BRK.B'))).toEqual(['BRK.B'])
-    expect(tickers(findAssetMentions('BRK.B is Berkshire'))).toEqual(['BRK.B', 'BRK.B'])
+  it('matches a dotted registry ticker (BRK.B)', () => {
+    expect(trustedTickers('$BRK.B')).toEqual(['BRK.B'])
   })
 
   it('prefers the longest company name (Berkshire Hathaway over Berkshire)', () => {
-    const m = findAssetMentions('Berkshire Hathaway is cheap')
-    expect(tickers(m)).toEqual(['BRK.B'])
-    expect(m[0].end).toBe('Berkshire Hathaway'.length)
+    const m = findAssetSpans('Berkshire Hathaway is cheap')
+    expect(m).toHaveLength(1)
+    expect(m[0]).toMatchObject({ kind: 'trusted', ticker: 'BRK.B', end: 'Berkshire Hathaway'.length })
+  })
+
+  it('trusts a user holding/watchlist ticker via knownTickers', () => {
+    const m = findAssetSpans('my PLTR position', { knownTickers: ['PLTR'] })
+    expect(m).toEqual([{ start: 3, end: 7, kind: 'trusted', ticker: 'PLTR' }])
   })
 })
 
-describe('findAssetMentions — false-positive guards', () => {
-  it('does not link common acronyms as bare tickers', () => {
-    expect(findAssetMentions('AI and the CEO discussed the ETF')).toEqual([])
+// ─── findAssetSpans: validation candidates ───────────────────────────────────
+describe('findAssetSpans — validation candidates', () => {
+  it('flags an unknown ALL-CAPS token as a ticker candidate', () => {
+    expect(validateQueries('AMD is cheap')).toEqual(['ticker:AMD'])
   })
 
-  it('does not link "NOW" as prose but does link the company name', () => {
-    expect(findAssetMentions('do it now, right now')).toEqual([])
-    expect(tickers(findAssetMentions('ServiceNow is great'))).toEqual(['NOW'])
+  it('flags an unknown cashtag as a cashtag candidate', () => {
+    expect(validateQueries('what about $ZM?')).toEqual(['cashtag:ZM'])
   })
 
-  it('does not match a ticker embedded in a larger word', () => {
-    expect(findAssetMentions('SPYWARE and AMZNX are not tickers')).toEqual([])
+  it('flags an unknown capitalized proper noun as a name candidate', () => {
+    expect(validateQueries('I like Palantir a lot')).toEqual(['name:Palantir'])
   })
 
-  it('returns nothing for plain prose', () => {
-    expect(findAssetMentions('I think you should diversify a little more')).toEqual([])
-  })
-})
-
-describe('findAssetMentions — extraTickers (holdings / watchlist)', () => {
-  it('links a user-supplied ticker not in the registry', () => {
-    expect(tickers(findAssetMentions('PLTR is risky', { extraTickers: ['PLTR'] }))).toEqual(['PLTR'])
+  it('does not flag common acronyms or common words', () => {
+    expect(findAssetSpans('AI and the CEO discussed the ETF')).toEqual([])
+    expect(findAssetSpans('Think about why you should diversify')).toEqual([])
   })
 
-  it('ignores extra tickers when absent from the text', () => {
-    expect(findAssetMentions('nothing here', { extraTickers: ['PLTR'] })).toEqual([])
+  it('does not flag a ticker embedded in a larger word', () => {
+    expect(findAssetSpans('SPYWARE is malware')).toEqual([])
   })
 })
 
-describe('findAssetMentions — ordering and overlap', () => {
-  it('returns multiple mentions ordered by position', () => {
-    const m = findAssetMentions('Compare Apple to $TSLA and NVDA')
-    expect(tickers(m)).toEqual(['AAPL', 'TSLA', 'NVDA'])
+describe('findAssetSpans — ordering, overlap, hygiene', () => {
+  it('returns spans ordered by position', () => {
+    const m = findAssetSpans('Apple beats $TSLA and NVDA')
+    expect(m.map(s => s.ticker)).toEqual(['AAPL', 'TSLA', 'NVDA'])
     expect(m[0].start).toBeLessThan(m[1].start)
     expect(m[1].start).toBeLessThan(m[2].start)
   })
 
   it('does not double-count a cashtag and its bare ticker', () => {
-    // The cashtag span ($AAPL) wins over the overlapping bare AAPL.
-    expect(tickers(findAssetMentions('$AAPL'))).toEqual(['AAPL'])
+    const m = findAssetSpans('$AAPL')
+    expect(m).toHaveLength(1)
+    expect(m[0].ticker).toBe('AAPL')
+  })
+
+  it('handles empty / null / non-string input', () => {
+    expect(findAssetSpans('')).toEqual([])
+    expect(findAssetSpans(null)).toEqual([])
+    expect(findAssetSpans(undefined)).toEqual([])
+    expect(findAssetSpans(42)).toEqual([])
   })
 })
 
-describe('findAssetMentions — input hygiene', () => {
-  it('handles empty, null, and non-string input', () => {
-    expect(findAssetMentions('')).toEqual([])
-    expect(findAssetMentions(null)).toEqual([])
-    expect(findAssetMentions(undefined)).toEqual([])
-    expect(findAssetMentions(42)).toEqual([])
+describe('resolutionKey / ASSET_REGISTRY', () => {
+  it('builds a stable upper-cased key', () => {
+    expect(resolutionKey('name', 'Palantir')).toBe('name:PALANTIR')
   })
-})
-
-describe('splitTextWithAssets', () => {
-  it('splits text into plain and asset segments in order', () => {
-    const segs = splitTextWithAssets('Buy AAPL now')
-    expect(segs).toEqual([
-      { text: 'Buy ', ticker: null },
-      { text: 'AAPL', ticker: 'AAPL' },
-      { text: ' now', ticker: null },
-    ])
-  })
-
-  it('returns a single plain segment when no asset is present', () => {
-    expect(splitTextWithAssets('hello there')).toEqual([{ text: 'hello there', ticker: null }])
-  })
-
-  it('returns an empty array for empty text', () => {
-    expect(splitTextWithAssets('')).toEqual([])
-    expect(splitTextWithAssets(null)).toEqual([])
-  })
-
-  it('handles an asset at the very start and end', () => {
-    expect(splitTextWithAssets('AAPL')).toEqual([{ text: 'AAPL', ticker: 'AAPL' }])
-  })
-})
-
-describe('ASSET_REGISTRY', () => {
-  it('every entry has a ticker and at least one name', () => {
+  it('registry entries each have a ticker and at least one name', () => {
     for (const a of ASSET_REGISTRY) {
       expect(typeof a.ticker).toBe('string')
       expect(a.names.length).toBeGreaterThan(0)
@@ -125,12 +103,55 @@ describe('ASSET_REGISTRY', () => {
   })
 })
 
+// ─── resolveSymbol / matchRows (live validation) ─────────────────────────────
+const ROWS = [
+  { symbol: 'PLTR', instrument_name: 'Palantir Technologies Inc', instrument_type: 'Common Stock', country: 'United States' },
+  { symbol: 'AMD', instrument_name: 'Advanced Micro Devices', instrument_type: 'Common Stock', country: 'United States' },
+  { symbol: 'PLTR.MX', instrument_name: 'Palantir', instrument_type: 'Common Stock', country: 'Mexico' },
+]
+
+describe('matchRows', () => {
+  it('matches a ticker candidate to an exact US symbol', () => {
+    expect(matchRows(ROWS, 'AMD', 'ticker')).toBe('AMD')
+  })
+  it('matches a name candidate to a US instrument by name prefix', () => {
+    expect(matchRows(ROWS, 'Palantir', 'name')).toBe('PLTR')
+  })
+  it('ignores non-US listings', () => {
+    expect(matchRows(ROWS, 'ZZZZ', 'ticker')).toBe(null)
+  })
+  it('returns null when nothing matches', () => {
+    expect(matchRows(ROWS, 'Nope', 'name')).toBe(null)
+  })
+})
+
+describe('resolveSymbol', () => {
+  beforeEach(() => { globalThis.fetch.mockReset?.(); localStorage.clear() })
+
+  it('resolves a name candidate via the symbol API and caches the result', async () => {
+    globalThis.fetch = vi.fn(async () => ({ ok: true, json: async () => ({ data: ROWS }) }))
+    expect(await resolveSymbol('Palantir', 'name')).toBe('PLTR')
+    // Second call is served from the localStorage cache — no extra fetch.
+    expect(await resolveSymbol('Palantir', 'name')).toBe('PLTR')
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1)
+  })
+
+  it('returns null (and caches it) for a non-asset, and on fetch error', async () => {
+    globalThis.fetch = vi.fn(async () => ({ ok: true, json: async () => ({ data: [] }) }))
+    expect(await resolveSymbol('Yesterday', 'name')).toBe(null)
+    globalThis.fetch = vi.fn(async () => { throw new Error('network') })
+    expect(await resolveSymbol('Boom', 'ticker')).toBe(null)
+  })
+})
+
+// ─── AssetText component ─────────────────────────────────────────────────────
 function wrap(ui) {
-  return render(<MemoryRouter>{ui}</MemoryRouter>)
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  return render(<QueryClientProvider client={qc}><MemoryRouter>{ui}</MemoryRouter></QueryClientProvider>)
 }
 
-describe('AssetText component', () => {
-  it('renders an asset mention as a clickable link', () => {
+describe('AssetText — trusted (synchronous) links', () => {
+  it('renders a known ticker as a clickable link', () => {
     const onAssetClick = vi.fn()
     wrap(<AssetText text="I like AAPL" onAssetClick={onAssetClick} />)
     const link = screen.getByText('AAPL')
@@ -140,23 +161,17 @@ describe('AssetText component', () => {
     expect(onAssetClick).toHaveBeenCalledWith('AAPL')
   })
 
-  it('activates the link via keyboard (Enter)', () => {
+  it('activates a link via keyboard (Enter)', () => {
     const onAssetClick = vi.fn()
     wrap(<AssetText text="Apple" onAssetClick={onAssetClick} />)
     fireEvent.keyDown(screen.getByText('Apple'), { key: 'Enter' })
     expect(onAssetClick).toHaveBeenCalledWith('AAPL')
   })
 
-  it('renders plain text without any links', () => {
-    wrap(<AssetText text="just diversify" onAssetClick={vi.fn()} />)
-    expect(screen.getByText('just diversify')).toBeInTheDocument()
+  it('renders plain prose with no links', () => {
+    wrap(<AssetText text="just diversify a bit" onAssetClick={vi.fn()} />)
+    expect(screen.getByText('just diversify a bit')).toBeInTheDocument()
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
-  })
-
-  it('navigates to the stock detail route by default (no onAssetClick)', () => {
-    // No onAssetClick → falls back to navigate('/stock/AAPL'); just assert it renders a link.
-    wrap(<AssetText text="$AAPL" />)
-    expect(screen.getByText('$AAPL')).toHaveAttribute('data-ticker', 'AAPL')
   })
 
   it('links a user holding passed via extraTickers', () => {
@@ -165,15 +180,40 @@ describe('AssetText component', () => {
     fireEvent.click(screen.getByText('PLTR'))
     expect(onAssetClick).toHaveBeenCalledWith('PLTR')
   })
+
+  it('navigates to /stock/<TICKER> by default (no onAssetClick)', () => {
+    wrap(<AssetText text="$AAPL" />)
+    expect(screen.getByText('$AAPL')).toHaveAttribute('data-ticker', 'AAPL')
+  })
+})
+
+describe('AssetText — live-validated links', () => {
+  it('links an unknown company once validated against market data', async () => {
+    globalThis.fetch = vi.fn(async () => ({ ok: true, json: async () => ({ data: ROWS }) }))
+    const onAssetClick = vi.fn()
+    wrap(<AssetText text="I like Palantir" onAssetClick={onAssetClick} />)
+    // Initially plain text; becomes a link after the lookup resolves.
+    const link = await screen.findByText('Palantir')
+    await waitFor(() => expect(link).toHaveAttribute('data-ticker', 'PLTR'))
+    fireEvent.click(link)
+    expect(onAssetClick).toHaveBeenCalledWith('PLTR')
+  })
+
+  it('leaves an unrecognized capitalized word as plain text', async () => {
+    globalThis.fetch = vi.fn(async () => ({ ok: true, json: async () => ({ data: [] }) }))
+    wrap(<AssetText text="Yesterday was rough" onAssetClick={vi.fn()} />)
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled())
+    expect(screen.queryByRole('link')).not.toBeInTheDocument()
+  })
 })
 
 describe('HeroMessage / UserMessage asset linkification', () => {
-  it('HeroMessage renders a clickable asset in the reply', () => {
+  it('HeroMessage renders a clickable known asset in the reply', () => {
     wrap(<HeroMessage hero="warren" text={'"What is AAPL worth?"'} />)
     expect(screen.getByText('AAPL')).toHaveAttribute('data-ticker', 'AAPL')
   })
 
-  it('UserMessage renders a clickable asset in the question', () => {
+  it('UserMessage renders a clickable known asset in the question', () => {
     wrap(<UserMessage text="Should I buy NVDA?" />)
     expect(screen.getByText('NVDA')).toHaveAttribute('data-ticker', 'NVDA')
   })

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderWithProviders } from './renderWithProviders'
 import { __setTableData } from './supabaseMock'
 import { HeroMessage, UserMessage, SageMsg } from '../components/HeroMessage'
@@ -9,15 +10,18 @@ import Markets from '../screens/markets/Markets'
 
 describe('chat message components', () => {
   it('HeroMessage renders every hero plus fallback, time, and new dot', () => {
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
-      <MemoryRouter>
-        {['sage', 'warren', 'munger', 'lynch', 'bogle', 'cathie', 'ray', 'unknown'].map(h => (
-          <HeroMessage key={h} hero={h} text={`hi from ${h}`} time="9:41" isNew/>
-        ))}
-        <UserMessage text="my question"/>
-        <SageMsg text="welcome" compact/>
-        <SageMsg text="welcome big"/>
-      </MemoryRouter>,
+      <QueryClientProvider client={qc}>
+        <MemoryRouter>
+          {['sage', 'warren', 'munger', 'lynch', 'bogle', 'cathie', 'ray', 'unknown'].map(h => (
+            <HeroMessage key={h} hero={h} text={`hi from ${h}`} time="9:41" isNew/>
+          ))}
+          <UserMessage text="my question"/>
+          <SageMsg text="welcome" compact/>
+          <SageMsg text="welcome big"/>
+        </MemoryRouter>
+      </QueryClientProvider>,
     )
     expect(screen.getByText('Charlie Munger')).toBeInTheDocument()
     expect(screen.getByText('my question')).toBeInTheDocument()

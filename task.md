@@ -265,3 +265,38 @@ Clicking anywhere in the chat window opens that asset exactly like a Markets sea
   a clean `git stash` checkout, so it predates this feature and is out of scope. New feature files
   (`assetLinks.js`, `AssetText.jsx`) lint clean.
 - **Outcome:** 235/235 Vitest pass (100% > 95% target). No remaining failures attributable to the feature.
+
+### Iteration 2 — live market-data validation (broaden coverage)
+Reported gap: companies/stocks mentioned by name but absent from the curated registry (e.g.
+"Palantir", "AMD") were not linked. Per user decision, detection now **validates candidates against
+live market data** instead of relying on a static list alone.
+
+- [x] AM-7  `lib/assetLinks.js`: replace `findAssetMentions`/`splitTextWithAssets` with
+            `findAssetSpans()` that classifies each span as **trusted** (registry / holdings /
+            watchlist / known cashtag → link immediately) or **validate** (unknown cashtag, ALL-CAPS
+            token, or capitalized proper noun → carries a `query`). Added `COMMON_WORDS` thrift filter
+            and `resolutionKey()`.
+- [x] AM-8  `lib/resolveSymbol.js`: `resolveSymbol(query,type)` + `matchRows()` confirm a candidate
+            against TwelveData `symbol_search` (US Common Stock/ETF), memoized in localStorage
+            (positives and negatives) so each term is looked up once.
+- [x] AM-9  `hooks/useAssetResolution.js`: batches validation candidates through React Query
+            (`useQueries`, `staleTime: Infinity`, deduped); returns a key→ticker map.
+- [x] AM-10 `components/AssetText.jsx`: renders trusted spans synchronously and validated spans once
+            resolved; unresolved/unknown candidates stay plain text.
+- [x] AM-11 Tests reworked in `assetLinks.test.jsx` (findAssetSpans, matchRows/resolveSymbol incl.
+            cache + error paths, AssetText trusted + live-validated). Added `QueryClientProvider` to the
+            `components.test.jsx` / `misc.test.jsx` chat renders (AssetText now uses React Query).
+- [x] AM-12 PRD updated with the live-validation requirement.
+            **Result: 239/239 Vitest pass (100% > 95%). Coverage — assetLinks.js / AssetText.jsx /
+            resolveSymbol.js all 100% lines; global 86.93% (80% gate cleared). New files lint clean.
+            `npm run build` ✓.**
+
+### QA findings — iteration 2
+- **[fixed] Over-strict ordering test.** A test fed "Compare Apple to …"; "Compare" is now correctly a
+  name *candidate* (ticker undefined until validated), so `m.map(s=>s.ticker)` led with `undefined`.
+  Re-anchored the test to a sentence without a stray proper noun — behavior is correct.
+- **[fixed] Two `no-useless-assignment` lint errors** in new files (a redundant `ticker = null` in a
+  catch, and a final unused `key++`). Resolved; new files lint clean.
+- **Note:** validation depends on `VITE_TWELVEDATA_API_KEY` and is best-effort — on rate-limit/no-key,
+  unknown candidates gracefully render as plain text (trusted/registry/holdings still link offline).
+- **Outcome:** 239/239 Vitest pass (100% > 95% target).

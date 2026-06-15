@@ -186,9 +186,14 @@ Requirements:
 - Detection covers explicit cashtags (`$AAPL`), recognized company/common names
   (e.g. "Apple", "NVIDIA", "Bitcoin"), and bare ticker symbols the system knows
   (the curated asset registry plus the user's own holdings and watchlist symbols).
+- Beyond the known set, any other candidate mentioned in chat — an unknown cashtag,
+  ALL-CAPS token, or capitalized company name (e.g. "Palantir") — is **validated
+  against live market data** (the same symbol search the Markets page uses) and is
+  linked only if it resolves to a real US stock/ETF. Lookups are cached so each term
+  is resolved once.
 - Common English words and finance acronyms (e.g. "AI", "CEO", "ETF", "NOW" as prose)
   must not be falsely linked when they appear as bare tokens; an explicit cashtag is
-  always honored.
+  always honored. Unrecognized candidates simply render as plain text.
 - Clicking (or keyboard-activating) a linked asset **anywhere in the chat window**
   performs the same action as searching that asset on the Markets page: it opens the
   asset's detail view (`/stock/<TICKER>`).

@@ -9,69 +9,80 @@ message renders as an underlined, clickable link that opens the asset's detail p
 - **Run:** `cd app && npx vitest run src/test/assetLinks.test.jsx`
   Coverage: `cd app && npx vitest run --coverage src/test/assetLinks.test.jsx`
 
+Detection links **known** assets (curated registry + the user's holdings/watchlist + explicit
+cashtags) synchronously, and **validates** any other candidate (unknown cashtag, ALL-CAPS token, or
+capitalized company name) against live market data before linking.
+
 ## Units under test
 
 | File | What it does |
 |------|--------------|
-| `src/lib/assetLinks.js` | `findAssetMentions`, `splitTextWithAssets`, `ASSET_REGISTRY` (pure) |
-| `src/components/AssetText.jsx` | Renders text with asset segments as `role="link"` spans |
+| `src/lib/assetLinks.js` | `findAssetSpans` (trusted vs validate spans), `resolutionKey`, `ASSET_REGISTRY` (pure) |
+| `src/lib/resolveSymbol.js` | `resolveSymbol` / `matchRows` — confirm a candidate via symbol search, cached |
+| `src/hooks/useAssetResolution.js` | Batches validation candidates through React Query |
+| `src/components/AssetText.jsx` | Renders trusted links synchronously, validated links once resolved |
 | `src/components/HeroMessage.jsx` | `HeroMessage` / `UserMessage` render replies/questions via `AssetText` |
 
 ## Test cases
 
-### A. `findAssetMentions` — detection signals
-1. Detects an explicit cashtag (`$AAPL`) and reports correct `start`/`end`.
-2. Honors a cashtag even for an unknown symbol (`$ZZZZ` → `ZZZZ`).
-3. Detects a company / common name case-insensitively (`Apple`, `nvidia`, `Bitcoin`).
-4. Detects a bare known ticker (`NVDA`).
-5. Matches a dotted ticker (`BRK.B`) as both a cashtag and a bare token.
-6. Prefers the longest company name (`Berkshire Hathaway` over `Berkshire`).
+### A. `findAssetSpans` — trusted (no-network) detection
+1. Detects a cashtag for a known symbol (`$AAPL`) with correct `start`/`end`.
+2. Detects a registry company name case-insensitively (`Apple`, `nvidia`, `Bitcoin`).
+3. Detects a bare registry ticker (`NVDA`).
+4. Matches a dotted registry ticker (`$BRK.B`).
+5. Prefers the longest company name (`Berkshire Hathaway` over `Berkshire`).
+6. Trusts a user holding/watchlist ticker via `knownTickers` (`PLTR`).
 
-### B. `findAssetMentions` — false-positive guards
-7. Does not link common acronyms as bare tickers (`AI`, `CEO`, `ETF`).
-8. Does not link `NOW` as prose, but links the company name `ServiceNow`.
-9. Does not match a ticker embedded in a larger word (`SPYWARE`, `AMZNX`).
-10. Returns nothing for plain prose.
+### B. `findAssetSpans` — validation candidates
+7. Flags an unknown ALL-CAPS token as a `ticker` candidate (`AMD`).
+8. Flags an unknown cashtag as a `cashtag` candidate (`$ZM`).
+9. Flags an unknown capitalized proper noun as a `name` candidate (`Palantir`).
+10. Does not flag common acronyms (`AI`, `CEO`, `ETF`) or common words.
+11. Does not flag a ticker embedded in a larger word (`SPYWARE`).
 
-### C. `findAssetMentions` — extra (user) tickers
-11. Links a user-supplied ticker not in the registry (`PLTR` via `extraTickers`).
-12. Ignores extra tickers absent from the text.
+### C. `findAssetSpans` — ordering, overlap, hygiene
+12. Returns spans ordered by position.
+13. Does not double-count a cashtag and its overlapping bare ticker.
+14. Handles empty / null / undefined / non-string input → `[]`.
 
-### D. `findAssetMentions` — ordering & overlap
-13. Returns multiple mentions ordered by position.
-14. Does not double-count a cashtag and its overlapping bare ticker.
+### D. `resolutionKey` / `ASSET_REGISTRY`
+15. `resolutionKey` builds a stable upper-cased key.
+16. Every registry entry has a ticker and at least one name.
 
-### E. `findAssetMentions` — input hygiene
-15. Handles empty / null / undefined / non-string input → `[]`.
+### E. `matchRows` (pure match logic)
+17. Matches a ticker candidate to an exact US symbol (`AMD`).
+18. Matches a name candidate to a US instrument by name prefix (`Palantir` → `PLTR`).
+19. Ignores non-US listings.
+20. Returns null when nothing matches.
 
-### F. `splitTextWithAssets`
-16. Splits into ordered plain + asset segments.
-17. Returns a single plain segment when no asset present.
-18. Returns `[]` for empty / null text.
-19. Handles an asset at the very start / whole string.
+### F. `resolveSymbol` (live validation)
+21. Resolves a name candidate via the symbol API and caches it (second call hits the cache — no
+    second fetch).
+22. Returns null for a non-asset, and on fetch error (cached).
 
-### G. `ASSET_REGISTRY` integrity
-20. Every entry has a ticker and at least one name.
-
-### H. `AssetText` component
-21. Renders an asset mention as a clickable link (`data-ticker`, `role="link"`); click fires
+### G. `AssetText` — trusted (synchronous) links
+23. Renders a known ticker as a clickable link (`data-ticker`, `role="link"`); click fires
     `onAssetClick(ticker)`.
-22. Activates the link via keyboard (Enter).
-23. Renders plain text with no links when there is no asset.
-24. Falls back to `navigate('/stock/<TICKER>')` when no `onAssetClick` is given (renders a link).
-25. Links a user holding passed via `extraTickers`.
+24. Activates a link via keyboard (Enter).
+25. Renders plain prose with no links.
+26. Links a user holding passed via `extraTickers`.
+27. Falls back to `navigate('/stock/<TICKER>')` when no `onAssetClick` is given.
+
+### H. `AssetText` — live-validated links
+28. Links an unknown company once validated against market data (`Palantir` → `PLTR`).
+29. Leaves an unrecognized capitalized word as plain text.
 
 ### I. Integration — message components
-26. `HeroMessage` renders a clickable asset inside the (quoted) reply.
-27. `UserMessage` renders a clickable asset inside the user's question.
+30. `HeroMessage` renders a clickable known asset inside the (quoted) reply.
+31. `UserMessage` renders a clickable known asset inside the user's question.
 
 ## Results (latest run)
 
-- **Feature file:** 27/27 pass.
-- **Full suite:** 235/235 pass (100% > 95% target).
-- **Coverage (feature files):** `assetLinks.js` 100% lines, `AssetText.jsx` 100% lines — both clear
-  the 80% gate.
-- **Build:** `npm run build` ✓.
+- **Feature file:** 31/31 pass.
+- **Full suite:** 239/239 pass (100% > 95% target).
+- **Coverage:** `assetLinks.js`, `AssetText.jsx`, and `resolveSymbol.js` all 100% lines; global
+  86.93% lines (80% gate cleared).
+- **Lint:** new files clean. **Build:** `npm run build` ✓.
 
 Discovered issues and their resolution are appended to `task.md` under
-"QA findings — asset-mention feature".
+"QA findings — asset-mention feature" and "QA findings — iteration 2".
