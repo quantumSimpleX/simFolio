@@ -5,6 +5,7 @@ import { Eyebrow, MktStatus } from '../../components/Primitives'
 import { WatchRow } from '../../components/WatchRow'
 import { SearchResultRow } from '../../components/SearchResultRow'
 import { AppShell } from '../../components/AppShell'
+import { HeroSidebar } from '../../components/HeroSidebar'
 import { PageHeader } from '../../components/Nav'
 import { useIsMobile } from '../../hooks/useBreakpoint'
 import { useQuotes, isMarketOpen } from '../../hooks/useQuotes'
@@ -37,7 +38,9 @@ export default function Markets() {
   const quoteMap = Object.fromEntries([...(stableQuotes ?? []), ...(searchQuotes ?? [])].map(q => [q.ticker, q]))
 
   return (
-    <AppShell active="markets">
+    <AppShell active="markets" maxWidth={mobile ? 1100 : 1280}>
+      <div className={cn(!mobile && 'flex items-start gap-8')}>
+        <div className="flex min-w-0 flex-1 flex-col">
       <PageHeader title="Markets" right={<MktStatus open={marketOpen} />} />
 
       {/* Search */}
@@ -129,6 +132,10 @@ export default function Markets() {
           ))}
         </div>
       )}
+        </div>
+
+        {!mobile && <HeroSidebar />}
+      </div>
     </AppShell>
   )
 }
