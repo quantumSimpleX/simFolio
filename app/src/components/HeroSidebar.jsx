@@ -35,7 +35,7 @@ export function HeroSidebar({ className }) {
     sendMessage(msg);
   }
 
-  const councilNames = heroes.map(h => h.name.split(' ')[0]).join(' · ');
+  const councilNames = heroes.map(h => h.name).join(' · ');
 
   return (
     <div className={cn('sticky top-7 flex w-[380px] flex-shrink-0 flex-col overflow-hidden rounded-card border border-ink-100 bg-white [height:calc(100dvh/var(--zoom)-132px)]', className)}>

@@ -31,7 +31,7 @@ export default function AskTab() {
     sendMessage(msg);
   }
 
-  const councilNames = heroes.map(h => h.name.split(' ')[0]).join(' · ');
+  const councilNames = heroes.map(h => h.name).join(' · ');
 
   return (
     <div className="flex h-[100dvh] w-full flex-col overflow-hidden bg-paper">
