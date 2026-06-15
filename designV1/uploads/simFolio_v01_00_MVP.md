@@ -176,6 +176,25 @@ Examples:
 - What am I missing?
 - Am I diversified enough?
 
+## Interactive Asset Mentions
+
+Whenever a stock, ETF, or crypto asset is mentioned in **any chat message** — whether
+written by a Hero, by Sage, or by the user — the platform must render that asset as an
+**underlined, clickable link** inline in the message.
+
+Requirements:
+- Detection covers explicit cashtags (`$AAPL`), recognized company/common names
+  (e.g. "Apple", "NVIDIA", "Bitcoin"), and bare ticker symbols the system knows
+  (the curated asset registry plus the user's own holdings and watchlist symbols).
+- Common English words and finance acronyms (e.g. "AI", "CEO", "ETF", "NOW" as prose)
+  must not be falsely linked when they appear as bare tokens; an explicit cashtag is
+  always honored.
+- Clicking (or keyboard-activating) a linked asset **anywhere in the chat window**
+  performs the same action as searching that asset on the Markets page: it opens the
+  asset's detail view (`/stock/<TICKER>`).
+- Links are styled with the brand amethyst accent and an underline, distinct from the
+  dotted-amethyst educational tooltip underline.
+
 ## Hero Commentary Engine
 
 Heroes may proactively comment during important moments:

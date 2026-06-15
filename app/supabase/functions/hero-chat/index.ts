@@ -83,7 +83,7 @@ serve(async (req) => {
       `- Never give direct buy or sell instructions. Frame all responses as questions, observations, or educational perspectives.`,
       `- Keep responses concise — 2-4 sentences unless the user asks for detail.`,
       `- Never use emoji.`,
-      portfolio_context ? `\nUSER'S CURRENT PORTFOLIO:\n${portfolio_context}` : '',
+      portfolio_context ? `\nUSER'S CURRENT PORTFOLIO & WATCHLIST:\n${portfolio_context}` : '',
     ].join('\n')
 
     const messages = [

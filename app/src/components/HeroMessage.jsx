@@ -1,6 +1,7 @@
 import { C } from '../tokens';
 import { cn } from '../lib/utils';
 import { HeroAvatar, GuideAvatar } from './Primitives';
+import { AssetText } from './AssetText';
 
 const HERO_MAP = {
   sage:   { initials:'◇',  name:'Sage',           color:C.aqua400 },
@@ -26,7 +27,7 @@ const HERO_MAP = {
   burry:  { initials:'MB', name:'Michael Burry',           color:C.ink400 },
 };
 
-export function HeroMessage({ hero='warren', text, time, isNew=false, modelTag }) {
+export function HeroMessage({ hero='warren', text, time, isNew=false, modelTag, assetTickers }) {
   const h = HERO_MAP[hero] ?? HERO_MAP.warren;
   return (
     <div className="flex gap-2.5">
@@ -38,16 +39,16 @@ export function HeroMessage({ hero='warren', text, time, isNew=false, modelTag }
           {modelTag && <div className="ml-auto font-mono text-[9px] uppercase tracking-wide text-ink-300">{modelTag}</div>}
           {isNew && <div className={cn('h-1.5 w-1.5 rounded-pill bg-ame-400', !modelTag && 'ml-auto')}/>}
         </div>
-        <div className="font-sans text-lg italic leading-relaxed text-ink-600">{text}</div>
+        <div className="font-sans text-lg italic leading-relaxed text-ink-600"><AssetText text={text} extraTickers={assetTickers}/></div>
       </div>
     </div>
   );
 }
 
-export function UserMessage({ text }) {
+export function UserMessage({ text, assetTickers }) {
   return (
     <div className="flex justify-end">
-      <div className="max-w-[80%] rounded-[8px_8px_4px_8px] bg-ink-900 px-3.5 py-2.5 font-sans text-lg leading-normal text-white">{text}</div>
+      <div className="max-w-[80%] rounded-[8px_8px_4px_8px] bg-ink-900 px-3.5 py-2.5 font-sans text-lg leading-normal text-white"><AssetText text={text} extraTickers={assetTickers}/></div>
     </div>
   );
 }

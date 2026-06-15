@@ -221,3 +221,47 @@ Run `npm run dev`; sign up → onboarding seeds capital + heroes → Markets sho
 buy a stock (cash drops, position + receipt with real slippage) → "First Trade" badge appears →
 ask a Hero (in-character English reply grounded in holdings) → toggle dark mode and 繁中 tooltips →
 sign out / back in: portfolio, badges, theme, language all persisted.
+
+---
+
+## Feature — Clickable Asset Mentions in Chat
+
+**Requirement (PRD "Interactive Asset Mentions"):** whenever a stock / ETF / crypto asset is
+mentioned in any chat message (hero, Sage, or user), render it as an underlined, clickable link.
+Clicking anywhere in the chat window opens that asset exactly like a Markets search hit
+(`/stock/<TICKER>`).
+
+### Design
+- Detection lives in a pure module so it is fully unit-testable in isolation.
+- A small presentational component turns detected mentions into accessible links.
+- Wiring is a single prop threaded down the existing chat render path — no new data fetching.
+
+### Plan & checklist
+- [x] AM-1  `app/src/lib/assetLinks.js` — `ASSET_REGISTRY`, `findAssetMentions(text,{extraTickers})`
+            (cashtag + company-name + bare-ticker detection, stopword guard, overlap resolution),
+            and `splitTextWithAssets()`.
+- [x] AM-2  `app/src/components/AssetText.jsx` — renders plain/asset segments; asset segments are
+            `role="link"` spans (click + Enter/Space) that `navigate('/stock/<TICKER>')` by default,
+            or call an injected `onAssetClick` (tests).
+- [x] AM-3  Wire into `components/HeroMessage.jsx` (`HeroMessage` + `UserMessage` via `AssetText`).
+- [x] AM-4  Thread `assetTickers` through `components/HeroChatPanel.jsx` `ChatMessages` and pass the
+            user's `positions + watchlist` from `AskTab.jsx` and `PortfolioDesktop.jsx` so personal
+            symbols always link.
+- [x] AM-5  PRD: add "Interactive Asset Mentions" requirement to `simFolio_v01_00_MVP.md`.
+- [x] AM-6  Tests per `unittest.md`; ≥80% line coverage on new feature files; full suite green;
+            build clean.
+            **Result: 235/235 Vitest pass (100% > 95% target), incl. 27 new feature cases.
+            Coverage — assetLinks.js 100% lines, AssetText.jsx 100% lines (both ≥80%).
+            `npm run build` ✓.**
+
+### QA findings — asset-mention feature
+- **[fixed] Standalone `HeroMessage` render broke under Router-less test.** `misc.test.jsx`'s "renders
+  every hero" case rendered `HeroMessage` with no Router; `AssetText` calls `useNavigate`, which throws
+  outside a `<Router>`. Real screens (and the chat component tests in `components.test.jsx`) always have
+  a router, so wrapped that one test in `MemoryRouter` (mirrors the existing `wrap()` pattern). Minimal,
+  justified test update — the component now contains links and so legitimately requires router context.
+- **[pre-existing, not introduced] `npm run lint` reports one error** in `HeroChatPanel.jsx:10`
+  (`react-refresh/only-export-components` on the long-standing `modelLabel` export). Verified present on
+  a clean `git stash` checkout, so it predates this feature and is out of scope. New feature files
+  (`assetLinks.js`, `AssetText.jsx`) lint clean.
+- **Outcome:** 235/235 Vitest pass (100% > 95% target). No remaining failures attributable to the feature.

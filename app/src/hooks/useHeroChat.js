@@ -39,6 +39,7 @@ export function useHeroChat(heroId, portfolioContext) {
   const { session } = useAuth()
   const qc = useQueryClient()
   const { user } = useAuth()
+  const key = ['hero-history', user?.id, heroId]
 
   return useMutation({
     mutationFn: async (message) => {
@@ -51,8 +52,22 @@ export function useHeroChat(heroId, portfolioContext) {
       console.log('[HeroChat] reply from model:', data.model)
       return { reply: data.reply, model: data.model }
     },
+    // Show the user's message immediately (like any chat app); the "Calling …"
+    // indicator then renders below it while the reply is pending.
+    onMutate: async (message) => {
+      await qc.cancelQueries({ queryKey: key })
+      const previous = qc.getQueryData(key)
+      qc.setQueryData(key, old => [
+        ...(old ?? []),
+        { role: 'user', content: message, created_at: new Date().toISOString() },
+      ])
+      return { previous }
+    },
+    onError: (_err, _message, ctx) => {
+      if (ctx) qc.setQueryData(key, ctx.previous)
+    },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['hero-history', user?.id, heroId] })
+      qc.invalidateQueries({ queryKey: key })
     },
   })
 }
