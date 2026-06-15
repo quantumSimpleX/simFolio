@@ -89,7 +89,7 @@ export default function BuyScreen() {
 
       <div>
         <div className="mb-2 font-sans text-[13px] text-ink-500">Quantity</div>
-        <QtyInputBlock qty={qty} setQty={setQty}/>
+        <QtyInputBlock qty={qty} setQty={setQty} price={price}/>
       </div>
 
       <div>
@@ -203,23 +203,65 @@ function MarketClosedBanner() {
   )
 }
 
-function QtyInputBlock({ qty, setQty }) {
+function QtyInputBlock({ qty, setQty, price }) {
+  // Shares (qty) stays the source of truth in the parent. The dollar field shows
+  // shares × price, except while it's being edited — then it shows the user's
+  // draft and we compute the shares that amount buys. `amountDraft` is non-null
+  // only during editing, so no effect/sync is needed.
+  const [amountDraft, setAmountDraft] = useState(null)
+
+  const derivedAmount = (parseFloat(qty) || 0) * price
+  const amountValue = amountDraft !== null
+    ? amountDraft
+    : (derivedAmount > 0 ? derivedAmount.toFixed(2) : '')
+
+  function onSharesChange(e) {
+    const v = parseFloat(e.target.value)
+    if (!isNaN(v) && v > 0) setQty(v)
+    else if (e.target.value === '') setQty('')
+  }
+
+  function onAmountChange(e) {
+    const raw = e.target.value
+    setAmountDraft(raw)
+    const amt = parseFloat(raw)
+    if (!isNaN(amt) && amt > 0 && price > 0) setQty(Math.round((amt / price) * 100) / 100)
+    else if (raw === '') setQty('')
+  }
+
+  const fieldClass = 'flex h-14 min-w-0 flex-1 items-center justify-between rounded-input border-[1.5px] border-ame-400 bg-white px-4 [box-shadow:0_0_0_3px_color-mix(in_srgb,var(--ame-400)_10%,transparent)]'
+  const labelClass = 'flex-shrink-0 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-ame-400'
+  const inputClass = 'w-full min-w-0 border-none bg-transparent text-right font-display text-[24px] font-bold tracking-[-0.02em] text-ink-900 outline-none'
+
   return (
-    <div className="flex h-14 items-center justify-between rounded-input border-[1.5px] border-ame-400 bg-white px-4 [box-shadow:0_0_0_3px_color-mix(in_srgb,var(--ame-400)_10%,transparent)]">
-      <div className="font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-ame-400">Shares</div>
-      <input
-        type="number"
-        min="0.01"
-        step="0.01"
-        value={qty}
-        onChange={e => {
-          const v = parseFloat(e.target.value)
-          if (!isNaN(v) && v > 0) setQty(v)
-          else if (e.target.value === '') setQty('')
-        }}
-        onBlur={e => { if (!e.target.value || parseFloat(e.target.value) <= 0) setQty(1) }}
-        className="w-[120px] border-none bg-transparent text-right font-display text-[28px] font-bold tracking-[-0.02em] text-ink-900 outline-none"
-      />
+    <div className="flex gap-2.5">
+      <div className={fieldClass}>
+        <div className={labelClass}>Shares</div>
+        <input
+          type="number"
+          min="0.01"
+          step="0.01"
+          value={qty}
+          onFocus={e => e.target.select()}
+          onChange={onSharesChange}
+          onBlur={e => { if (!e.target.value || parseFloat(e.target.value) <= 0) setQty(1) }}
+          className={inputClass}
+        />
+      </div>
+      <div className={fieldClass}>
+        <div className={labelClass}>Amount $</div>
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          value={amountValue}
+          placeholder="0.00"
+          onFocus={e => { setAmountDraft(amountValue); e.target.select() }}
+          onBlur={() => setAmountDraft(null)}
+          onChange={onAmountChange}
+          className={inputClass}
+        />
+      </div>
     </div>
   )
 }
