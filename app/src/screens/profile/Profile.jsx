@@ -43,6 +43,10 @@ export default function Profile() {
     return () => { cancelled = true; };
   }, [user]);
 
+  async function handleSignOut() {
+    try { await signOut(); } finally { navigate('/', { replace: true }); }
+  }
+
   const firstName = user?.user_metadata?.first_name ?? '';
   const rows = answers
     ? Object.entries(QUESTION_LABELS)
@@ -117,7 +121,7 @@ export default function Profile() {
         )}
       </Card>
 
-      <CTA label="Sign out" full onClick={signOut}/>
+      <CTA label="Sign out" full onClick={handleSignOut}/>
     </AppShell>
   );
 }

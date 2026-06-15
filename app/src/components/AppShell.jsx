@@ -9,7 +9,7 @@ import { cn } from '../lib/utils'
 export function AppShell({ active, children, maxWidth = 1100, pad = true, footer = null }) {
   const mobile = useIsMobile()
   return (
-    <div className="flex min-h-[100dvh] w-full flex-col bg-paper">
+    <div className="flex h-[calc(100dvh/var(--zoom))] w-full flex-col bg-paper">
       <TopNav active={active} />
 
       <div className="w-full flex-1 overflow-y-auto [-webkit-overflow-scrolling:touch]">

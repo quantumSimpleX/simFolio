@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react'
 
-const KEY = 'simfolio_watchlist'
-const DEFAULTS = ['MSFT', 'TSLA', 'AMZN', 'META', 'GOOGL']
+// Bumped to _v2 so previously-seeded defaults (MSFT/TSLA/…) in old localStorage
+// are dropped and users start with an empty watchlist.
+const KEY = 'simfolio_watchlist_v2'
 
 export function useWatchlist() {
   const [watchlist, setWatchlist] = useState(() => {
     try {
       const stored = localStorage.getItem(KEY)
-      return stored ? JSON.parse(stored) : DEFAULTS
+      return stored ? JSON.parse(stored) : []
     } catch {
-      return DEFAULTS
+      return []
     }
   })
 

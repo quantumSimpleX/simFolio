@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { C } from './tokens'
 import { useAuth } from './context/AuthContext'
@@ -9,6 +9,7 @@ import WelcomeMobile   from './screens/auth/WelcomeMobile'
 import WelcomeDesktop  from './screens/auth/WelcomeDesktop'
 import SignUp          from './screens/auth/SignUp'
 import SignIn          from './screens/auth/SignIn'
+import SignInDesktop   from './screens/auth/SignInDesktop'
 import ReturningUser   from './screens/auth/ReturningUser'
 
 import Onboarding from './screens/onboarding/Onboarding'
@@ -70,11 +71,10 @@ export default function App() {
       <Wrapper>
         <Routes>
           {/* Public */}
-          {/* TODO: remove dev redirect — skips welcome/auth, straight to onboarding */}
-          <Route path="/"          element={<Navigate to="/onboarding" replace/>}/>
+          <Route path="/"          element={isMobile ? <WelcomeMobile/> : <WelcomeDesktop/>}/>
           <Route path="/welcome"   element={isMobile ? <WelcomeMobile/> : <WelcomeDesktop/>}/>
-          <Route path="/sign-up"   element={<SignUp/>}/>
-          <Route path="/sign-in"   element={<SignIn/>}/>
+          <Route path="/sign-up"   element={isMobile ? <SignUp/> : <WelcomeDesktop/>}/>
+          <Route path="/sign-in"   element={isMobile ? <SignIn/> : <SignInDesktop/>}/>
           <Route path="/returning" element={<ReturningUser/>}/>
 
           {/* Onboarding */}

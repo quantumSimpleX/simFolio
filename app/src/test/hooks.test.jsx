@@ -80,15 +80,14 @@ describe('useBreakpoint', () => {
 describe('useWatchlist', () => {
   beforeEach(() => localStorage.clear())
 
-  it('seeds defaults, then add/remove/has reflect state and persist', () => {
+  it('starts empty, then add/remove/has reflect state and persist', () => {
     const { result } = renderHook(() => useWatchlist())
-    expect(result.current.watchlist).toEqual(['MSFT', 'TSLA', 'AMZN', 'META', 'GOOGL'])
-    expect(result.current.isWatching('msft')).toBe(true)
+    expect(result.current.watchlist).toEqual([])
     expect(result.current.isWatching('AAPL')).toBe(false)
 
     act(() => result.current.addToWatchlist('aapl'))
     expect(result.current.isWatching('AAPL')).toBe(true)
-    expect(JSON.parse(localStorage.getItem('simfolio_watchlist'))).toContain('AAPL')
+    expect(JSON.parse(localStorage.getItem('simfolio_watchlist_v2'))).toContain('AAPL')
 
     // adding a duplicate does not grow the list
     const lenBefore = result.current.watchlist.length
@@ -99,10 +98,10 @@ describe('useWatchlist', () => {
     expect(result.current.isWatching('AAPL')).toBe(false)
   })
 
-  it('falls back to defaults when stored JSON is corrupt', () => {
-    localStorage.setItem('simfolio_watchlist', '{not json')
+  it('falls back to an empty list when stored JSON is corrupt', () => {
+    localStorage.setItem('simfolio_watchlist_v2', '{not json')
     const { result } = renderHook(() => useWatchlist())
-    expect(result.current.watchlist).toEqual(['MSFT', 'TSLA', 'AMZN', 'META', 'GOOGL'])
+    expect(result.current.watchlist).toEqual([])
   })
 })
 

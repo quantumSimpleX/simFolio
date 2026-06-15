@@ -9,18 +9,6 @@ import { usePortfolio } from '../../hooks/usePortfolio';
 import { usePortfolioCandles } from '../../hooks/usePortfolioCandles';
 import { useCandles } from '../../hooks/useStockDetail';
 
-// Dev mock: ~$10k per position at mid-2025 prices
-// AAPL $213 · NVDA $138 · NOW $1,048 · SFDC $295
-// Cost basis uses avg buy prices; starting capital $50k
-const DEV_HOLDINGS = [
-  { ticker:'AAPL', name:'Apple Inc.',      total_qty:'47', average_cost_basis:'175', price:213,  value:10011, cost:8225, pnl:1786, pct:21.7, pos:true },
-  { ticker:'NVDA', name:'NVIDIA Corp.',    total_qty:'73', average_cost_basis:'92',  price:138,  value:10074, cost:6716, pnl:3358, pct:50.0, pos:true },
-  { ticker:'NOW',  name:'ServiceNow Inc.', total_qty:'10', average_cost_basis:'820', price:1048, value:10480, cost:8200, pnl:2280, pct:27.8, pos:true },
-  { ticker:'CRM',  name:'Salesforce Inc.', total_qty:'34', average_cost_basis:'230', price:295,  value:10030, cost:7820, pnl:2210, pct:28.3, pos:true },
-];
-const DEV_CASH     = 19039;
-const DEV_STARTING = 50000;
-
 function fmt(n) {
   return n?.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 }) ?? '—';
 }
@@ -31,16 +19,15 @@ export default function PortfolioMobile() {
   const [hoveredTicker, setHoveredTicker] = useState(null);
   const { positions, cashBalance, totalValue, totalPnl, totalPct, loading } = usePortfolio();
 
-  const useDev          = !loading && positions.length === 0;
-  const displayHoldings = useDev ? DEV_HOLDINGS : positions;
-  const displayCash     = useDev ? DEV_CASH : (cashBalance ?? 0);
-  const displayTotal    = useDev ? DEV_CASH + DEV_HOLDINGS.reduce((s,h) => s + h.value, 0) : totalValue;
-  const displayPnl      = useDev ? displayTotal - DEV_STARTING : totalPnl;
-  const displayPct      = useDev ? (displayPnl / DEV_STARTING) * 100 : totalPct;
+  const displayHoldings = positions;
+  const displayCash     = cashBalance ?? 0;
+  const displayTotal    = totalValue;
+  const displayPnl      = totalPnl;
+  const displayPct      = totalPct;
 
   const { data: overlayCandles } = useCandles(hoveredTicker, activeRange);
   const { candles, isLoading: candlesLoading, isError: candlesError } = usePortfolioCandles(
-    useDev ? DEV_HOLDINGS : positions,
+    positions,
     displayCash,
     activeRange,
   );
@@ -94,6 +81,9 @@ export default function PortfolioMobile() {
         </div>
         {loading && positions.length === 0 && (
           <div className="py-5 font-sans text-sm text-ink-400">Loading positions…</div>
+        )}
+        {!loading && displayHoldings.length === 0 && (
+          <div className="py-5 font-sans text-sm text-ink-400">No holdings yet. Buy a stock from Markets to get started.</div>
         )}
         {displayHoldings.map(h => (
           <HoldingRow

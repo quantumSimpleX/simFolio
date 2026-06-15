@@ -132,8 +132,8 @@ describe('screen smoke tests', () => {
     expect(document.body.textContent).toContain('Time horizon')
   })
 
-  it('App routes / to onboarding (dev redirect)', async () => {
+  it('App routes / to the welcome screen', async () => {
     renderWithProviders(<App/>, { withRouter: false })
-    await waitFor(() => expect(document.body.textContent).toMatch(/Select all that apply/i))
+    await waitFor(() => expect(document.body.textContent).toMatch(/Create your account/i))
   })
 })
