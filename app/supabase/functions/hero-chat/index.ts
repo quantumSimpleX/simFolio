@@ -11,6 +11,88 @@ const cors = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+// Pass 2 of the chat flow: a focused "market analyst" call that reads the reply
+// and returns the exact asset mentions in it as a JSON array. Listing mentions
+// into JSON is something models do reliably — far more so than decorating their
+// own prose with markers mid-sentence — so this drives the clickable-asset
+// linking instead of asking each hero persona to bracket inline. Best-effort:
+// if every model fails, we return [] and the reply is shown without links.
+async function extractAssets(reply: string, apiKey: string): Promise<string[]> {
+  const sys = [
+    `You are a financial market data analyst.`,
+    `Read the text below and identify every mention of a publicly traded company, stock, ETF, or cryptocurrency — whether referred to by company name OR by ticker symbol.`,
+    `Return ONLY a JSON array of strings. Each string must be the exact substring as it appears in the text, copied verbatim (same spelling, capitalization, and spacing). When both a company name and its ticker appear, include each as a separate entry.`,
+    `Do NOT include sectors, investment themes, market indexes referred to as concepts, people's names, or generic financial terms.`,
+    `Ignore any text already wrapped in square brackets [ ] — it has already been tagged; do not list it.`,
+    `If there are none, return []. Output only the JSON array — no prose, no markdown, no code fences.`,
+  ].join('\n')
+
+  const res = await callLLMWithFallback<string[]>({
+    apiKey,
+    label: 'hero-chat:extract',
+    messages: [
+      { role: 'system', content: sys },
+      { role: 'user', content: reply },
+    ],
+    validate: (content) => {
+      try {
+        const cleaned = content.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim()
+        const arr = JSON.parse(cleaned)
+        if (!Array.isArray(arr)) return null
+        return arr.filter((x): x is string => typeof x === 'string' && x.trim().length > 0)
+      } catch {
+        return null
+      }
+    },
+  })
+
+  return res.ok && res.value ? res.value : []
+}
+
+// Wrap each analyst-identified mention in square brackets so the client links it.
+// Longest mentions first (so "Guardant Health" wins over "Health"), word-boundary
+// safe (won't match inside a larger word), and never nests or double-wraps.
+function bracketAssets(reply: string, mentions: string[]): string {
+  const occupied: Array<[number, number]> = []
+  const isWord = (c: string) => /[A-Za-z0-9]/.test(c)
+  const overlaps = (s: number, e: number) => occupied.some(([os, oe]) => s < oe && e > os)
+
+  // Seed overlap-tracking with any pre-existing [ ] regions so re-tagging is
+  // idempotent (never nests) — text may already be tagged when backfilling
+  // history. These are NOT re-wrapped; only `inserts` below get brackets.
+  const existing = /\[[^[\]]*\]/g
+  for (let m; (m = existing.exec(reply)); ) occupied.push([m.index, m.index + m[0].length])
+
+  const uniq = [...new Set(mentions.map(m => m.trim()).filter(Boolean))]
+  uniq.sort((a, b) => b.length - a.length)
+
+  const inserts: Array<[number, number]> = []
+  for (const mention of uniq) {
+    const re = new RegExp(escapeRegExp(mention), 'g')
+    for (let m; (m = re.exec(reply)); ) {
+      const s = m.index, e = s + m[0].length
+      const before = s > 0 ? reply[s - 1] : ''
+      const after = e < reply.length ? reply[e] : ''
+      if (isWord(before) || isWord(after)) continue   // inside a larger word
+      if (overlaps(s, e)) continue                     // already wrapped / tagged
+      occupied.push([s, e])
+      inserts.push([s, e])
+    }
+  }
+
+  // Insert brackets right-to-left so earlier indices stay valid.
+  inserts.sort((a, b) => b[0] - a[0])
+  let out = reply
+  for (const [s, e] of inserts) {
+    out = out.slice(0, s) + '[' + out.slice(s, e) + ']' + out.slice(e)
+  }
+  return out
+}
+
 const HERO_PERSONAS: Record<string, string> = {
   sage: `You are Sage, a neutral, warm, and encouraging financial education guide. You are NOT an investor persona — you are a guide helping a beginner learn how to invest. You use plain language, ask Socratic questions, and never give directives. Always speak in first person.`,
   warren: `You are Warren Buffett. You speak from decades of investing in quality businesses at fair prices. Your philosophy: understand the business, buy with a margin of safety, think in decades not days, and never invest in what you don't understand. You ask Socratic questions. You never give direct buy/sell orders. Always speak in first person as Warren Buffett.`,
@@ -49,7 +131,18 @@ serve(async (req) => {
   const uid = user.id
 
   try {
-    const { hero_id, message, portfolio_context } = await req.json()
+    const { hero_id, message, portfolio_context, tag_text } = await req.json()
+
+    // Tag-only mode: run just the analyst pass on arbitrary text (e.g. a reply
+    // from a past conversation) and return the bracketed version. No persona
+    // call, no persistence — useful for backfilling history and for testing the
+    // asset detection without sending a fresh chat message.
+    if (typeof tag_text === 'string') {
+      const mentions = await extractAssets(tag_text, OPENROUTER_KEY)
+      return new Response(JSON.stringify({ reply: bracketAssets(tag_text, mentions), mentions }), {
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      })
+    }
 
     const persona = HERO_PERSONAS[hero_id] ?? HERO_PERSONAS['sage']
 
@@ -83,13 +176,6 @@ serve(async (req) => {
       `- Never give direct buy or sell instructions. Frame all responses as questions, observations, or educational perspectives.`,
       `- Keep responses concise — 2-4 sentences unless the user asks for detail.`,
       `- Never use emoji.`,
-      ``,
-      `ASSET TAGGING (MANDATORY OUTPUT FORMAT):`,
-      `Every time you name a publicly traded company, stock, ETF, or cryptocurrency, you MUST wrap it in square brackets [ ] as a single unit. This applies to EVERY mention, every time — names AND tickers. Wrap the full multi-word name exactly once; if you also give the ticker, bracket it separately.`,
-      `Do NOT bracket sectors, themes, indexes-as-concepts, people, or generic terms.`,
-      `Example input: "I like Illumina and Guardant Health, plus the ARK Genomic Revolution ETF (ARKG)."`,
-      `Required output: "I like [Illumina] and [Guardant Health], plus the [ARK Genomic Revolution ETF] ([ARKG])."`,
-      `If you forget the brackets, your answer is wrong. Re-read your reply before sending and add any missing brackets.`,
       portfolio_context ? `\nUSER'S CURRENT PORTFOLIO & WATCHLIST:\n${portfolio_context}` : '',
     ].join('\n')
 
@@ -110,8 +196,13 @@ serve(async (req) => {
         headers: { ...cors, 'Content-Type': 'application/json' },
       })
     }
-    const reply = llm.value
     const usedModel = llm.model
+
+    // Pass 2: tag the assets the analyst finds so the client can link them. The
+    // bracketed text is what we persist and return, so links also survive a
+    // history reload (the client renders from stored `content`).
+    const mentions = await extractAssets(llm.value as string, OPENROUTER_KEY)
+    const reply = bracketAssets(llm.value as string, mentions)
 
     // Persist both turns, tagging the assistant turn with the model that answered.
     // Falls back without `model` if that column hasn't been added yet

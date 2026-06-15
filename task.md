@@ -333,3 +333,32 @@ the brackets — no fragile name parsing.
   (best-effort; falls back to plain text). The prompt change requires redeploying the `hero-chat`
   edge function to take effect in production.
 - **Outcome:** 238/238 Vitest pass (100% > 95% target).
+
+### Iteration 4 — two-pass server-side tagging (reliable bracketing)
+
+Inline bracketing (iteration 3) proved unreliable in production: open models routinely ignored the
+"wrap every asset in `[]`" instruction, so live replies arrived unbracketed. Replaced it with a
+two-pass flow entirely inside the `hero-chat` edge function — no client changes (the bracket parser +
+live validation pipeline is unchanged).
+
+- [x] AM-19 `hero-chat/index.ts`: removed the inline ASSET-TAGGING prompt block (pass 1 now replies
+            naturally).
+- [x] AM-20 Added `extractAssets()` — pass 2 "market analyst" LLM call returning the exact mentions as
+            a JSON array (via `callLLMWithFallback` with a JSON `validate`); best-effort (returns `[]`
+            if all models fail).
+- [x] AM-21 Added `bracketAssets()` — deterministically wraps each mention in `[]`: longest-first,
+            word-boundary safe, no overlap. Seeds existing `[]` regions so re-tagging is idempotent
+            (never nests). Persists/returns the bracketed text so links survive a history reload.
+- [x] AM-22 Added `tag_text` request mode: runs only the analyst pass on arbitrary text → returns the
+            bracketed version + `mentions`. Enables backfilling past replies and easier testing.
+- [x] AM-23 Analyst instructed to ignore text already inside `[]`.
+- [x] AM-24 Requirement doc updated to the two-pass mechanism.
+
+### QA findings — iteration 4
+- Client + parser unchanged → all client tests still pass (**239/239** Vitest, 100% > 95%). Edge
+  function is Deno-only (excluded from Vitest); Deno not installed locally so it isn't type-checked
+  here — logic is straightforward string handling.
+- **Tradeoff:** two LLM calls per message (extra latency/cost). Acceptable for reliability; the
+  analyst pass is small and uses the same free fallback chain.
+- **Dependency unchanged:** requires redeploying `hero-chat` (`supabase functions deploy hero-chat`)
+  to take effect in production; linking unknown entities still needs `VITE_TWELVEDATA_API_KEY`.

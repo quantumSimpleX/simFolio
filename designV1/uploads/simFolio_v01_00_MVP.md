@@ -183,11 +183,16 @@ written by a Hero, by Sage, or by the user — the platform must render that ass
 **underlined, clickable link** inline in the message.
 
 Requirements:
-- **Hero/Sage replies mark assets explicitly.** The LLM is instructed to wrap every
-  company name or ticker it mentions in square brackets as a single unit — e.g.
-  `[Apple]`, `[Berkshire Hathaway]`, `[NVDA]`, `[Bitcoin]`. The client links the whole
-  bracketed entity and strips the brackets from the displayed text. This avoids fragile
-  client-side name parsing and handles multi-word company names reliably.
+- **Hero/Sage replies are tagged server-side in two passes.** Pass 1 generates the
+  reply naturally (no formatting constraints). Pass 2 runs a focused "market analyst"
+  LLM call that returns the exact asset mentions in that reply as a JSON array; the
+  `hero-chat` edge function then deterministically wraps each mention in square brackets
+  as a single unit — e.g. `[Apple]`, `[Berkshire Hathaway]`, `[NVDA]`, `[Bitcoin]` — and
+  persists/returns the bracketed text. The client links the whole bracketed entity and
+  strips the brackets from the displayed text. Asking a model to *list* assets into JSON
+  is far more reliable than asking it to decorate its own prose mid-sentence, and it
+  handles multi-word company names cleanly. (The same analyst pass can re-tag any past
+  reply via a `tag_text` request, so existing history can be backfilled.)
 - A bracketed entity is linked directly when it is a known symbol/name (curated registry
   or the user's holdings/watchlist); otherwise it is **validated against live market
   data** (the same symbol search the Markets page uses) and linked only if it resolves to
