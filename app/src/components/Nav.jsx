@@ -1,4 +1,4 @@
-import { Logo, LangToggle, ThemeToggle } from './Primitives';
+import { Logo, NavToggles } from './Primitives';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { usePortfolio } from '../hooks/usePortfolio';
@@ -55,8 +55,7 @@ export function TopNav({ active='portfolio' }) {
           <Logo size={18}/>
         </div>
         <div className="flex-1"/>
-        <LangToggle/>
-        <ThemeToggle/>
+        <NavToggles/>
         <div onClick={() => navigate('/profile')} title="Profile" className="flex h-[30px] w-[30px] cursor-pointer items-center justify-center rounded-pill bg-ink-900 font-sans text-[13px] font-bold text-white">{initials}</div>
       </div>
     );
@@ -83,9 +82,8 @@ export function TopNav({ active='portfolio' }) {
         })}
       </div>
       <div className={cn('flex items-center', tablet ? 'gap-3' : 'gap-4')}>
-        <LangToggle/>
-        <ThemeToggle/>
-        <div className="whitespace-nowrap font-sans text-sm text-ink-500">Cash <span className="font-semibold text-ink-900">{cashDisplay}</span></div>
+        <NavToggles/>
+        <div className="flex items-baseline gap-1.5 whitespace-nowrap font-sans text-ink-500"><span className="text-xs uppercase tracking-[0.12em]">Cash</span> <span className="text-xl font-bold text-ink-900">{cashDisplay}</span></div>
         <div onClick={() => navigate('/profile')} title="Profile" className="flex h-[34px] w-[34px] cursor-pointer items-center justify-center rounded-pill bg-ink-900 font-sans text-sm font-bold text-white">{initials}</div>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import BrandPanel from './BrandPanel';
+import { NavToggles } from './Primitives';
 
 // Responsive two-panel auth shell shared by the desktop welcome/sign-up and
 // sign-in pages: dark brand panel on the left, form on the right. The brand
@@ -6,7 +7,8 @@ import BrandPanel from './BrandPanel';
 // crushed on narrower windows — there it simply centers as a single column.
 export default function AuthLayout({ children }) {
   return (
-    <div className="flex min-h-[calc(100dvh/var(--zoom))] w-full bg-paper">
+    <div className="relative flex min-h-[calc(100dvh/var(--zoom))] w-full bg-paper">
+      <NavToggles className="absolute right-4 top-4 z-10"/>
       <div className="hidden w-[44%] max-w-[580px] flex-shrink-0 overflow-hidden xl:block">
         <BrandPanel/>
       </div>

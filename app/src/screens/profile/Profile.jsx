@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from '../../components/AppShell';
 import { PageHeader } from '../../components/Nav';
-import { CTA, Eyebrow } from '../../components/Primitives';
+import { CTA, Eyebrow, LangToggle, ThemeToggle } from '../../components/Primitives';
 import { Card } from '../../components/ui/card';
 import { BadgeGlyphForIndex, MedalGlyph, TrophyGlyph } from '../../components/Badges';
 import { useAuth } from '../../context/AuthContext';
@@ -10,13 +10,6 @@ import { supabase } from '../../lib/supabase';
 import { QUESTION_LABELS } from '../onboarding/questionLabels';
 import { useAchievements } from '../../hooks/useAchievements';
 import { cn } from '../../lib/utils';
-
-function formatAnswer(key, value) {
-  if (value == null || (Array.isArray(value) && value.length === 0)) return null;
-  if (key === 'capital') return `$${Number(value).toLocaleString('en-US')}`;
-  if (Array.isArray(value)) return value.join(' · ');
-  return String(value);
-}
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -50,8 +43,8 @@ export default function Profile() {
   const firstName = user?.user_metadata?.first_name ?? '';
   const rows = answers
     ? Object.entries(QUESTION_LABELS)
-        .map(([key, label]) => ({ key, label, value: formatAnswer(key, answers[key]) }))
-        .filter(r => r.value != null)
+        .map(([key, label]) => ({ key, label, value: answers[key] }))
+        .filter(r => r.value != null && !(Array.isArray(r.value) && r.value.length === 0))
     : [];
 
   return (
@@ -106,15 +99,39 @@ export default function Profile() {
       </Card>
 
       <Card className="mb-5 px-6 py-5">
-        <div className="mb-3.5 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-400">Your onboarding answers</div>
+        <div className="mb-4"><Eyebrow>Preferences</Eyebrow></div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="font-sans text-sm text-ink-500">Tooltip language</div>
+            <LangToggle/>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <div className="font-sans text-sm text-ink-500">Theme</div>
+            <ThemeToggle/>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="mb-5 px-6 py-5">
+        <div className="mb-4"><Eyebrow>Your onboarding answers</Eyebrow></div>
         {rows.length === 0 ? (
           <div className="font-sans text-sm text-ink-400">No onboarding answers saved yet.</div>
         ) : (
-          <div className="flex flex-col">
-            {rows.map((r, i) => (
-              <div key={r.key} className={cn('flex justify-between gap-4 py-2.5', i !== 0 && 'border-t border-ink-100')}>
-                <div className="flex-shrink-0 font-sans text-sm text-ink-400">{r.label}</div>
-                <div className="text-right font-sans text-sm font-semibold text-ink-900">{r.value}</div>
+          <div className="grid grid-cols-2 gap-x-8 gap-y-3.5">
+            {rows.map(r => (
+              <div key={r.key}>
+                <div className="font-sans text-[11px] uppercase tracking-[0.14em] text-ink-400">{r.label}</div>
+                {Array.isArray(r.value) ? (
+                  <div className="mt-1 flex flex-col gap-0.5">
+                    {r.value.map((v, i) => (
+                      <div key={i} className="font-sans text-sm font-semibold text-ink-900">{v}</div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="mt-1 font-sans text-sm font-semibold text-ink-900">
+                    {r.key === 'capital' ? `$${Number(r.value).toLocaleString('en-US')}` : String(r.value)}
+                  </div>
+                )}
               </div>
             ))}
           </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StatusBar, CTA, SocialBtn, Divider, Field } from '../../components/Primitives';
+import { StatusBar, CTA, SocialBtn, Divider, Field, NavToggles } from '../../components/Primitives';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
@@ -31,7 +31,7 @@ export default function SignIn() {
       <div className="flex items-center gap-3.5 border-b border-ink-100 px-6 pb-3.5">
         <div onClick={() => navigate(-1)} className="cursor-pointer font-sans text-sm text-ame-400">← Back</div>
         <div className="flex-1 text-center font-sans text-[17px] font-bold text-ink-900">Sign in</div>
-        <div className="w-10"/>
+        <NavToggles/>
       </div>
       <div className="flex flex-col gap-4 px-6 py-7">
         <div className="flex gap-2">

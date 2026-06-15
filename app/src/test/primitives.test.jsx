@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { renderWithProviders } from './renderWithProviders'
 import {
   StatusBar, Logo, Mark, SimPill, CTA, GhostCTA, Field, SocialBtn, Divider,
-  LangToggle, ThemeToggle, Eyebrow, TermUnderline, StatusPill, HeroAvatar,
+  LangToggle, ThemeToggle, FlagIcon, Eyebrow, TermUnderline, StatusPill, HeroAvatar,
   GuideAvatar, ProgressDots, GoalCard, MktStatus, ReceiptRow,
 } from '../components/Primitives'
 import { TopNav, BottomNav, PageHeader, BackHeader } from '../components/Nav'
@@ -99,12 +99,30 @@ describe('Primitives', () => {
     }
   })
 
-  it('LangToggle and ThemeToggle toggle through context', () => {
+  it('LangToggle and ThemeToggle toggle through context (icon buttons)', () => {
+    localStorage.clear()
     const { container } = renderWithProviders(<><LangToggle/><ThemeToggle/></>)
-    fireEvent.click(screen.getByText('繁中'))
-    fireEvent.click(screen.getByText('EN'))
-    const toggle = container.querySelector('[data-testid="theme-toggle"]')
-    fireEvent.click(toggle)
+
+    // Language: single flag-icon button, starts at English (US flag), toggles to TW.
+    const lang = container.querySelector('[data-testid="lang-toggle"]')
+    expect(lang).toHaveAttribute('aria-label', 'Switch to Traditional Chinese')
+    fireEvent.click(lang)
+    expect(lang).toHaveAttribute('aria-label', 'Switch to English')
+
+    // Theme: single Sun/Moon icon button, toggles light ↔ dark + sets data-theme.
+    const theme = container.querySelector('[data-testid="theme-toggle"]')
+    expect(theme).toHaveAttribute('aria-label', 'Switch to dark mode')
+    fireEvent.click(theme)
+    expect(theme).toHaveAttribute('aria-label', 'Switch to light mode')
+    expect(document.documentElement.dataset.theme).toBe('dark')
+    fireEvent.click(theme)
+    expect(document.documentElement.dataset.theme).toBe('light')
+  })
+
+  it('FlagIcon renders US and TW flag svgs', () => {
+    const { container } = render(<><FlagIcon country="US"/><FlagIcon country="TW"/></>)
+    const svgs = container.querySelectorAll('svg')
+    expect(svgs.length).toBe(2)
   })
 })
 

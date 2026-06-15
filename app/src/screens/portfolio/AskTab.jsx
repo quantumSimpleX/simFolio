@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { BottomNav, TopNav } from '../../components/Nav';
-import { QuickPrompts, ChatComposer, ChatMessages } from '../../components/HeroChatPanel';
+import { ChatComposer, ChatMessages } from '../../components/HeroChatPanel';
 import { useHeroChat, useHeroHistory } from '../../hooks/useHeroChat';
 import { useHeroSelections } from '../../hooks/useHeroSelections';
 import { usePortfolio } from '../../hooks/usePortfolio';
@@ -50,8 +50,6 @@ export default function AskTab() {
         </div>
         <div className="ml-auto h-[7px] w-[7px] rounded-pill bg-aqua-400"/>
       </div>
-
-      <QuickPrompts onPick={handleSend} className="flex-shrink-0 border-b border-ink-100 px-3 py-1.5"/>
 
       <ChatMessages
         className="flex-1 px-3 py-2.5"

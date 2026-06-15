@@ -1,5 +1,5 @@
 import { C } from '../../tokens';
-import { StatusBar, Mark, SimPill, CTA, SocialBtn, LangToggle } from '../../components/Primitives';
+import { StatusBar, Mark, SimPill, CTA, SocialBtn, NavToggles } from '../../components/Primitives';
 import QSWordmark from '../../components/QSWordmark';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '../../lib/utils';
@@ -45,9 +45,8 @@ export default function WelcomeMobile() {
             <SocialBtn provider="Google"/>
             <SocialBtn provider="Apple"/>
           </div>
-          <div className="flex items-center justify-between pt-1">
-            <div className="font-sans text-xs text-ink-400">Tooltip language:</div>
-            <LangToggle/>
+          <div className="flex justify-end pt-1">
+            <NavToggles/>
           </div>
         </div>
       </div>

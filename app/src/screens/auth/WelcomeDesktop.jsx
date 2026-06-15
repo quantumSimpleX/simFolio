@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CTA, SocialBtn, Divider, Field, LangToggle } from '../../components/Primitives';
+import { CTA, SocialBtn, Divider, Field } from '../../components/Primitives';
 import AuthLayout from '../../components/AuthLayout';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -40,10 +40,6 @@ export default function WelcomeDesktop() {
         <Field label="First name" placeholder="Jamie" value={firstName} onChange={e => setFirstName(e.target.value)}/>
         <Field label="Email address" placeholder="jamie@example.com" value={email} onChange={e => setEmail(e.target.value)}/>
         <Field label="Password" placeholder="••••••••••" type="password" value={password} onChange={e => setPassword(e.target.value)}/>
-        <div className="flex items-center justify-between rounded-input border border-ink-100 bg-ink-50 px-4 py-2.5">
-          <div className="font-sans text-sm text-ink-600">Tooltip language</div>
-          <LangToggle/>
-        </div>
       </div>
       {error && <div className="mt-3 font-sans text-[13px] text-red">{error}</div>}
       <div className="mt-5">

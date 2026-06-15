@@ -8,6 +8,7 @@ import { supabase, mockUser } from './supabaseMock'
 beforeEach(() => {
   vi.clearAllMocks()
   document.documentElement.removeAttribute('data-theme')
+  localStorage.clear()
 })
 
 // --- AuthContext ---------------------------------------------------------
@@ -88,6 +89,21 @@ describe('ThemeContext', () => {
     expect(screen.getByTestId('theme')).toHaveTextContent('light')
   })
 
+  it('initializes from localStorage and applies data-theme on mount', async () => {
+    localStorage.setItem('simfolio_theme', 'dark')
+    await act(async () => {
+      render(<AuthProvider><ThemeProvider><ThemeProbe /></ThemeProvider></AuthProvider>)
+    })
+    expect(screen.getByTestId('theme')).toHaveTextContent('dark')
+    expect(document.documentElement.dataset.theme).toBe('dark')
+  })
+
+  it('setTheme mirrors the choice to localStorage', async () => {
+    render(<AuthProvider><ThemeProvider><ThemeProbe /></ThemeProvider></AuthProvider>)
+    await act(async () => { fireEvent.click(screen.getByText('dark')) })
+    expect(localStorage.getItem('simfolio_theme')).toBe('dark')
+  })
+
   it('setTheme flips data-theme on the document element', async () => {
     render(<AuthProvider><ThemeProvider><ThemeProbe /></ThemeProvider></AuthProvider>)
     await act(async () => { fireEvent.click(screen.getByText('dark')) })
@@ -129,5 +145,19 @@ describe('LanguageContext', () => {
     expect(screen.getByTestId('lang')).toHaveTextContent('zh-Hant')
     await act(async () => { fireEvent.click(screen.getByText('en')) })
     expect(screen.getByTestId('lang')).toHaveTextContent('en')
+  })
+
+  it('initializes from localStorage', async () => {
+    localStorage.setItem('simfolio_language', 'zh-TW')
+    await act(async () => {
+      render(<AuthProvider><LanguageProvider><LangProbe /></LanguageProvider></AuthProvider>)
+    })
+    expect(screen.getByTestId('lang')).toHaveTextContent('zh-TW')
+  })
+
+  it('setLang mirrors the choice to localStorage', async () => {
+    render(<AuthProvider><LanguageProvider><LangProbe /></LanguageProvider></AuthProvider>)
+    await act(async () => { fireEvent.click(screen.getByText('zh')) })
+    expect(localStorage.getItem('simfolio_language')).toBe('zh-Hant')
   })
 })

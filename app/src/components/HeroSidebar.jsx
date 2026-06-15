@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { cn } from '../lib/utils';
 import { HeroAvatar } from './Primitives';
-import { QuickPrompts, ChatComposer, ChatMessages } from './HeroChatPanel';
+import { ChatComposer, ChatMessages } from './HeroChatPanel';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { useHeroSelections } from '../hooks/useHeroSelections';
 import { useWatchlist } from '../hooks/useWatchlist';
@@ -57,7 +57,6 @@ export function HeroSidebar({ className }) {
           <div className="font-sans text-sm text-ink-400">{heroes.length} of 3 council slots · watching your portfolio</div>
         </div>
       </div>
-      <QuickPrompts onPick={handleSend} className="border-b border-ink-100 px-3 py-1.5"/>
       <ChatMessages
         className="flex-1 px-3 py-2.5"
         history={history}

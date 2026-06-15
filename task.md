@@ -422,3 +422,68 @@ wouldn't link (the ticker was buried inside).
             the chat flow and `tag_text`. Prompt also tightened ("a SINGLE name OR a SINGLE ticker,
             never combined") with a `**bold**` example.
 - Edge-only change (no client change); 244/244 Vitest still pass; `hero-chat` redeployed.
+
+---
+
+## Feature — Nav preferences (language + theme icons), cash size, chat cleanup
+
+**Requirements (from user):**
+1. Language chosen at sign-up persists across the app and is stored in the user's profile.
+2. Toggling tooltip language in the top nav updates the language in the user's profile.
+3. Returning user, after sign-in, goes directly to the portfolio page.
+4. Tooltip language persisted in the profile sets the language shown in the nav on load.
+5. Use a US flag + Taiwan flag icon to denote tooltip language.
+6. Single theme icon toggling sun (light) ↔ moon (dark); persists preferred theme to profile.
+7. Nav controls use icons to save space.
+8. Cash balance shown in a larger font.
+9. Remove the quick-select prompt pills under the hero in the chat window.
+
+**Current state (verified):** `LanguageContext`/`ThemeContext` already persist to
+`users.language_preference`/`theme_preference` and load on user change (reqs 1–4 largely wired).
+`SignIn`/`SignInDesktop` already route to `/portfolio` (req 3). `lucide-react` is available.
+
+**Design decisions:**
+- Language toggle = a single **flag icon** showing the current language; click toggles
+  US (English) ↔ TW (繁體中文). Flags are inline SVG (design system forbids emoji).
+- Theme toggle = a single **lucide Sun/Moon icon** reflecting current theme; click toggles.
+- Persistence hardened: both contexts mirror to `localStorage` and push the local value up to a
+  freshly-created profile, so the sign-up selection survives the anon→new-user transition.
+- Keep `QuickPrompts` exported (unit-tested); only remove its usage from chat surfaces.
+
+**Plan & checklist:**
+- [x] NP-1  `Primitives.jsx`: add `FlagIcon` (US/TW SVG); `LangToggle` → single flag button.
+- [x] NP-2  `Primitives.jsx`: `ThemeToggle` → single Sun/Moon lucide icon button (keeps testid).
+- [x] NP-3  `LanguageContext.jsx`: localStorage init + mirror; push local→empty profile.
+- [x] NP-4  `ThemeContext.jsx`: localStorage init/apply on mount + mirror; push local→empty profile.
+- [x] NP-5  `Nav.jsx`: cash value enlarged to text-xl bold (label shrunk to an eyebrow).
+- [x] NP-6  `HeroSidebar.jsx` + `AskTab.jsx`: removed `QuickPrompts` usage + import.
+- [x] NP-7  Verified `SignIn`/`SignInDesktop` already `navigate('/portfolio')`.
+- [x] NP-8  Tests + coverage + lint + build (results below).
+
+### Status / results
+- **Suite: 249/249 Vitest pass (100% > 95% target).**
+- **Coverage: global 85.24% lines (80% gate cleared).** Changed core files: `Primitives.jsx`
+  98.38%, `ThemeContext.jsx` 95.23%, `Nav.jsx` 82.14% (all >80%).
+- `npm run lint` clean on all changed source + test files; `npm run build` ✓.
+- New/updated tests: primitives toggle test reworked for the icon buttons (aria-label flips +
+  `data-theme`); `FlagIcon` US/TW render; LanguageContext + ThemeContext localStorage init/mirror;
+  AskTab asserts no quick-prompt pills.
+
+### QA findings
+- **localStorage now affects context init**, so cross-test contamination was possible. Added
+  `localStorage.clear()` to the context test `beforeEach` and to the primitives toggle test for
+  determinism. No production impact.
+- **`HeroSidebar.jsx` / `AskTab.jsx` per-file coverage is ~66%** — pre-existing (the chat
+  send/hook branches were never exercised by the smoke render). This edit only removed the pills
+  and did not lower it; global gate still passes. Out of scope to backfill chat-send tests here.
+- **DB dependency:** persistence needs `users.language_preference` and `users.theme_preference`
+  columns in the hosted Supabase project (the contexts already targeted them; SQL must be applied
+  there — cannot be done from app code). Tests use the supabase mock so they don't depend on it.
+- **Outcome:** all NP tasks complete; pass rate 100% > 95% target.
+
+### NP follow-up — tighter nav pair + toggles on auth pages
+- Added `NavToggles` (tight `gap-1` lang+theme pair). Nav uses it (icons now adjacent).
+- Placed `NavToggles` as top-right chrome on the auth pages: `AuthLayout` (desktop welcome
+  sign-up + sign-in), and the mobile `WelcomeMobile` / `SignUp` / `SignIn` headers. Removed the
+  redundant verbose "Tooltip language" rows from `WelcomeDesktop` / `WelcomeMobile` / `SignUp`.
+- **249/249 Vitest pass (100%)**, lint clean, build ✓.

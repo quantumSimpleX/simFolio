@@ -9,7 +9,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
-import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group';
+import { Sun, Moon } from 'lucide-react';
 import {
   Tooltip, TooltipTrigger, TooltipContent, TooltipProvider,
 } from './ui/tooltip';
@@ -145,42 +145,81 @@ export function Divider({ label='or with email' }) {
   );
 }
 
-export function LangToggle() {
-  const { lang, setLang } = useLang();
-  const value = lang === 'zh-TW' ? 'zh-TW' : 'en';
+// Inline SVG flags (the design system forbids emoji, so no 🇺🇸/🇹🇼). Compact and
+// recognizable at nav size; `country` picks US (English) or TW (繁體中文).
+export function FlagIcon({ country, size = 20 }) {
+  const w = size, h = Math.round(size * 0.7);
+  if (country === 'TW') {
+    return (
+      <svg width={w} height={h} viewBox="0 0 30 20" className="block rounded-[2px]" aria-hidden="true">
+        <rect width="30" height="20" fill="#FE0000"/>
+        <rect width="15" height="10" fill="#000095"/>
+        <circle cx="7.5" cy="5" r="3.3" fill="#fff"/>
+        <circle cx="7.5" cy="5" r="2.5" fill="#000095"/>
+        <circle cx="7.5" cy="5" r="1.4" fill="#fff"/>
+      </svg>
+    );
+  }
+  const stripe = 20 / 13;
   return (
-    <ToggleGroup
-      type="single"
-      value={value}
-      onValueChange={v => v && setLang && setLang(v)}
-      size="sm"
-    >
-      <ToggleGroupItem value="en">EN</ToggleGroupItem>
-      <ToggleGroupItem value="zh-TW">繁中</ToggleGroupItem>
-    </ToggleGroup>
+    <svg width={w} height={h} viewBox="0 0 30 20" className="block rounded-[2px]" aria-hidden="true">
+      <rect width="30" height="20" fill="#fff"/>
+      {[0, 2, 4, 6, 8, 10, 12].map(i => (
+        <rect key={i} y={i * stripe} width="30" height={stripe} fill="#B22234"/>
+      ))}
+      <rect width="13" height={stripe * 7} fill="#3C3B6E"/>
+      {[...Array(12)].map((_, i) => {
+        const r = Math.floor(i / 4), c = i % 4;
+        return <circle key={i} cx={2.3 + c * 3} cy={2 + r * 3} r="0.7" fill="#fff"/>;
+      })}
+    </svg>
   );
 }
 
+// Single icon button: shows the flag of the current tooltip language; click toggles
+// English ↔ 繁體中文 (persisted to the user's profile by LanguageContext).
+export function LangToggle() {
+  const { lang, setLang } = useLang();
+  const isZh = lang === 'zh-TW';
+  return (
+    <button
+      type="button"
+      aria-label={isZh ? 'Switch to English' : 'Switch to Traditional Chinese'}
+      title="Tooltip language"
+      data-testid="lang-toggle"
+      onClick={() => setLang && setLang(isZh ? 'en' : 'zh-TW')}
+      className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-input border border-ink-100 bg-white"
+    >
+      <FlagIcon country={isZh ? 'TW' : 'US'} size={20}/>
+    </button>
+  );
+}
+
+// Tight pair of the language + theme icon buttons, shared by the nav and the
+// auth pages so they always sit close together.
+export function NavToggles({ className }) {
+  return (
+    <div className={cn('flex flex-shrink-0 items-center gap-1', className)}>
+      <LangToggle/>
+      <ThemeToggle/>
+    </div>
+  );
+}
+
+// Single icon button: Sun in light mode, Moon in dark mode; click toggles + persists.
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const dark = theme === 'dark';
   return (
     <button
       type="button"
-      aria-label="Toggle theme"
+      aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+      title="Theme"
       data-testid="theme-toggle"
       onClick={() => setTheme && setTheme(dark ? 'light' : 'dark')}
-      className={cn(
-        'relative h-5 w-9 flex-shrink-0 rounded-pill transition-colors',
-        dark ? 'bg-ame-400' : 'bg-ink-200',
-      )}
+      className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-input border border-ink-100 bg-white text-ink-700"
     >
-      <span
-        className={cn(
-          'absolute top-0.5 h-4 w-4 rounded-pill bg-white transition-all',
-          dark ? 'left-[18px]' : 'left-0.5',
-        )}
-      />
+      {dark ? <Moon size={16}/> : <Sun size={16}/>}
     </button>
   );
 }

@@ -62,8 +62,10 @@ describe('screen smoke tests', () => {
     await waitFor(() => expect(document.body.textContent).toContain('Holdings'))
   })
 
-  it('AskTab renders', () => {
+  it('AskTab renders without quick-prompt pills', () => {
     renderWithProviders(<AskTab/>)
+    expect(document.body.textContent).not.toContain('Review my picks')
+    expect(document.body.textContent).not.toContain('Am I diversified?')
   })
 
   it('Markets renders', async () => {
