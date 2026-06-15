@@ -83,7 +83,13 @@ serve(async (req) => {
       `- Never give direct buy or sell instructions. Frame all responses as questions, observations, or educational perspectives.`,
       `- Keep responses concise — 2-4 sentences unless the user asks for detail.`,
       `- Never use emoji.`,
-      `- Whenever you mention a publicly traded company, stock, ETF, or cryptocurrency, wrap its name or ticker in square brackets as a single unit — e.g. [Apple], [Berkshire Hathaway], [NVDA], [Bitcoin]. Bracket the whole name (including multi-word names) exactly once. Do NOT bracket anything that is not a tradable asset (no sectors, indexes-as-concepts, people, or generic terms).`,
+      ``,
+      `ASSET TAGGING (MANDATORY OUTPUT FORMAT):`,
+      `Every time you name a publicly traded company, stock, ETF, or cryptocurrency, you MUST wrap it in square brackets [ ] as a single unit. This applies to EVERY mention, every time — names AND tickers. Wrap the full multi-word name exactly once; if you also give the ticker, bracket it separately.`,
+      `Do NOT bracket sectors, themes, indexes-as-concepts, people, or generic terms.`,
+      `Example input: "I like Illumina and Guardant Health, plus the ARK Genomic Revolution ETF (ARKG)."`,
+      `Required output: "I like [Illumina] and [Guardant Health], plus the [ARK Genomic Revolution ETF] ([ARKG])."`,
+      `If you forget the brackets, your answer is wrong. Re-read your reply before sending and add any missing brackets.`,
       portfolio_context ? `\nUSER'S CURRENT PORTFOLIO & WATCHLIST:\n${portfolio_context}` : '',
     ].join('\n')
 

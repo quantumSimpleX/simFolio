@@ -34,6 +34,14 @@ describe('findAssetSpans — bracketed entities', () => {
     expect(findAssetSpans('nothing [] here')).toEqual([])
     expect(findAssetSpans('[ Apple ]')[0]).toMatchObject({ ticker: 'AAPL', display: 'Apple' })
   })
+
+  it('parses a realistic reply with adjacent bracketed name + ticker', () => {
+    const text = 'I like [Illumina] and [Guardant Health], plus [ARK Genomic Revolution ETF] ([ARKG]).'
+    const m = findAssetSpans(text)
+    expect(m.map(s => s.display)).toEqual(['Illumina', 'Guardant Health', 'ARK Genomic Revolution ETF', 'ARKG'])
+    // All unknown to the registry → each queued for live validation as one unit.
+    expect(m.every(s => s.vtype === 'entity')).toBe(true)
+  })
 })
 
 // ─── findAssetSpans: unbracketed text (user messages / legacy) ───────────────
