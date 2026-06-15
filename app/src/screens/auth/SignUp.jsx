@@ -30,7 +30,7 @@ export default function SignUp() {
   }
 
   return (
-    <div className="flex min-h-[844px] w-[390px] flex-col bg-paper">
+    <div className="flex min-h-[calc(100dvh/var(--zoom))] w-full max-w-[390px] flex-col bg-paper">
       <StatusBar/>
       <div className="flex items-center gap-3.5 border-b border-ink-100 px-6 pb-3.5">
         <div onClick={() => navigate(-1)} className="cursor-pointer font-sans text-sm text-ame-400">← Back</div>

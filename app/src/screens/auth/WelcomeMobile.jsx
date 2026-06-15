@@ -7,7 +7,7 @@ import { cn } from '../../lib/utils';
 export default function WelcomeMobile() {
   const navigate = useNavigate();
   return (
-    <div className="flex h-[844px] w-[390px] flex-col overflow-hidden bg-paper">
+    <div className="flex min-h-[calc(100dvh/var(--zoom))] w-full max-w-[390px] flex-col bg-paper">
       <StatusBar/>
       <div className="flex flex-1 flex-col px-8 py-4">
         <div className="flex flex-1 flex-col items-center justify-center gap-6">

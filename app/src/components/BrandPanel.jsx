@@ -12,9 +12,9 @@ const HEROES = [
 export default function BrandPanel() {
   return (
     <div className="box-border flex h-full flex-col bg-ink-900 px-[72px] py-16">
-      <div className="flex flex-col gap-2">
-        <Logo size={32} color={C.white}/>
-        <div className="flex items-center gap-1.5 pl-[43px] opacity-30">
+      <div className="flex items-center gap-3">
+        <Logo size={40} color={C.white}/>
+        <div className="flex items-center gap-1.5 opacity-30">
           <span className="font-sans text-[11px] text-white">by</span>
           <QSWordmark onDark={true} size={28}/>
         </div>
@@ -29,17 +29,19 @@ export default function BrandPanel() {
       </div>
       <div className="flex flex-col gap-3">
         {HEROES.map(h => (
-          <div key={h.id} className="flex gap-3.5 rounded-card border border-white/[0.08] bg-white/[0.04] px-[18px] py-3.5">
-            <HeroAvatar id={h.id} initials={h.initials} color={h.color} size={40}/>
-            <div className="flex-1">
-              <div className="font-sans text-[15px] font-semibold text-white">{h.name}</div>
-              <div className="font-sans text-[13px]" style={{ color:h.color }}>{h.style}</div>
+          <div key={h.id} className="flex flex-col gap-1.5 rounded-card border border-white/[0.08] bg-white/[0.04] px-[18px] py-3">
+            <div className="flex items-center gap-3">
+              <HeroAvatar id={h.id} initials={h.initials} color={h.color} size={40}/>
+              <div>
+                <div className="font-sans text-[15px] font-semibold leading-tight text-white">{h.name}</div>
+                <div className="font-sans text-[13px] leading-tight" style={{ color:h.color }}>{h.style}</div>
+              </div>
             </div>
-            <div className="max-w-[160px] text-right font-sans text-xs italic leading-snug text-white/30">{h.quote}</div>
+            <div className="font-sans text-xs italic leading-snug text-ink-300">{h.quote}</div>
           </div>
         ))}
       </div>
-      <div className="mt-1 text-center font-sans text-[13px] text-white/25">and 7 more in the library</div>
+      <div className="mt-1 text-center font-sans text-[13px] text-ink-400">and 17 more in the library</div>
       <div className="mt-8"><SimPill/></div>
     </div>
   );

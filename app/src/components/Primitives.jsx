@@ -72,7 +72,7 @@ export function SimPill() {
   return (
     <Badge variant="sim" size="sim">
       <span className="h-[5px] w-[5px] rounded-full bg-ame-400"/>
-      Simulated only — no real money
+      Simulation only — no real money
     </Badge>
   );
 }
