@@ -6,7 +6,7 @@ import { AppShell } from '../../components/AppShell'
 import { PriceCard } from '../../components/PriceCard'
 import { useIsMobile } from '../../hooks/useBreakpoint'
 import { SageMsg } from '../../components/HeroMessage'
-import { MiniChart } from '../../components/Charts'
+import { ChartPanel, RangeButtons } from '../../components/Charts'
 import { useStockDetail, useCandles } from '../../hooks/useStockDetail'
 import { usePlaceOrder } from '../../hooks/usePlaceOrder'
 import { isMarketOpen } from '../../hooks/useQuotes'
@@ -29,9 +29,10 @@ export default function BuyScreen() {
   const [orderType, setOrderType] = useState('MARKET')
   const [limitPrice, setLimitPrice] = useState('')
   const [tif, setTif] = useState('GTC')
+  const [chartRange, setChartRange] = useState('All')
 
   const { data: stock, isLoading } = useStockDetail(ticker)
-  const { data: candles, isLoading: candlesLoading, isError: candlesError } = useCandles(ticker, '1M')
+  const { data: candles, isLoading: candlesLoading, isError: candlesError } = useCandles(ticker, chartRange)
   const { cashBalance } = usePortfolio()
   const { mutate: placeOrder, isPending } = usePlaceOrder()
   const marketOpen = isMarketOpen()
@@ -107,16 +108,16 @@ export default function BuyScreen() {
           </div>
         )}
         {orderType === 'LIMIT' && (
-          <>
+          <div className="mt-2 grid grid-cols-2 items-center gap-2.5">
             <input
               type="number"
               value={limitPrice}
               onChange={e => setLimitPrice(e.target.value)}
               placeholder={`Max price (current: $${price})`}
-              className="mt-2 box-border h-11 w-full rounded-input border border-ame-400 bg-white px-3.5 font-sans text-sm text-ink-900 outline-none"
+              className="box-border h-11 w-full rounded-input border border-ame-400 bg-white px-3.5 font-sans text-sm text-ink-900 outline-none"
             />
             <TifToggle tif={tif} setTif={setTif}/>
-          </>
+          </div>
         )}
       </div>
 
@@ -183,9 +184,22 @@ export default function BuyScreen() {
         </div>
 
         <div className="sticky top-7 flex min-w-0 flex-1 flex-col gap-6">
-          <Eyebrow>{stock?.name ?? ticker} — {ticker}</Eyebrow>
-          <div className="rounded-card border border-ink-100 bg-white px-6 py-5">
-            <MiniChart candles={candles} isLoading={candlesLoading} isError={candlesError}/>
+          <div>
+            <div className="mb-1 font-sans text-sm text-ink-400">
+              {isLoading ? '…' : [ticker, stock?.name, stock?.exchange].filter(Boolean).join(' · ')}
+            </div>
+            <div className="flex items-end gap-3.5">
+              <div className="whitespace-nowrap font-display text-5xl font-bold leading-none tracking-[-0.025em] text-ink-900">
+                {isLoading ? '…' : stock?.price ? `$${stock.price.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 })}` : '—'}
+              </div>
+              <div className={cn('whitespace-nowrap font-sans text-lg leading-tight', stock?.pos ? 'text-aqua-600' : 'text-red')}>
+                {stock ? `${stock.pos?'+':''}${stock.change?.toFixed(2)} (${stock.pos?'+':''}${stock.pct?.toFixed(1)}%)` : '—'}
+              </div>
+              <div className="ml-auto"><RangeButtons range={chartRange} onRangeChange={setChartRange}/></div>
+            </div>
+          </div>
+          <div className="rounded-card border border-ink-100 bg-white px-2 pb-2 pt-5">
+            <ChartPanel height={300} candles={candles} isLoading={candlesLoading} isError={candlesError} range={chartRange} onRangeChange={setChartRange}/>
           </div>
           <SageMsg text={`You're buying ${qty} shares — a solid start. If you're unsure about the quantity, you can always buy more later.`}/>
         </div>
@@ -268,7 +282,7 @@ function QtyInputBlock({ qty, setQty, price }) {
 
 export function TifToggle({ tif, setTif }) {
   return (
-    <div className="mt-2 flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <div className="font-sans text-xs text-ink-400">Good until</div>
       {[['GTC','Cancelled'], ['DAY','End of day']].map(([val, label]) => (
         <div key={val} onClick={() => setTif(val)} className={cn('cursor-pointer select-none rounded-pill border px-2.5 py-[3px] font-sans text-xs', tif===val ? 'border-ame-400 bg-ame-50 font-semibold text-ame-600' : 'border-ink-100 bg-white font-normal text-ink-500')}>

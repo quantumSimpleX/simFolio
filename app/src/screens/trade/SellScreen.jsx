@@ -6,6 +6,8 @@ import { AppShell } from '../../components/AppShell'
 import { useIsMobile } from '../../hooks/useBreakpoint'
 import { usePortfolio } from '../../hooks/usePortfolio'
 import { usePlaceOrder } from '../../hooks/usePlaceOrder'
+import { useStockDetail, useCandles } from '../../hooks/useStockDetail'
+import { ChartPanel, RangeButtons } from '../../components/Charts'
 import { TRANSACTION_FEE } from '../../lib/fees'
 import { OrderTypeCard, TifToggle } from './BuyScreen'
 
@@ -33,6 +35,10 @@ export default function SellScreen() {
   const [orderType, setOrderType] = useState('MARKET')
   const [limitPrice, setLimitPrice] = useState('')
   const [tif, setTif] = useState('GTC')
+  const [chartRange, setChartRange] = useState('All')
+
+  const { data: stock, isLoading } = useStockDetail(ticker)
+  const { data: candles, isLoading: candlesLoading, isError: candlesError } = useCandles(ticker, chartRange)
 
   const gross = (qty * price).toFixed(2)
   const pnl   = qty * price - qty * costBasis
@@ -78,7 +84,7 @@ export default function SellScreen() {
   )
 
   const content = (
-    <div className={cn('flex w-full flex-col gap-[18px]', !mobile && 'mx-auto max-w-[560px]')}>
+    <div className="flex w-full flex-col gap-[18px]">
       <div className="flex items-center gap-3.5">
         <div onClick={() => navigate(-1)} className="cursor-pointer font-sans text-sm text-ame-400">← Back</div>
         <div className="flex-1 text-center font-sans text-[17px] font-bold text-ink-900">Sell {ticker}</div>
@@ -137,16 +143,16 @@ export default function SellScreen() {
           <OrderTypeCard label="Limit order" desc="Only fill if price reaches your target" active={orderType==='LIMIT'} onClick={() => setOrderType('LIMIT')}/>
         </div>
         {orderType === 'LIMIT' && (
-          <>
+          <div className="mt-2 grid grid-cols-2 items-center gap-2.5">
             <input
               type="number"
               value={limitPrice}
               onChange={e => setLimitPrice(e.target.value)}
               placeholder={`Min price (current: $${price.toFixed(2)})`}
-              className="mt-2 box-border h-11 w-full rounded-input border border-ame-400 bg-white px-3.5 font-sans text-sm text-ink-900 outline-none"
+              className="box-border h-11 w-full rounded-input border border-ame-400 bg-white px-3.5 font-sans text-sm text-ink-900 outline-none"
             />
             <TifToggle tif={tif} setTif={setTif}/>
-          </>
+          </div>
         )}
       </div>
 
@@ -166,6 +172,28 @@ export default function SellScreen() {
     </div>
   )
 
+  const chartBlock = (
+    <>
+      <div>
+        <div className="mb-1 font-sans text-sm text-ink-400">
+          {isLoading ? '…' : [ticker, stock?.name, stock?.exchange].filter(Boolean).join(' · ')}
+        </div>
+        <div className="flex items-end gap-3.5">
+          <div className="whitespace-nowrap font-display text-5xl font-bold leading-none tracking-[-0.025em] text-ink-900">
+            {isLoading ? '…' : stock?.price ? `$${stock.price.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 })}` : '—'}
+          </div>
+          <div className={cn('whitespace-nowrap font-sans text-lg leading-tight', stock?.pos ? 'text-aqua-600' : 'text-red')}>
+            {stock ? `${stock.pos?'+':''}${stock.change?.toFixed(2)} (${stock.pos?'+':''}${stock.pct?.toFixed(1)}%)` : '—'}
+          </div>
+          <div className="ml-auto"><RangeButtons range={chartRange} onRangeChange={setChartRange}/></div>
+        </div>
+      </div>
+      <div className="rounded-card border border-ink-100 bg-white px-2 pb-2 pt-5">
+        <ChartPanel height={300} candles={candles} isLoading={candlesLoading} isError={candlesError} range={chartRange} onRangeChange={setChartRange}/>
+      </div>
+    </>
+  )
+
   if (mobile) {
     const footer = (
       <div className="border-t border-ink-100 bg-white px-4 pb-5 pt-3">
@@ -175,5 +203,12 @@ export default function SellScreen() {
     return <AppShell active="portfolio" footer={footer}>{content}</AppShell>
   }
 
-  return <AppShell active="portfolio">{content}</AppShell>
+  return (
+    <AppShell active="portfolio" maxWidth={1200}>
+      <div className="flex items-start gap-8">
+        <div className="w-[480px] flex-shrink-0">{content}</div>
+        <div className="sticky top-7 flex min-w-0 flex-1 flex-col gap-6">{chartBlock}</div>
+      </div>
+    </AppShell>
+  )
 }

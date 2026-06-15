@@ -20,8 +20,8 @@ describe('SellScreen with a position', () => {
     renderWithProviders(<SellScreen/>, { route: '/sell/AAPL', path: '/sell/:ticker' })
     await waitFor(() => expect(document.body.textContent).toContain('You own 10 shares'))
     expect(document.body.textContent).toContain('has anything changed about AAPL'.toLowerCase() ? 'AAPL' : 'AAPL')
-    // quantity quick buttons
-    fireEvent.click(screen.getByText('All'))
+    // quantity quick buttons — the form's "All" comes before the chart range "All"
+    fireEvent.click(screen.getAllByText('All')[0])
     expect(document.body.textContent).toContain('Sell 10 AAPL')
   })
 
