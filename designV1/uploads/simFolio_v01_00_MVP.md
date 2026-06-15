@@ -176,6 +176,47 @@ Examples:
 - What am I missing?
 - Am I diversified enough?
 
+## Interactive Asset Mentions
+
+Whenever a stock, ETF, or crypto asset is mentioned in **any chat message** — whether
+written by a Hero, by Sage, or by the user — the platform must render that asset as an
+**underlined, clickable link** inline in the message.
+
+Requirements:
+- **Hero/Sage replies are tagged server-side in two passes.** Pass 1 generates the
+  reply naturally (no formatting constraints). Pass 2 runs a focused "market analyst"
+  LLM call that returns the exact asset mentions in that reply as a JSON array; the
+  `hero-chat` edge function then deterministically wraps each mention in square brackets
+  as a single unit — e.g. `[Apple]`, `[Berkshire Hathaway]`, `[NVDA]`, `[Bitcoin]` — and
+  persists/returns the bracketed text. The client links the whole bracketed entity and
+  strips the brackets from the displayed text. Asking a model to *list* assets into JSON
+  is far more reliable than asking it to decorate its own prose mid-sentence, and it
+  handles multi-word company names cleanly. (The same analyst pass can re-tag any past
+  reply via a `tag_text` request, so existing history can be backfilled.)
+- A bracketed entity links directly when it is a known symbol/name (curated registry or the
+  user's holdings/watchlist) — no network call. Otherwise, **only ticker-shaped mentions are
+  validated** against live market data (the same symbol search the Markets page uses): an
+  ALL-CAPS token of 1–5 letters (optional `.X` suffix) gets one cheap exact-symbol lookup and
+  links if it resolves. Bracketed multi-word **company names are not fuzzy-searched** — they
+  render as plain text. In practice a hero gives the ticker alongside the name, so the asset
+  still links via its ticker; the edge function also collapses a `[Name] ([TICKER])` pair to
+  `Name ([TICKER])` so only the ticker is tagged. Lookups are cached; brackets always stripped.
+- In **unbracketed** text (the user's own messages, or legacy/untagged replies), detection
+  is precise: explicit cashtags (`$AAPL`), curated registry names, known/owned tickers, and
+  — as a deterministic safety net for ticker-shaped tokens the analyst may miss — any
+  ALL-CAPS token of 3+ letters (e.g. `ARKG`, `PLTR`), which is then confirmed against live
+  market data and linked only if it resolves. Common English words and finance acronyms
+  ("AI", "CEO", "ETF", "NOW" as prose) are excluded; the client does not guess unknown
+  mixed-case company names in unbracketed prose.
+- Clicking (or keyboard-activating) a linked asset **anywhere in the chat window**
+  performs the same action as searching that asset on the Markets page: it opens the
+  asset's detail view (`/stock/<TICKER>`).
+- Links are styled with the brand amethyst accent and an underline, distinct from the
+  dotted-amethyst educational tooltip underline.
+- Chat text is rendered as light markdown: `**bold**` renders bold (asterisks stripped), with
+  asset links preserved inside. The analyst pass is also told that `**`-wrapped text is a strong
+  asset candidate, improving recall on names the persona emphasized.
+
 ## Hero Commentary Engine
 
 Heroes may proactively comment during important moments:

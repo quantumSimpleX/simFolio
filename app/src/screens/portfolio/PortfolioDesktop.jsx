@@ -10,6 +10,8 @@ import { usePortfolio } from '../../hooks/usePortfolio';
 import { usePortfolioCandles } from '../../hooks/usePortfolioCandles';
 import { useCandles } from '../../hooks/useStockDetail';
 import { useHeroSelections } from '../../hooks/useHeroSelections';
+import { useWatchlist } from '../../hooks/useWatchlist';
+import { buildHeroContext } from '../../lib/heroContext';
 import { useHeroChat, useHeroHistory } from '../../hooks/useHeroChat';
 
 // Dev mock: ~$10k per position at mid-2025 prices
@@ -48,13 +50,13 @@ export default function PortfolioDesktop() {
     activeRange,
   );
   const { heroes } = useHeroSelections();
+  const { watchlist } = useWatchlist();
 
   const primaryHero = heroes[0];
   const heroId = primaryHero?.id ?? 'sage';
 
-  const portfolioContext = positions.length
-    ? `Cash: $${cashBalance?.toFixed(2) ?? 0}. Holdings: ${positions.map(p => `${p.ticker} (${parseFloat(p.total_qty)} shares @ avg $${parseFloat(p.average_cost_basis).toFixed(2)}, current $${p.price?.toFixed(2) ?? '?'})`).join(', ')}.`
-    : 'No positions yet.';
+  const portfolioContext = buildHeroContext(positions, cashBalance, watchlist);
+  const assetTickers = [...positions.map(p => p.ticker), ...watchlist];
 
   const { data: history } = useHeroHistory(heroId);
   const { mutate: sendMessage, isPending, data: lastReply } = useHeroChat(heroId, portfolioContext);
@@ -154,6 +156,7 @@ export default function PortfolioDesktop() {
             heroId={heroId}
             isPending={isPending}
             lastModel={lastReply?.model}
+            assetTickers={assetTickers}
           />
           <div className="border-t border-ink-100 px-3 pb-3 pt-2">
             <ChatComposer value={input} onChange={setInput} onSend={() => handleSend()} isPending={isPending}/>

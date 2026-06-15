@@ -33,6 +33,7 @@ interface CallOptions<T> {
   // reject this model and try the next. Defaults to accepting any truthy content as-is.
   validate?: (content: string) => T | null | undefined
   models?: string[]
+  temperature?: number // optional sampling temperature (e.g. 0 for deterministic extraction)
   label?: string // log prefix, e.g. 'hero-chat'
 }
 
@@ -41,7 +42,7 @@ interface CallOptions<T> {
 export async function callLLMWithFallback<T = string>(
   opts: CallOptions<T>,
 ): Promise<LLMResult<T>> {
-  const { messages, apiKey, validate, label = 'llm' } = opts
+  const { messages, apiKey, validate, temperature, label = 'llm' } = opts
   const models = opts.models ?? MODELS
   const failures: string[] = []
 
@@ -57,7 +58,7 @@ export async function callLLMWithFallback<T = string>(
           'HTTP-Referer': 'https://simfolio.app',
           'X-Title': 'simFolio',
         },
-        body: JSON.stringify({ model, messages }),
+        body: JSON.stringify({ model, messages, ...(temperature !== undefined ? { temperature } : {}) }),
       })
       const data = await res.json()
       content = data.choices?.[0]?.message?.content

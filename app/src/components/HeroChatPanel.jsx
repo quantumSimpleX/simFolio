@@ -51,7 +51,7 @@ export function ChatComposer({ value, onChange, onSend, isPending }) {
 // Scrolling message list. Renders user/hero bubbles, a loading + empty state,
 // a "Calling {hero}…" indicator while a reply is pending, and a small label of
 // which model answered the latest reply (the chat falls back across a chain of LLMs).
-export function ChatMessages({ history, heroId, isPending, lastModel, historyLoading = false, emptyText, className }) {
+export function ChatMessages({ history, heroId, isPending, lastModel, historyLoading = false, emptyText, className, assetTickers }) {
   const containerRef = useRef(null)
   // Keep the latest message in view by scrolling the chat container itself —
   // never scrollIntoView (which also scrolls the whole page, landing it mid-screen on load).
@@ -74,11 +74,11 @@ export function ChatMessages({ history, heroId, isPending, lastModel, historyLoa
           <div className="pt-4 text-center font-sans text-[17px] italic text-ink-400">{emptyText}</div>
         )}
         {(history ?? []).map((msg, i) => {
-          if (msg.role === 'user') return <UserMessage key={i} text={msg.content}/>
+          if (msg.role === 'user') return <UserMessage key={i} text={msg.content} assetTickers={assetTickers}/>
           // Prefer the model persisted with the message; fall back to the live model
           // of the latest reply (covers the moment before it's persisted/refetched).
           const model = msg.model ?? (i === (history.length - 1) ? lastModel : null)
-          return <HeroMessage key={i} hero={heroId} text={`"${msg.content}"`} modelTag={modelLabel(model)}/>
+          return <HeroMessage key={i} hero={heroId} text={`"${msg.content}"`} modelTag={modelLabel(model)} assetTickers={assetTickers}/>
         })}
         {isPending && <div className="font-sans text-[17px] italic text-ink-400">Calling {heroName}…</div>}
       </div>

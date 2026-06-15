@@ -221,3 +221,204 @@ Run `npm run dev`; sign up → onboarding seeds capital + heroes → Markets sho
 buy a stock (cash drops, position + receipt with real slippage) → "First Trade" badge appears →
 ask a Hero (in-character English reply grounded in holdings) → toggle dark mode and 繁中 tooltips →
 sign out / back in: portfolio, badges, theme, language all persisted.
+
+---
+
+## Feature — Clickable Asset Mentions in Chat
+
+**Requirement (PRD "Interactive Asset Mentions"):** whenever a stock / ETF / crypto asset is
+mentioned in any chat message (hero, Sage, or user), render it as an underlined, clickable link.
+Clicking anywhere in the chat window opens that asset exactly like a Markets search hit
+(`/stock/<TICKER>`).
+
+### Design
+- Detection lives in a pure module so it is fully unit-testable in isolation.
+- A small presentational component turns detected mentions into accessible links.
+- Wiring is a single prop threaded down the existing chat render path — no new data fetching.
+
+### Plan & checklist
+- [x] AM-1  `app/src/lib/assetLinks.js` — `ASSET_REGISTRY`, `findAssetMentions(text,{extraTickers})`
+            (cashtag + company-name + bare-ticker detection, stopword guard, overlap resolution),
+            and `splitTextWithAssets()`.
+- [x] AM-2  `app/src/components/AssetText.jsx` — renders plain/asset segments; asset segments are
+            `role="link"` spans (click + Enter/Space) that `navigate('/stock/<TICKER>')` by default,
+            or call an injected `onAssetClick` (tests).
+- [x] AM-3  Wire into `components/HeroMessage.jsx` (`HeroMessage` + `UserMessage` via `AssetText`).
+- [x] AM-4  Thread `assetTickers` through `components/HeroChatPanel.jsx` `ChatMessages` and pass the
+            user's `positions + watchlist` from `AskTab.jsx` and `PortfolioDesktop.jsx` so personal
+            symbols always link.
+- [x] AM-5  PRD: add "Interactive Asset Mentions" requirement to `simFolio_v01_00_MVP.md`.
+- [x] AM-6  Tests per `unittest.md`; ≥80% line coverage on new feature files; full suite green;
+            build clean.
+            **Result: 235/235 Vitest pass (100% > 95% target), incl. 27 new feature cases.
+            Coverage — assetLinks.js 100% lines, AssetText.jsx 100% lines (both ≥80%).
+            `npm run build` ✓.**
+
+### QA findings — asset-mention feature
+- **[fixed] Standalone `HeroMessage` render broke under Router-less test.** `misc.test.jsx`'s "renders
+  every hero" case rendered `HeroMessage` with no Router; `AssetText` calls `useNavigate`, which throws
+  outside a `<Router>`. Real screens (and the chat component tests in `components.test.jsx`) always have
+  a router, so wrapped that one test in `MemoryRouter` (mirrors the existing `wrap()` pattern). Minimal,
+  justified test update — the component now contains links and so legitimately requires router context.
+- **[pre-existing, not introduced] `npm run lint` reports one error** in `HeroChatPanel.jsx:10`
+  (`react-refresh/only-export-components` on the long-standing `modelLabel` export). Verified present on
+  a clean `git stash` checkout, so it predates this feature and is out of scope. New feature files
+  (`assetLinks.js`, `AssetText.jsx`) lint clean.
+- **Outcome:** 235/235 Vitest pass (100% > 95% target). No remaining failures attributable to the feature.
+
+### Iteration 2 — live market-data validation (broaden coverage)
+Reported gap: companies/stocks mentioned by name but absent from the curated registry (e.g.
+"Palantir", "AMD") were not linked. Per user decision, detection now **validates candidates against
+live market data** instead of relying on a static list alone.
+
+- [x] AM-7  `lib/assetLinks.js`: replace `findAssetMentions`/`splitTextWithAssets` with
+            `findAssetSpans()` that classifies each span as **trusted** (registry / holdings /
+            watchlist / known cashtag → link immediately) or **validate** (unknown cashtag, ALL-CAPS
+            token, or capitalized proper noun → carries a `query`). Added `COMMON_WORDS` thrift filter
+            and `resolutionKey()`.
+- [x] AM-8  `lib/resolveSymbol.js`: `resolveSymbol(query,type)` + `matchRows()` confirm a candidate
+            against TwelveData `symbol_search` (US Common Stock/ETF), memoized in localStorage
+            (positives and negatives) so each term is looked up once.
+- [x] AM-9  `hooks/useAssetResolution.js`: batches validation candidates through React Query
+            (`useQueries`, `staleTime: Infinity`, deduped); returns a key→ticker map.
+- [x] AM-10 `components/AssetText.jsx`: renders trusted spans synchronously and validated spans once
+            resolved; unresolved/unknown candidates stay plain text.
+- [x] AM-11 Tests reworked in `assetLinks.test.jsx` (findAssetSpans, matchRows/resolveSymbol incl.
+            cache + error paths, AssetText trusted + live-validated). Added `QueryClientProvider` to the
+            `components.test.jsx` / `misc.test.jsx` chat renders (AssetText now uses React Query).
+- [x] AM-12 PRD updated with the live-validation requirement.
+            **Result: 239/239 Vitest pass (100% > 95%). Coverage — assetLinks.js / AssetText.jsx /
+            resolveSymbol.js all 100% lines; global 86.93% (80% gate cleared). New files lint clean.
+            `npm run build` ✓.**
+
+### QA findings — iteration 2
+- **[fixed] Over-strict ordering test.** A test fed "Compare Apple to …"; "Compare" is now correctly a
+  name *candidate* (ticker undefined until validated), so `m.map(s=>s.ticker)` led with `undefined`.
+  Re-anchored the test to a sentence without a stray proper noun — behavior is correct.
+- **[fixed] Two `no-useless-assignment` lint errors** in new files (a redundant `ticker = null` in a
+  catch, and a final unused `key++`). Resolved; new files lint clean.
+- **Note:** validation depends on `VITE_TWELVEDATA_API_KEY` and is best-effort — on rate-limit/no-key,
+  unknown candidates gracefully render as plain text (trusted/registry/holdings still link offline).
+- **Outcome:** 239/239 Vitest pass (100% > 95% target).
+
+### Iteration 3 — LLM bracket markers (reliable multi-word detection)
+Reported gap: client-side detection of company names (esp. multi-word) was poor. New mechanism: the
+LLM wraps every asset it mentions in `[...]`; the client links the whole bracketed entity and strips
+the brackets — no fragile name parsing.
+
+- [x] AM-13 `hero-chat/index.ts`: add a system-prompt rule to wrap every company/stock/ETF/crypto
+            name or ticker in square brackets as one unit (multi-word included), and bracket nothing
+            that isn't a tradable asset. (Needs `supabase functions deploy hero-chat` in prod.)
+- [x] AM-14 `lib/assetLinks.js`: `findAssetSpans()` now parses `[...]` entities first (whole unit,
+            display strips brackets) → fast-path resolve or validate as `entity`. Unbracketed text
+            keeps only precise trusted detection (known cashtag / registry name / known-or-owned
+            ticker) + unknown-cashtag validation. Dropped the noisy proper-noun + unknown-ALL-CAPS
+            guessing and the `COMMON_WORDS` list.
+- [x] AM-15 `lib/resolveSymbol.js`: `matchRows` handles the `entity` type (exact symbol → name
+            prefix/contains) and strips a leading `$`.
+- [x] AM-16 `components/AssetText.jsx`: renders each span's `display` (brackets stripped whether or
+            not it resolves); trusted spans link synchronously, entities link once validated.
+- [x] AM-17 Tests reworked for the bracket model (bracketed trusted/validate, unbracketed precise,
+            brackets-stripped-on-fail, matchRows entity + `$` strip).
+- [x] AM-18 PRD updated to specify the bracket-marker mechanism.
+            **Result: 238/238 Vitest pass (100% > 95%). Coverage — assetLinks.js / AssetText.jsx /
+            resolveSymbol.js all 100% lines; global 87.05% (80% gate cleared). New files lint clean.
+            `npm run build` ✓.**
+
+### QA findings — iteration 3
+- Behavior change is intentional: **unbracketed** company names are no longer guessed (that was the
+  "poor detection" the user hit). In practice hero replies are bracketed by the LLM, so multi-word
+  names like "Berkshire Hathaway" now link reliably as one entity.
+- **Dependencies:** linking bracketed *unknown* entities still needs `VITE_TWELVEDATA_API_KEY`
+  (best-effort; falls back to plain text). The prompt change requires redeploying the `hero-chat`
+  edge function to take effect in production.
+- **Outcome:** 238/238 Vitest pass (100% > 95% target).
+
+### Iteration 4 — two-pass server-side tagging (reliable bracketing)
+
+Inline bracketing (iteration 3) proved unreliable in production: open models routinely ignored the
+"wrap every asset in `[]`" instruction, so live replies arrived unbracketed. Replaced it with a
+two-pass flow entirely inside the `hero-chat` edge function — no client changes (the bracket parser +
+live validation pipeline is unchanged).
+
+- [x] AM-19 `hero-chat/index.ts`: removed the inline ASSET-TAGGING prompt block (pass 1 now replies
+            naturally).
+- [x] AM-20 Added `extractAssets()` — pass 2 "market analyst" LLM call returning the exact mentions as
+            a JSON array (via `callLLMWithFallback` with a JSON `validate`); best-effort (returns `[]`
+            if all models fail).
+- [x] AM-21 Added `bracketAssets()` — deterministically wraps each mention in `[]`: longest-first,
+            word-boundary safe, no overlap. Seeds existing `[]` regions so re-tagging is idempotent
+            (never nests). Persists/returns the bracketed text so links survive a history reload.
+- [x] AM-22 Added `tag_text` request mode: runs only the analyst pass on arbitrary text → returns the
+            bracketed version + `mentions`. Enables backfilling past replies and easier testing.
+- [x] AM-23 Analyst instructed to ignore text already inside `[]`.
+- [x] AM-24 Requirement doc updated to the two-pass mechanism.
+
+### QA findings — iteration 4
+- Client + parser unchanged → all client tests still pass (**239/239** Vitest, 100% > 95%). Edge
+  function is Deno-only (excluded from Vitest); Deno not installed locally so it isn't type-checked
+  here — logic is straightforward string handling.
+- **Tradeoff:** two LLM calls per message (extra latency/cost). Acceptable for reliability; the
+  analyst pass is small and uses the same free fallback chain.
+- **Dependency unchanged:** requires redeploying `hero-chat` (`supabase functions deploy hero-chat`)
+  to take effect in production; linking unknown entities still needs `VITE_TWELVEDATA_API_KEY`.
+
+### Iteration 5 — extraction reliability + deterministic format net
+
+Deployed iteration 4 found assets unreliably (e.g. 1 of 4 in one reply): `callLLMWithFallback`
+accepts the first model returning valid JSON, and the chain led with the smallest model, whose
+incomplete-but-valid array was accepted. Root `supabase/` (stale dup) had also been deployed by
+mistake from the repo root — redeployed from `app/`.
+
+- [x] AM-25 `_shared/llm.ts`: optional `temperature` (additive; other callers unaffected).
+- [x] AM-26 `hero-chat/index.ts`: extraction now uses `EXTRACT_MODELS` (gpt-oss-120b → llama-70b →
+            gemma-31b, strongest first), `temperature: 0`, and an exhaustive prompt + worked example.
+- [x] AM-27 `lib/assetLinks.js`: unbracketed scan now flags unknown ALL-CAPS tokens of 3+ letters as
+            `ticker` validation candidates (STOPWORDS-guarded), catching ticker-shaped misses like
+            `ARKG`/`PLTR`; still links only if live market data confirms them.
+- [x] AM-28 Tests for the format net (flag `PLTR`/`ARKG`; ignore 2-letter & stopwords); doc updated.
+
+### QA findings — iteration 5
+- **241/241** Vitest pass (+2). Build/parser otherwise unchanged.
+- Live `tag_text` check confirmed bracketing of multi-word names + tickers after deploy.
+- **Cost:** extraction prefers larger free models (slower/heavier) but stays within the wall-clock
+  budget (550B model excluded). Format net adds no LLM cost (client-side + cached validation).
+
+### Iteration 6 — fewer API calls, markdown bold, ticker-only validation
+
+Decisions: (a) validate **only ticker-shaped** brackets — skip fuzzy company-name lookups; (b)
+render `**bold**` markdown; (c) hint the analyst that `**`-wrapped text is a strong asset candidate.
+
+- [x] AM-29 `hero-chat/index.ts`: `collapseNameTickerPairs()` rewrites `[Name] ([TICKER])`
+            (brackets <=5 chars apart, name = title-case, ticker = caps+optional `.`, len>3) to
+            `Name ([TICKER])` — tags only the ticker. Applied in both the chat flow and `tag_text`.
+- [x] AM-30 `_shared/llm.ts`: optional `temperature` already added (iter 5); reused here.
+- [x] AM-31 `hero-chat`: analyst prompt gains a `**`-hint line (fixes missed
+            "iShares MSCI Global Impact ETF (MPCT)") — return the name/ticker without asterisks.
+- [x] AM-32 `lib/assetLinks.js`: new exported `looksLikeTicker()` (1–5 caps, optional `.X`).
+            Bracket branch now: registry/owned → free link; ticker-shaped → validate (one exact
+            lookup); company name → plain text, NO fuzzy search. `entity` type no longer produced
+            (matchRows still supports it for the symbol-search page / tests).
+- [x] AM-33 `components/AssetText.jsx`: renders `**bold**` as `<strong>` (asterisks stripped),
+            linkifying assets inside; single `useAssetResolution` across all bold/plain segments.
+- [x] AM-34 Tests updated (ticker-only validation, bracketed name → plain/no-fetch, bold render,
+            collapsed pair); docs updated.
+
+### QA findings — iteration 6
+- **244/244** Vitest pass; lint clean on changed files; `hero-chat` redeployed.
+- **API-call saving:** a `[Name] ([TICKER])` pair now costs **one** exact lookup instead of a
+  fuzzy name search + a ticker lookup. A bracketed name with no ticker won't link (accepted
+  tradeoff per the chosen strategy).
+- Client changes need a Vercel deploy (push) to reach production; edge change is already live.
+
+### Iteration 7 — split combined name+ticker mentions
+
+Live `**`-hint test showed the analyst returning a whole bold segment as one mention
+(`"iShares MSCI Global Impact ETF (MPCT)"`), which bracketed as a single non-ticker entity →
+wouldn't link (the ticker was buried inside).
+
+- [x] AM-35 `hero-chat/index.ts`: `normalizeMentions()` deterministically splits `Name (TICKER)`
+            into two atomic entries and strips stray asterisks; applied before bracketing in both
+            the chat flow and `tag_text`. Prompt also tightened ("a SINGLE name OR a SINGLE ticker,
+            never combined") with a `**bold**` example.
+- Edge-only change (no client change); 244/244 Vitest still pass; `hero-chat` redeployed.

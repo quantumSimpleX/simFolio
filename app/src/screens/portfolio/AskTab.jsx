@@ -4,20 +4,22 @@ import { QuickPrompts, ChatComposer, ChatMessages } from '../../components/HeroC
 import { useHeroChat, useHeroHistory } from '../../hooks/useHeroChat';
 import { useHeroSelections } from '../../hooks/useHeroSelections';
 import { usePortfolio } from '../../hooks/usePortfolio';
+import { useWatchlist } from '../../hooks/useWatchlist';
+import { buildHeroContext } from '../../lib/heroContext';
 import { HeroAvatar } from '../../components/Primitives';
 
 export default function AskTab() {
   const { heroes } = useHeroSelections();
   const { positions, cashBalance } = usePortfolio();
+  const { watchlist } = useWatchlist();
   const [input, setInput] = useState('');
 
   // Use first hero in council for chat (council shares one window)
   const primaryHero = heroes[0];
   const heroId = primaryHero?.id ?? 'sage';
 
-  const portfolioContext = positions.length
-    ? `Cash: $${cashBalance?.toFixed(2) ?? 0}. Holdings: ${positions.map(p => `${p.ticker} (${parseFloat(p.total_qty)} shares @ avg $${parseFloat(p.average_cost_basis).toFixed(2)}, current $${p.price?.toFixed(2) ?? '?'})`).join(', ')}.`
-    : 'No positions yet.';
+  const portfolioContext = buildHeroContext(positions, cashBalance, watchlist);
+  const assetTickers = [...positions.map(p => p.ticker), ...watchlist];
 
   const { data: history, isLoading: historyLoading } = useHeroHistory(heroId);
   const { mutate: sendMessage, isPending, data: lastReply } = useHeroChat(heroId, portfolioContext);
@@ -59,6 +61,7 @@ export default function AskTab() {
         lastModel={lastReply?.model}
         historyLoading={historyLoading}
         emptyText="Ask your council anything about your portfolio or investing."
+        assetTickers={assetTickers}
       />
 
       <div className="flex-shrink-0 border-t border-ink-100 px-3 pb-3.5 pt-2">
