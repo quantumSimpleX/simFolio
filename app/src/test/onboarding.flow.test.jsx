@@ -4,7 +4,7 @@ import { screen, fireEvent, waitFor } from '@testing-library/react'
 import { renderWithProviders } from './renderWithProviders'
 import Onboarding from '../screens/onboarding/Onboarding'
 
-const goalTitle = 'Making sure your savings grow as fast as store prices rise so you can still afford the same stuff'
+const goalTitle = 'Beat Inflation'
 const NONE = 'None of the above'
 
 const clickContinue = () => fireEvent.click(screen.getByText(/^Continue\s*→$/))

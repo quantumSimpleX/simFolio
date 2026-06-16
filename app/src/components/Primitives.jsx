@@ -10,9 +10,6 @@ import { Label } from './ui/label';
 import { Badge } from './ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { Sun, Moon } from 'lucide-react';
-import {
-  Tooltip, TooltipTrigger, TooltipContent, TooltipProvider,
-} from './ui/tooltip';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 import { useIsMobile } from '../hooks/useBreakpoint';
@@ -317,26 +314,28 @@ export function TermUnderline({ children, termKey }) {
     );
   }
 
-  // Desktop: tooltip in the active language.
+  // Desktop: a CSS-positioned tooltip anchored to the term. We avoid a portalled
+  // popper here because the app applies `body { zoom }` (see index.css), which throws
+  // off floating-ui's coordinate math and lands the tooltip away from the cursor.
+  // An absolutely-positioned child lives in the same zoomed space, so it sits on the term.
   const entry = def[lang] || def.en;
   return (
-    <TooltipProvider delayDuration={0}>
-      <Tooltip open={open} onOpenChange={setOpen}>
-        <TooltipTrigger asChild>
-          <span
-            ref={ref}
-            className={TRIGGER_CLS}
-            onMouseEnter={() => setOpen(true)}
-            onMouseLeave={() => setOpen(false)}
-          >
-            {children}
-          </span>
-        </TooltipTrigger>
-        <TooltipContent>
+    <span
+      ref={ref}
+      className={cn(TRIGGER_CLS, 'relative inline-block')}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      {children}
+      {open && (
+        <span
+          role="tooltip"
+          className="absolute bottom-full left-0 z-50 mb-1.5 block w-max max-w-[280px] rounded-card border border-ink-100 bg-white px-3.5 py-2.5 font-sans shadow-[0_4px_20px_rgba(0,0,0,0.12)]"
+        >
           <GlossaryEntry entry={entry} />
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+        </span>
+      )}
+    </span>
   );
 }
 
