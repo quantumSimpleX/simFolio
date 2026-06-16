@@ -32,7 +32,7 @@ describe('SellScreen with a position', () => {
     fireEvent.click(screen.getByText('Limit order'))
     const limitInput = await screen.findByPlaceholderText(/Min price/i)
     fireEvent.change(limitInput, { target: { value: '180' } })
-    fireEvent.click(screen.getByText('End of day')) // DAY time-in-force
+    fireEvent.click(screen.getByText('EOD')) // DAY time-in-force
 
     fireEvent.click(screen.getByText(/Place limit sell/))
     await waitFor(() => expect(supabase.functions.invoke).toHaveBeenCalled())
@@ -56,7 +56,7 @@ describe('BuyScreen interactions', () => {
     fireEvent.click((await screen.findAllByText('Limit order'))[0])
     const limitInput = await screen.findByPlaceholderText(/Max price/i)
     fireEvent.change(limitInput, { target: { value: '120' } })
-    expect(screen.getByText('Cancelled')).toBeInTheDocument() // GTC option visible
+    expect(screen.getByText('GTC')).toBeInTheDocument() // GTC option visible
 
     fireEvent.click(screen.getByText(/Queue order|Buy 1 AAPL/))
     await waitFor(() => expect(supabase.functions.invoke).toHaveBeenCalled())

@@ -12,7 +12,7 @@ const NEW_KEYS = [
   'eps', 'beta', 'volume', 'avg_volume', 'exchange', '52w_range', 'shares',
   'ticker', 'position', 'holdings', 'bid_ask_spread', 'gross_cost',
   'gross_proceeds', 'net_proceeds', 'execution_price', 'time_in_force',
-  'gtc_order', 'day_order', 'crypto', 'index', 'watchlist', 'dividend',
+  'gtc_order', 'eod_order', 'crypto', 'index', 'watchlist', 'dividend',
 ]
 
 const allKeys = Object.keys(glossary)
@@ -54,8 +54,11 @@ describe('B. Acronyms spelled out', () => {
   it('eps spells out Earnings Per Share', () => {
     expect(text('eps')).toMatch(/Earnings Per Share/i)
   })
-  it('gtc_order spells out Good-Till-Cancelled', () => {
-    expect(text('gtc_order')).toMatch(/Good-Till-Cancelled/i)
+  it('gtc_order spells out Good Till Cancel', () => {
+    expect(text('gtc_order')).toMatch(/Good Till Cancel/i)
+  })
+  it('eod_order spells out Good Till End of Day', () => {
+    expect(text('eod_order')).toMatch(/Good Till End of Day/i)
   })
   it('pe_ratio spells out Price-to-Earnings', () => {
     expect(text('pe_ratio')).toMatch(/Price-to-Earnings/i)

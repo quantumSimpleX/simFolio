@@ -100,15 +100,15 @@ export default function BuyScreen() {
           <OrderTypeCard label="Limit order" desc="Only fill if price reaches your target" active={orderType==='LIMIT'} onClick={() => setOrderType('LIMIT')}/>
         </div>
         {orderType === 'LIMIT' && (
-          <div className="mt-2 grid grid-cols-1 items-center gap-2.5 md:grid-cols-2">
+          <div className="mt-2 flex items-center gap-2.5">
             <input
               type="number"
               value={limitPrice}
               onChange={e => setLimitPrice(e.target.value)}
               placeholder={`Max price (current: $${price})`}
-              className="box-border h-11 w-full rounded-input border border-ame-400 bg-white px-3.5 font-sans text-sm text-ink-900 outline-none"
+              className="box-border h-11 min-w-0 flex-1 rounded-input border border-ame-400 bg-white px-3.5 font-sans text-sm text-ink-900 outline-none"
             />
-            <TifToggle tif={tif} setTif={setTif}/>
+            <div className="shrink-0"><TifToggle tif={tif} setTif={setTif}/></div>
           </div>
         )}
       </div>
@@ -284,10 +284,10 @@ export function QtyInputBlock({ qty, setQty, price, accent = 'ame', max = null }
 export function TifToggle({ tif, setTif }) {
   return (
     <div className="flex flex-nowrap items-center gap-2">
-      <div className="whitespace-nowrap font-sans text-xs text-ink-400"><TermUnderline termKey="time_in_force">Good until</TermUnderline></div>
-      {[['GTC','Cancelled'], ['DAY','End of day']].map(([val, label]) => (
+      <div className="whitespace-nowrap font-sans text-xs text-ink-400"><TermUnderline termKey="time_in_force">Time in force</TermUnderline></div>
+      {[['GTC','GTC','gtc_order'], ['DAY','EOD','eod_order']].map(([val, label, tkey]) => (
         <div key={val} onClick={() => setTif(val)} className={cn('shrink-0 cursor-pointer select-none whitespace-nowrap rounded-pill border px-2.5 py-[3px] font-sans text-xs', tif===val ? 'border-ame-400 bg-ame-50 font-semibold text-ame-600' : 'border-ink-100 bg-white font-normal text-ink-500')}>
-          {label}
+          <TermUnderline termKey={tkey}>{label}</TermUnderline>
         </div>
       ))}
     </div>

@@ -128,15 +128,15 @@ export default function SellScreen() {
           <OrderTypeCard label="Limit order" desc="Only fill if price reaches your target" active={orderType==='LIMIT'} onClick={() => setOrderType('LIMIT')}/>
         </div>
         {orderType === 'LIMIT' && (
-          <div className="mt-2 grid grid-cols-1 items-center gap-2.5 md:grid-cols-2">
+          <div className="mt-2 flex items-center gap-2.5">
             <input
               type="number"
               value={limitPrice}
               onChange={e => setLimitPrice(e.target.value)}
               placeholder={`Min price (current: $${price.toFixed(2)})`}
-              className="box-border h-11 w-full rounded-input border border-ame-400 bg-white px-3.5 font-sans text-sm text-ink-900 outline-none"
+              className="box-border h-11 min-w-0 flex-1 rounded-input border border-ame-400 bg-white px-3.5 font-sans text-sm text-ink-900 outline-none"
             />
-            <TifToggle tif={tif} setTif={setTif}/>
+            <div className="shrink-0"><TifToggle tif={tif} setTif={setTif}/></div>
           </div>
         )}
       </div>

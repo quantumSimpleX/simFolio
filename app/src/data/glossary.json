@@ -120,12 +120,12 @@
     "zh-TW":{ "title": "委託效期 (Time in Force)", "definition": "您的訂單在過期或取消之前會保持有效多久。" }
   },
   "gtc_order": {
-    "en":   { "title": "GTC (Good-Till-Cancelled)", "definition": "An order that stays open until it is filled or you cancel it, even across multiple days." },
-    "zh-TW":{ "title": "長效單 (GTC, Good-Till-Cancelled)", "definition": "一種訂單，會一直保持有效直到成交或您主動取消，即使跨越多個交易日。" }
+    "en":   { "title": "GTC (Good Till Cancel)", "definition": "An order that stays open until it is filled or you cancel it, even across multiple days." },
+    "zh-TW":{ "title": "長效單 (GTC, Good Till Cancel)", "definition": "一種訂單，會一直保持有效直到成交或您主動取消，即使跨越多個交易日。" }
   },
-  "day_order": {
-    "en":   { "title": "Day Order",         "definition": "An order that expires at the end of the trading day if it has not been filled." },
-    "zh-TW":{ "title": "當日有效單 (Day Order)", "definition": "若當天交易結束前未成交，這種訂單就會自動失效。" }
+  "eod_order": {
+    "en":   { "title": "EOD (Good Till End of Day)", "definition": "An order that expires at the end of the trading day if it has not been filled." },
+    "zh-TW":{ "title": "當日有效單 (EOD, Good Till End of Day)", "definition": "若當天交易結束前未成交，這種訂單就會自動失效。" }
   },
   "crypto": {
     "en":   { "title": "Cryptocurrency",    "definition": "Digital money, such as Bitcoin, that you can buy and sell much like a stock." },
