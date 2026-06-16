@@ -49,8 +49,8 @@ export default function TradeReceipt() {
           {isSell ? (
             <>
               <ReceiptRow label="Sold" value={`${qty} shares of ${ticker}`}/>
-              <ReceiptRow label="Executed at" value={`$${execPrice.toFixed(2)} / share`}/>
-              <ReceiptRow label="Gross proceeds" value={`$${total}`}/>
+              <ReceiptRow label={<TermUnderline>Executed at</TermUnderline>} value={`$${execPrice.toFixed(2)} / share`}/>
+              <ReceiptRow label={<TermUnderline>Gross proceeds</TermUnderline>} value={`$${total}`}/>
               {pnl != null && (
                 <ReceiptRow
                   label={<TermUnderline>{pnlPositive ? 'Realised gain' : 'Realised loss'}</TermUnderline>}
@@ -59,7 +59,7 @@ export default function TradeReceipt() {
                 />
               )}
               <ReceiptRow label={<TermUnderline>Transaction fee</TermUnderline>} value={`−$${fee.toFixed(2)}`}/>
-              <ReceiptRow label="Net to cash" value={`$${net}`} bold/>
+              <ReceiptRow label={<TermUnderline>Net to cash</TermUnderline>} value={`$${net}`} bold/>
             </>
           ) : isQueued ? (
             <>
@@ -70,8 +70,8 @@ export default function TradeReceipt() {
           ) : (
             <>
               <ReceiptRow label="Bought" value={`${qty} shares of ${ticker}`}/>
-              <ReceiptRow label="Executed at" value={`$${execPrice.toFixed(2)} / share`}/>
-              <ReceiptRow label="Gross cost" value={`$${total}`}/>
+              <ReceiptRow label={<TermUnderline>Executed at</TermUnderline>} value={`$${execPrice.toFixed(2)} / share`}/>
+              <ReceiptRow label={<TermUnderline>Gross cost</TermUnderline>} value={`$${total}`}/>
               {hasSlippage && (
                 <ReceiptRow
                   label={<TermUnderline>Slippage</TermUnderline>}
@@ -87,7 +87,7 @@ export default function TradeReceipt() {
                 />
               )}
               <ReceiptRow label={<TermUnderline>Transaction fee</TermUnderline>} value={`$${fee.toFixed(2)}`}/>
-              <ReceiptRow label="Net deducted" value={`$${net}`} bold/>
+              <ReceiptRow label={<TermUnderline>Net deducted</TermUnderline>} value={`$${net}`} bold/>
             </>
           )}
         </div>

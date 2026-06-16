@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { cn } from '../../lib/utils';
-import { Eyebrow } from '../../components/Primitives';
+import { Eyebrow, TermUnderline } from '../../components/Primitives';
 import { BottomNav, TopNav } from '../../components/Nav';
 import { ChartPanel, RangeButtons } from '../../components/Charts';
 import { HoldingRow } from '../../components/HoldingRow';
@@ -65,9 +65,9 @@ export default function PortfolioMobile() {
 
       <div className="flex-shrink-0 px-2.5 pt-4">
         <div className="flex">
-          {[['Cash', `$${fmt(displayCash)}`], ['Positions', String(displayHoldings.length)], ['All-time', `${pnlPos?'+':''}${displayPct.toFixed(1)}%`]].map(([label,value],i,arr) => (
+          {[['Cash', `$${fmt(displayCash)}`, null], ['Positions', String(displayHoldings.length), 'position'], ['All-time', `${pnlPos?'+':''}${displayPct.toFixed(1)}%`, null]].map(([label,value,key],i,arr) => (
             <div key={label} className={cn('flex-1', i<arr.length-1 && 'border-r border-ink-100 pr-4', i>0 && 'pl-4')}>
-              <div className="mb-[3px] font-sans text-[11px] uppercase tracking-[0.14em] text-ink-400">{label}</div>
+              <div className="mb-[3px] font-sans text-[11px] uppercase tracking-[0.14em] text-ink-400">{key ? <TermUnderline termKey={key}>{label}</TermUnderline> : label}</div>
               <div className="font-sans text-base font-semibold text-ink-900">{value}</div>
             </div>
           ))}
@@ -76,7 +76,7 @@ export default function PortfolioMobile() {
 
       <div className="flex-1 overflow-auto px-2.5 pt-5">
         <div className="mb-3 flex items-center justify-between">
-          <Eyebrow>Holdings</Eyebrow>
+          <Eyebrow><TermUnderline>Holdings</TermUnderline></Eyebrow>
           <div onClick={() => navigate('/markets')} className="cursor-pointer font-sans text-[13px] text-ame-400">+ Add</div>
         </div>
         {loading && positions.length === 0 && (

@@ -94,7 +94,7 @@ export default function BuyScreen() {
       </div>
 
       <div>
-        <div className="mb-2 font-sans text-[13px] text-ink-500">Order type</div>
+        <div className="mb-2 font-sans text-[13px] text-ink-500"><TermUnderline termKey="market_order">Order type</TermUnderline></div>
         <div className="flex gap-2.5">
           <OrderTypeCard label="Market order" desc={canExec ? 'Execute now at current price' : 'Execute at next market open'} active={orderType==='MARKET'} onClick={() => setOrderType('MARKET')}/>
           <OrderTypeCard label="Limit order" desc="Only fill if price reaches your target" active={orderType==='LIMIT'} onClick={() => setOrderType('LIMIT')}/>
@@ -258,7 +258,7 @@ export function QtyInputBlock({ qty, setQty, price, accent = 'ame', max = null }
   return (
     <div className="flex gap-2.5">
       <div className={fieldClass}>
-        <div className={labelClass}>Shares</div>
+        <div className={labelClass}><TermUnderline>Shares</TermUnderline></div>
         <input
           type="number"
           min="0.01"
@@ -292,7 +292,7 @@ export function QtyInputBlock({ qty, setQty, price, accent = 'ame', max = null }
 export function TifToggle({ tif, setTif }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div className="font-sans text-xs text-ink-400">Good until</div>
+      <div className="font-sans text-xs text-ink-400"><TermUnderline termKey="time_in_force">Good until</TermUnderline></div>
       {[['GTC','Cancelled'], ['DAY','End of day']].map(([val, label]) => (
         <div key={val} onClick={() => setTif(val)} className={cn('cursor-pointer select-none rounded-pill border px-2.5 py-[3px] font-sans text-xs', tif===val ? 'border-ame-400 bg-ame-50 font-semibold text-ame-600' : 'border-ink-100 bg-white font-normal text-ink-500')}>
           {label}
