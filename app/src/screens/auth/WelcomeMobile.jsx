@@ -27,13 +27,13 @@ export default function WelcomeMobile() {
             {[['warren','WB',C.ame400],['cathie','CW',C.aqua400],['ray','RD',C.gold]].map(([id,init,color],i) => (
               <div
                 key={id}
-                className={cn('rounded-pill border-2 border-white', i > 0 && '-ml-4')}
+                className={cn('rounded-pill border-2 border-white', i > 0 && '-ml-3')}
                 style={{ zIndex:4-i }}
               >
-                <HeroAvatar id={id} initials={init} color={color} size={84}/>
+                <HeroAvatar id={id} initials={init} color={color} size={60}/>
               </div>
             ))}
-            <div className="z-0 -ml-4 flex h-[88px] w-[88px] items-center justify-center rounded-pill border-2 border-white bg-ink-50 font-sans text-[15px] text-ink-400">+17</div>
+            <div className="z-0 -ml-3 flex h-[64px] w-[64px] items-center justify-center rounded-pill border-2 border-white bg-ink-50 font-sans text-[13px] text-ink-400">+17</div>
           </div>
           <div className="font-sans text-[13px] text-ink-400">20 legendary investors in the library</div>
         </div>
