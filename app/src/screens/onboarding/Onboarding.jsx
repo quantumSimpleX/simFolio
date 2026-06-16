@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Logo, SimPill, CTA, GoalCard, ProgressDots, GuideAvatar, HeroAvatar } from '../../components/Primitives';
+import { Logo, SimPill, CTA, GoalCard, ProgressDots, GuideAvatar, HeroAvatar, TermUnderline } from '../../components/Primitives';
 import BrandPanel from '../../components/BrandPanel';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -11,11 +11,11 @@ import { cn } from '../../lib/utils';
 const NONE_GOAL = 'None of the above';
 
 const GOAL_CHOICES = [
-  { title: 'Making sure your savings grow as fast as store prices rise so you can still afford the same stuff', desc: '' },
-  { title: 'Your saved money earning extra money, which then earns its own money like a growing snowball', desc: '' },
-  { title: 'Getting regular "thank you" cash payments from a company just for letting them use your money', desc: '' },
-  { title: 'Not putting all your eggs in one basket so if one breaks, you do not lose everything', desc: '' },
-  { title: 'Owning a tiny slice of famous companies like Apple or Disney and sharing in their success', desc: '' },
+  { title: 'Beat Inflation',  termKey: 'beat_inflation',  desc: 'Making sure your savings grow as fast as store prices rise so you can still afford the same stuff' },
+  { title: 'Grow Wealth',     termKey: 'grow_wealth',     desc: 'Your saved money earning extra money, which then earns its own money like a growing snowball' },
+  { title: 'Passive Income',  termKey: 'passive_income',  desc: 'Getting regular "thank you" cash payments from a company just for letting them use your money' },
+  { title: 'Diversify Risk',  termKey: 'diversify_risk',  desc: 'Not putting all your eggs in one basket so if one breaks, you do not lose everything' },
+  { title: 'Stock Ownership', termKey: 'stock_ownership', desc: 'Owning a tiny slice of famous companies like Apple or Disney and sharing in their success' },
   { title: NONE_GOAL, desc: '' },
 ];
 
@@ -359,7 +359,7 @@ function MultiGoalPicker({ choices, value, onChange }) {
 
   return (
     <div className="flex flex-col gap-2">
-      {choices.map(({ title, desc }) => {
+      {choices.map(({ title, termKey, desc }) => {
         const isNone = title === NONE_GOAL;
         const checked = picks.includes(title);
         const disabled = (isNone && picks.length > 0 && !noneSelected) || (!isNone && noneSelected);
@@ -378,7 +378,9 @@ function MultiGoalPicker({ choices, value, onChange }) {
                 'flex h-[18px] w-[18px] flex-shrink-0 items-center justify-center rounded-input border-[1.5px] font-sans text-xs font-bold text-white',
                 checked ? 'border-ame-400 bg-ame-400' : 'border-ink-200 bg-white',
               )}>{checked ? '✓' : ''}</div>
-              <div className="font-sans font-semibold text-ink-900" style={{ fontSize: fluid(15, 18) }}>{title}</div>
+              <div className="font-sans font-semibold text-ink-900" style={{ fontSize: fluid(15, 18) }}>
+                {termKey ? <TermUnderline termKey={termKey}>{title}</TermUnderline> : title}
+              </div>
             </div>
             {desc && (
               <div className="mt-1.5 pl-7 font-sans leading-normal text-ink-400" style={{ fontSize: fluid(13, 15) }}>{desc}</div>

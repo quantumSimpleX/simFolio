@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect } from 'vitest'
+import { screen, fireEvent } from '@testing-library/react'
 import { renderWithProviders } from './renderWithProviders'
 import { TermUnderline } from '../components/Primitives'
 import { Fundamentals } from '../components/Fundamentals'

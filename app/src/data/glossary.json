@@ -142,5 +142,25 @@
   "dividend": {
     "en":   { "title": "Dividend",          "definition": "A cash payment a company shares with its shareholders out of its profits." },
     "zh-TW":{ "title": "股息 (Dividend)",      "definition": "公司從利潤中分配給股東的現金。" }
+  },
+  "beat_inflation": {
+    "en":   { "title": "Beat Inflation",    "definition": "Growing your money faster than prices rise, so it keeps its buying power. Prices for everyday things creep up each year; beating inflation means your savings can still buy just as much later." },
+    "zh-TW":{ "title": "對抗通膨 (Beat Inflation)", "definition": "讓你的錢成長得比物價上漲更快，以維持購買力。日常用品的價格每年通常會逐漸上升；對抗通膨就是讓你的存款未來仍能買到一樣多的東西。" }
+  },
+  "grow_wealth": {
+    "en":   { "title": "Grow Wealth",       "definition": "Building up more money over time by reinvesting your gains, so your money earns money — and those earnings earn even more, like a snowball getting bigger." },
+    "zh-TW":{ "title": "財富增值 (Grow Wealth)", "definition": "透過把獲利再投入，讓財富隨時間累積：你的錢會賺錢，而賺到的錢又會繼續賺錢，就像滾雪球一樣越滾越大。" }
+  },
+  "passive_income": {
+    "en":   { "title": "Passive Income",    "definition": "Money you receive regularly without having to work for it each time — for example, the cash dividend payments a company sends to its shareholders." },
+    "zh-TW":{ "title": "被動收入 (Passive Income)", "definition": "你不必每次出力就能定期收到的錢，例如公司發給股東的現金股息。" }
+  },
+  "diversify_risk": {
+    "en":   { "title": "Diversify Risk",    "definition": "Spreading your money across many different investments instead of just one, so if a single one does badly, you do not lose everything." },
+    "zh-TW":{ "title": "分散風險 (Diversify Risk)", "definition": "把資金分散投資在許多不同標的，而不是只押注一個；這樣即使其中一個表現不佳，你也不會血本無歸。" }
+  },
+  "stock_ownership": {
+    "en":   { "title": "Stock Ownership",   "definition": "Buying shares means you own a small piece of a real company. As a part-owner, you share in its success when the business does well." },
+    "zh-TW":{ "title": "股票持有 (Stock Ownership)", "definition": "買進股票代表你擁有一家真實公司的一小部分。身為部分股東，當公司經營良好時，你也能分享它的成功。" }
   }
 }
