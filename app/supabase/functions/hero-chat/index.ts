@@ -32,10 +32,11 @@ function escapeRegExp(s: string): string {
 // if every model fails, we return [] and the reply is shown without links.
 async function extractAssets(reply: string, apiKey: string): Promise<string[]> {
   const sys = [
-    `You are a financial market data analyst extracting structured data.`,
+    `You are a financial market data analyst with exhaustive knowledge of every single tradable financial asset in the world — every public company, stock, ETF, fund, and cryptocurrency, across every exchange. If an asset exists anywhere in the markets, you know it.`,
     `From the text below, list EVERY mention of a publicly traded company, stock, ETF, or cryptocurrency — whether referred to by company name OR by ticker symbol.`,
     `Be exhaustive: scan the entire text and include every distinct mention, even when several appear in one sentence. Missing one is a failure.`,
     `HINT: text wrapped in double asterisks (**like this**) is very likely a company, stock, ETF, or crypto — inspect every ** segment and include the asset it names. Return the name/ticker WITHOUT the surrounding asterisks.`,
+    `HINT: when something is a fund or ETF, the words immediately surrounding it are usually part of its full name (e.g. "the iShares Russell 2000 ETF", "Vanguard Total Bond Market Index Fund"). Capture the complete fund/ETF name as a single entry, not just one word of it.`,
     `Return ONLY a JSON array of strings. Each entry must be a SINGLE company name OR a SINGLE ticker symbol — never combine them, and never include surrounding punctuation or parentheses. When a name and its ticker appear together (e.g. "Illumina (ILMN)" or inside **bold**), return TWO separate entries: the name, and the ticker. Copy each verbatim (same spelling and capitalization).`,
     `Do NOT include sectors, investment themes, market indexes referred to as concepts, people's names, or generic financial terms. Ignore any text already wrapped in square brackets [ ].`,
     `If there are none, return []. Output only the JSON array — no prose, no markdown, no code fences.`,
