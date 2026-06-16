@@ -116,8 +116,8 @@
     "zh-TW":{ "title": "成交價格 (Execution Price)", "definition": "您的訂單實際成交時每股的價格。" }
   },
   "time_in_force": {
-    "en":   { "title": "Time in Force",     "definition": "How long your order stays active before it expires or is cancelled." },
-    "zh-TW":{ "title": "委託效期 (Time in Force)", "definition": "您的訂單在過期或取消之前會保持有效多久。" }
+    "en":   { "title": "TIF (Time in Force)", "definition": "How long your order stays active before it expires or is cancelled." },
+    "zh-TW":{ "title": "委託效期 (TIF, Time in Force)", "definition": "您的訂單在過期或取消之前會保持有效多久。" }
   },
   "gtc_order": {
     "en":   { "title": "GTC (Good Till Cancel)", "definition": "An order that stays open until it is filled or you cancel it, even across multiple days." },

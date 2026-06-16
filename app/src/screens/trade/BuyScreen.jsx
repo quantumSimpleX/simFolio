@@ -284,7 +284,7 @@ export function QtyInputBlock({ qty, setQty, price, accent = 'ame', max = null }
 export function TifToggle({ tif, setTif }) {
   return (
     <div className="flex flex-nowrap items-center gap-2">
-      <div className="whitespace-nowrap font-sans text-xs text-ink-400"><TermUnderline termKey="time_in_force">Time in force</TermUnderline></div>
+      <div className="whitespace-nowrap font-sans text-xs text-ink-400"><TermUnderline termKey="time_in_force">TIF</TermUnderline></div>
       {[['GTC','GTC','gtc_order'], ['DAY','EOD','eod_order']].map(([val, label, tkey]) => (
         <div key={val} onClick={() => setTif(val)} className={cn('shrink-0 cursor-pointer select-none whitespace-nowrap rounded-pill border px-2.5 py-[3px] font-sans text-xs', tif===val ? 'border-ame-400 bg-ame-50 font-semibold text-ame-600' : 'border-ink-100 bg-white font-normal text-ink-500')}>
           <TermUnderline termKey={tkey}>{label}</TermUnderline>

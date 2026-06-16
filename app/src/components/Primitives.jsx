@@ -58,6 +58,7 @@ const TERM_MAP = {
   'executed at':     'execution_price',
   'execution price': 'execution_price',
   'time in force':   'time_in_force',
+  'tif':             'time_in_force',
   'gtc':             'gtc_order',
   'eod':             'eod_order',
   'day':             'eod_order',
