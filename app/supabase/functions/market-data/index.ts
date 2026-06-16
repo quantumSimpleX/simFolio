@@ -143,6 +143,30 @@ async function getQuotes(symbols: string[]) {
   }))).filter(Boolean)
 }
 
+// US-listing exchange codes Yahoo returns in search results.
+const US_EXCHANGES = new Set(['NMS', 'NYQ', 'NGM', 'NCM', 'NIM', 'ASE', 'PCX', 'BATS', 'OQB', 'OQX', 'PNK'])
+// Map Yahoo quoteType -> the instrument_type the client's matchRows expects.
+const QUOTE_TYPE: Record<string, string> = { EQUITY: 'Common Stock', ETF: 'ETF' }
+
+// Free Yahoo symbol search (no crumb needed). Normalized to the same row shape
+// the client's matchRows expects from TwelveData: { symbol, instrument_name,
+// instrument_type, country }. Throws on a non-OK response so the client can
+// fall back to its secondary provider (e.g. when Yahoo rate-limits).
+async function searchSymbols(query: string) {
+  const url = `${YF_BASE}/v1/finance/search?q=${encodeURIComponent(query)}&quotesCount=10&newsCount=0&listsCount=0`
+  const res = await fetch(url, { headers: YF_HEADERS })
+  if (!res.ok) throw new Error(`Yahoo search ${res.status}`)
+  const data = await res.json()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const quotes = (data.quotes ?? []) as any[]
+  return quotes.map((q) => ({
+    symbol: q.symbol,
+    instrument_name: q.longname || q.shortname || q.symbol,
+    instrument_type: QUOTE_TYPE[q.quoteType] ?? q.quoteType ?? '',
+    country: US_EXCHANGES.has(q.exchange) ? 'United States' : (q.exchange ?? ''),
+  }))
+}
+
 async function getCandles(ticker: string, range: string) {
   const { interval, range: yfRange } = RANGE_MAP[range] ?? RANGE_MAP['3M']
   const url = `${YF_BASE}/v8/finance/chart/${ticker}?interval=${interval}&range=${yfRange}`
@@ -160,8 +184,11 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
   try {
-    const { symbols, candles, range, fundamentals } = await req.json()
+    const { symbols, candles, range, fundamentals, search } = await req.json()
 
+    if (search) {
+      return json({ data: await searchSymbols(String(search)) })
+    }
     if (fundamentals && symbols?.length) {
       const data = await getFundamentals(symbols as string[])
       await persistFundamentals(data)   // write server-side (service role) — authoritative

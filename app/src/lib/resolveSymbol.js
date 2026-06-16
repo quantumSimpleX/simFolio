@@ -1,14 +1,35 @@
 // Confirms whether a chat-text candidate (an unknown cashtag, ALL-CAPS token,
-// or capitalized proper noun) is a real tradable asset, using the same
-// TwelveData symbol_search the Markets page uses. Returns the canonical ticker
-// to link to, or null if it isn't a recognized US stock/ETF.
+// or bracketed company/fund name) is a real tradable asset, returning the
+// canonical ticker to link to, or null if it isn't a recognized US stock/ETF.
+//
+// Primary source is Yahoo Finance (free, same provider as our quotes), reached
+// through the `market-data` edge function because Yahoo blocks direct browser
+// calls. If Yahoo errors or rate-limits, we fall back to TwelveData's
+// symbol_search (a direct, CORS-friendly browser call).
 //
 // Results (including negatives) are memoized in localStorage so a given word is
-// only ever looked up once — symbols are stable and the free API tier is rate
-// limited.
+// only ever looked up once — symbols are stable and the free tiers are rate limited.
+import { supabase } from '@/lib/supabase'
 
 const API_KEY = import.meta.env.VITE_TWELVEDATA_API_KEY
 const LS_KEY = 'simfolio_asset_resolve'
+
+// Primary: Yahoo symbol search via the market-data edge function. Throws when
+// the function errors (incl. Yahoo rate-limit) so resolveSymbol can fall back.
+async function searchYahoo(query) {
+  const { data, error } = await supabase.functions.invoke('market-data', { body: { search: query } })
+  if (error) throw error
+  return Array.isArray(data?.data) ? data.data : []
+}
+
+// Fallback: TwelveData symbol_search, a direct browser fetch.
+async function searchTwelveData(query) {
+  const res = await fetch(
+    `https://api.twelvedata.com/symbol_search?symbol=${encodeURIComponent(query)}&apikey=${API_KEY}`,
+  )
+  const json = await res.json()
+  return Array.isArray(json?.data) ? json.data : []
+}
 
 function loadCache() {
   try { return JSON.parse(localStorage.getItem(LS_KEY)) || {} } catch { return {} }
@@ -47,17 +68,18 @@ export async function resolveSymbol(query, type) {
   const cache = loadCache()
   if (key in cache) return cache[key]
 
-  let ticker = null
+  let rows
   try {
-    const res = await fetch(
-      `https://api.twelvedata.com/symbol_search?symbol=${encodeURIComponent(query)}&apikey=${API_KEY}`,
-    )
-    const json = await res.json()
-    ticker = matchRows(json.data ?? [], query, type)
+    rows = await searchYahoo(query)              // primary
   } catch {
-    /* network / parse error — leave ticker null */
+    try {
+      rows = await searchTwelveData(query)       // fallback on Yahoo error / rate-limit
+    } catch {
+      rows = []                                  // both failed — treat as no match
+    }
   }
 
+  const ticker = matchRows(rows, query, type)
   cache[key] = ticker
   saveCache(cache)
   return ticker

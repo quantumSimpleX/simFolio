@@ -6,6 +6,11 @@ import { findAssetSpans, resolutionKey, ASSET_REGISTRY } from '../lib/assetLinks
 import { matchRows, resolveSymbol } from '../lib/resolveSymbol'
 import { AssetText } from '../components/AssetText'
 import { HeroMessage, UserMessage } from '../components/HeroMessage'
+import { supabase } from '../lib/supabase'   // aliased to the test mock
+
+// Yahoo (edge function) is the primary resolver; helper to stub its rows.
+const yahooReturns = rows => supabase.functions.invoke.mockResolvedValue({ data: { data: rows }, error: null })
+const yahooFails = () => supabase.functions.invoke.mockResolvedValue({ data: null, error: new Error('rate limited') })
 
 const trusted = text => findAssetSpans(text).filter(s => s.ticker)
 const validates = text => findAssetSpans(text).filter(s => s.vtype)
@@ -144,18 +149,26 @@ describe('matchRows', () => {
 })
 
 describe('resolveSymbol', () => {
-  beforeEach(() => { localStorage.clear() })
+  beforeEach(() => { localStorage.clear(); supabase.functions.invoke.mockReset() })
 
-  it('resolves an entity via the symbol API and caches the result', async () => {
-    globalThis.fetch = vi.fn(async () => ({ ok: true, json: async () => ({ data: ROWS }) }))
+  it('resolves an entity via Yahoo (edge function) and caches the result', async () => {
+    yahooReturns(ROWS)
     expect(await resolveSymbol('Palantir Technologies', 'entity')).toBe('PLTR')
     expect(await resolveSymbol('Palantir Technologies', 'entity')).toBe('PLTR')   // cached
-    expect(globalThis.fetch).toHaveBeenCalledTimes(1)
+    expect(supabase.functions.invoke).toHaveBeenCalledTimes(1)
   })
 
-  it('returns null (cached) for a non-asset and on fetch error', async () => {
-    globalThis.fetch = vi.fn(async () => ({ ok: true, json: async () => ({ data: [] }) }))
+  it('falls back to TwelveData when Yahoo errors / rate-limits', async () => {
+    yahooFails()
+    globalThis.fetch = vi.fn(async () => ({ ok: true, json: async () => ({ data: ROWS }) }))
+    expect(await resolveSymbol('Palantir Technologies', 'entity')).toBe('PLTR')
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1)   // TwelveData fallback used
+  })
+
+  it('returns null (cached) for a non-asset, and null when both providers fail', async () => {
+    yahooReturns([])
     expect(await resolveSymbol('Acme Widgets', 'entity')).toBe(null)
+    yahooFails()
     globalThis.fetch = vi.fn(async () => { throw new Error('network') })
     expect(await resolveSymbol('Boom', 'ticker')).toBe(null)
   })
@@ -222,10 +235,10 @@ describe('AssetText — trusted (synchronous) links', () => {
 })
 
 describe('AssetText — live-validated bracketed entities', () => {
-  beforeEach(() => { localStorage.clear() })
+  beforeEach(() => { localStorage.clear(); supabase.functions.invoke.mockReset() })
 
   it('links a bracketed ticker once validated, brackets stripped', async () => {
-    globalThis.fetch = vi.fn(async () => ({ ok: true, json: async () => ({ data: ROWS }) }))
+    yahooReturns(ROWS)
     const onAssetClick = vi.fn()
     wrap(<AssetText text="Look at [PLTR]" onAssetClick={onAssetClick} />)
     const link = await screen.findByText('PLTR')
@@ -236,10 +249,7 @@ describe('AssetText — live-validated bracketed entities', () => {
   })
 
   it('links a bracketed company/fund name once the market search resolves it', async () => {
-    globalThis.fetch = vi.fn(async () => ({
-      ok: true,
-      json: async () => ({ data: [{ symbol: 'ARKK', instrument_name: 'ARK Innovation ETF', instrument_type: 'ETF', country: 'United States' }] }),
-    }))
+    yahooReturns([{ symbol: 'ARKK', instrument_name: 'ARK Innovation ETF', instrument_type: 'ETF', country: 'United States' }])
     const onAssetClick = vi.fn()
     wrap(<AssetText text="the [ARK Innovation ETF] today" onAssetClick={onAssetClick} />)
     const link = await screen.findByText('ARK Innovation ETF')
@@ -250,9 +260,9 @@ describe('AssetText — live-validated bracketed entities', () => {
   })
 
   it('renders a bracketed name as plain text (brackets stripped) when it does not resolve', async () => {
-    globalThis.fetch = vi.fn(async () => ({ ok: true, json: async () => ({ data: [] }) }))
+    yahooReturns([])
     wrap(<AssetText text="the [whole market] today" onAssetClick={vi.fn()} />)
-    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled())
+    await waitFor(() => expect(supabase.functions.invoke).toHaveBeenCalled())
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
     expect(screen.queryByText(/\[/)).not.toBeInTheDocument()
     expect(screen.getByText(/whole market/)).toBeInTheDocument()
