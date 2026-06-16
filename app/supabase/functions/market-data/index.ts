@@ -153,7 +153,17 @@ const QUOTE_TYPE: Record<string, string> = { EQUITY: 'Common Stock', ETF: 'ETF' 
 // instrument_type, country }. Throws on a non-OK response so the client can
 // fall back to its secondary provider (e.g. when Yahoo rate-limits).
 async function searchSymbols(query: string) {
-  const url = `${YF_BASE}/v1/finance/search?q=${encodeURIComponent(query)}&quotesCount=10&newsCount=0&listsCount=0`
+  // Yahoo's search wants every query token to appear in the asset name and
+  // treats "&" and connector words ("and", "the", "of"…) as literal tokens, so
+  // a name written "ARK Autonomous Technology and Robotics ETF" matches nothing
+  // against the canonical "… & Robotics ETF". Drop "&" and connector words so
+  // only the distinctive tokens drive the search.
+  const term = String(query)
+    .replace(/&/g, ' ')
+    .replace(/\b(and|the|of|for|to)\b/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim() || String(query)
+  const url = `${YF_BASE}/v1/finance/search?q=${encodeURIComponent(term)}&quotesCount=10&newsCount=0&listsCount=0`
   const res = await fetch(url, { headers: YF_HEADERS })
   if (!res.ok) throw new Error(`Yahoo search ${res.status}`)
   const data = await res.json()

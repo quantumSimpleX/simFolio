@@ -43,6 +43,19 @@ function saveCache(cache) {
 //   'ticker' / 'cashtag' — match an exact US symbol only.
 //   'entity' (a bracketed mention) — try an exact symbol first, then match by
 //     company-name prefix/contains; handles both "AAPL" and "Berkshire Hathaway".
+// Connector words that carry no identifying weight when matching a name.
+const CONNECTORS = new Set(['and', 'the', 'of', 'a', 'an', 'for', 'to'])
+
+// Tokenize a name for comparison: lowercase, treat "&" as "and", split on any
+// non-alphanumeric run, and drop connector words. Word order, punctuation, and
+// "&" vs "and" no longer matter — only the set of meaningful tokens.
+function nameTokens(s) {
+  return new Set(
+    String(s).toLowerCase().replace(/&/g, ' and ').split(/[^a-z0-9]+/)
+      .filter(t => t && !CONNECTORS.has(t)),
+  )
+}
+
 export function matchRows(rows, query, type) {
   const us = rows.filter(d =>
     (d.instrument_type === 'Common Stock' || d.instrument_type === 'ETF') &&
@@ -55,11 +68,18 @@ export function matchRows(rows, query, type) {
     return bySymbol ? String(bySymbol.symbol).toUpperCase() : null
   }
 
-  // entity: prefer an exact symbol, else match the instrument name.
+  // entity: prefer an exact symbol, else a token-subset name match — every
+  // meaningful token in the query must appear in the candidate's name. The rows
+  // arrive in the provider's relevance order, so the first such row is the best
+  // match. This tolerates "&" vs "and", word order, punctuation, and extra
+  // descriptors (e.g. "Inc", "ETF") on either side.
   if (bySymbol) return String(bySymbol.symbol).toUpperCase()
-  const q = cleaned.toLowerCase()
-  const byName = us.find(r => (r.instrument_name || '').toLowerCase().startsWith(q)) ||
-                 us.find(r => (r.instrument_name || '').toLowerCase().includes(q))
+  const qt = [...nameTokens(cleaned)]
+  if (!qt.length) return null
+  const byName = us.find(r => {
+    const nt = nameTokens(r.instrument_name)
+    return qt.every(t => nt.has(t))
+  })
   return byName ? String(byName.symbol).toUpperCase() : null
 }
 

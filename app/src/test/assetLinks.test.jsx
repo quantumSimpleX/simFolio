@@ -139,6 +139,15 @@ describe('matchRows', () => {
   it('matches an entity by company-name prefix (multi-word)', () => {
     expect(matchRows(ROWS, 'Palantir Technologies', 'entity')).toBe('PLTR')
   })
+  it('matches names by token subset — tolerant of &/and, punctuation, and extra words', () => {
+    const rows = [{ symbol: 'ARKQ', instrument_name: 'ARK Autonomous Technology & Robotics ETF', instrument_type: 'ETF', country: 'United States' }]
+    // "and" vs "&"
+    expect(matchRows(rows, 'ARK Autonomous Technology and Robotics ETF', 'entity')).toBe('ARKQ')
+    // query omits a descriptor present in the canonical name
+    expect(matchRows(rows, 'ARK Autonomous Robotics', 'entity')).toBe('ARKQ')
+    // a token not in the name → no match
+    expect(matchRows(rows, 'ARK Genomic Robotics', 'entity')).toBe(null)
+  })
   it('strips a leading $ from the query', () => {
     expect(matchRows(ROWS, '$AMD', 'entity')).toBe('AMD')
   })
