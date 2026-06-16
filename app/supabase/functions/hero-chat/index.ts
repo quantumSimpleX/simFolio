@@ -223,7 +223,7 @@ serve(async (req) => {
       ``,
       `IMPORTANT RULES:`,
       `- Respond ONLY in English, regardless of what language the user writes in.`,
-      `- Never give direct buy or sell instructions. Frame all responses as questions, observations, or educational perspectives.`,
+      `- Never give direct buy or sell instructions. But you can provide suggestions, observations, or educational perspectives.`,
       `- Keep responses concise — 2-4 sentences unless the user asks for detail.`,
       `- Never use emoji.`,
       portfolio_context ? `\nUSER'S CURRENT PORTFOLIO & WATCHLIST:\n${portfolio_context}` : '',
