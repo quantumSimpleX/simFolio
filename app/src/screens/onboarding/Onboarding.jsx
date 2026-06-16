@@ -11,11 +11,11 @@ import { cn } from '../../lib/utils';
 const NONE_GOAL = 'None of the above';
 
 const GOAL_CHOICES = [
-  { title: 'Shielding purchasing power from inflation', desc: '' },
-  { title: 'Harnessing exponential compound wealth growth', desc: '' },
-  { title: 'Generating reliable passive dividend income', desc: '' },
-  { title: 'Spreading risk through asset diversification', desc: '' },
-  { title: 'Owning pieces of profitable global corporations', desc: '' },
+  { title: 'Making sure your savings grow as fast as store prices rise so you can still afford the same stuff', desc: '' },
+  { title: 'Your saved money earning extra money, which then earns its own money like a growing snowball', desc: '' },
+  { title: 'Getting regular "thank you" cash payments from a company just for letting them use your money', desc: '' },
+  { title: 'Not putting all your eggs in one basket so if one breaks, you do not lose everything', desc: '' },
+  { title: 'Owning a tiny slice of famous companies like Apple or Disney and sharing in their success', desc: '' },
   { title: NONE_GOAL, desc: '' },
 ];
 
