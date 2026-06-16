@@ -145,14 +145,14 @@ describe('D. TermUnderline desktop rendering', () => {
 // E. TermUnderline mobile + i18n
 // ---------------------------------------------------------------------------
 describe('E. TermUnderline mobile + i18n', () => {
-  it('mobile (innerWidth < 768): tapping opens a bottom sheet with EN/繁中 tabs', () => {
+  it('mobile (innerWidth < 768): tapping opens a bottom sheet with US/TW flag tabs', () => {
     const original = window.innerWidth
     window.innerWidth = 375
     try {
       renderWithProviders(<TermUnderline>EPS</TermUnderline>)
       fireEvent.click(screen.getByText('EPS'))
-      expect(screen.getByText('EN')).toBeInTheDocument()
-      expect(screen.getByText('繁中')).toBeInTheDocument()
+      expect(screen.getByLabelText('English')).toBeInTheDocument()
+      expect(screen.getByLabelText('Traditional Chinese')).toBeInTheDocument()
       expect(document.body.textContent).toContain(glossary.eps.en.definition)
     } finally {
       window.innerWidth = original

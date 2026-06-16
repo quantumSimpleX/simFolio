@@ -20,8 +20,8 @@
     "zh-TW":{ "title": "交易手續費 (Transaction Fee)", "definition": "每筆成交的買入或賣出訂單收取固定 $1.00 美元手續費。真實券商也會收費——把手續費納入考量，才能了解交易的真實成本。" }
   },
   "pe_ratio": {
-    "en":   { "title": "P/E Ratio",         "definition": "Price-to-Earnings ratio. How much investors pay for each dollar of a company's profit. A high P/E means investors expect strong future growth." },
-    "zh-TW":{ "title": "本益比 (P/E Ratio)",    "definition": "股價與每股盈餘的比值。顯示投資人為公司每一元利潤願意付出多少倍。本益比越高，代表市場對未來成長的期待越高。" }
+    "en":   { "title": "Price-to-Earnings (P/E) Ratio", "definition": "How much investors pay for each dollar of a company's profit. A high P/E means investors expect strong future growth." },
+    "zh-TW":{ "title": "本益比 (Price-to-Earnings / P/E Ratio)", "definition": "股價與每股盈餘的比值。顯示投資人為公司每一元利潤願意付出多少倍。本益比越高，代表市場對未來成長的期待越高。" }
   },
   "market_cap": {
     "en":   { "title": "Market Cap",        "definition": "The total market value of all a company's shares. Calculated as share price × total shares outstanding." },

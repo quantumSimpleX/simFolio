@@ -296,7 +296,7 @@ export function TermUnderline({ children, termKey }) {
     return <span className={TRIGGER_CLS}>{children}</span>;
   }
 
-  // Mobile: full-width bottom sheet with EN / 繁中 language tabs.
+  // Mobile: full-width bottom sheet with US / TW flag language tabs.
   if (isMobile) {
     return (
       <Sheet>
@@ -306,8 +306,8 @@ export function TermUnderline({ children, termKey }) {
         <SheetContent side="bottom">
           <Tabs defaultValue={lang === 'zh-TW' ? 'zh-TW' : 'en'} className="mt-4">
             <TabsList>
-              <TabsTrigger value="en">EN</TabsTrigger>
-              <TabsTrigger value="zh-TW">繁中</TabsTrigger>
+              <TabsTrigger value="en" aria-label="English"><FlagIcon country="US" size={20}/></TabsTrigger>
+              <TabsTrigger value="zh-TW" aria-label="Traditional Chinese"><FlagIcon country="TW" size={20}/></TabsTrigger>
             </TabsList>
             <TabsContent value="en" className="mt-3"><GlossaryEntry entry={def.en} /></TabsContent>
             <TabsContent value="zh-TW" className="mt-3"><GlossaryEntry entry={def['zh-TW'] || def.en} /></TabsContent>
