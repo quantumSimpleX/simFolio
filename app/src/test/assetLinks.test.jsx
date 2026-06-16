@@ -28,12 +28,10 @@ describe('findAssetSpans — bracketed entities', () => {
     expect(validates('[GH] and [ILMN]').map(s => `${s.vtype}:${s.query}`)).toEqual(['ticker:GH', 'ticker:ILMN'])
   })
 
-  it('does NOT validate a bracketed multi-word company name — renders plain, brackets stripped', () => {
+  it('validates a bracketed multi-word company name as an entity', () => {
     const m = findAssetSpans('Look at [Palantir Technologies] today')
     expect(m).toHaveLength(1)
-    expect(m[0]).toMatchObject({ display: 'Palantir Technologies' })
-    expect(m[0].vtype).toBeUndefined()
-    expect(m[0].ticker).toBeUndefined()
+    expect(m[0]).toMatchObject({ display: 'Palantir Technologies', vtype: 'entity', query: 'Palantir Technologies' })
   })
 
   it('trims whitespace and ignores empty brackets', () => {
@@ -41,13 +39,15 @@ describe('findAssetSpans — bracketed entities', () => {
     expect(findAssetSpans('[ Apple ]')[0]).toMatchObject({ ticker: 'AAPL', display: 'Apple' })
   })
 
-  it('validates only the ticker-shaped brackets in a reply; names render plain', () => {
+  it('validates names as entities and ticker-shaped brackets as tickers', () => {
     const text = 'I like [Illumina] and [Guardant Health], plus [ARK Genomic Revolution ETF] ([ARKG]).'
     const m = findAssetSpans(text)
     // Every bracket becomes a span (brackets stripped from display)…
     expect(m.map(s => s.display)).toEqual(['Illumina', 'Guardant Health', 'ARK Genomic Revolution ETF', 'ARKG'])
-    // …but only the ticker-shaped one is sent for validation.
-    expect(m.filter(s => s.vtype).map(s => `${s.vtype}:${s.query}`)).toEqual(['ticker:ARKG'])
+    // …names resolve via the Markets symbol search; ticker-shaped ones as tickers.
+    expect(m.filter(s => s.vtype).map(s => `${s.vtype}:${s.query}`)).toEqual([
+      'entity:Illumina', 'entity:Guardant Health', 'entity:ARK Genomic Revolution ETF', 'ticker:ARKG',
+    ])
   })
 })
 
@@ -235,13 +235,27 @@ describe('AssetText — live-validated bracketed entities', () => {
     expect(onAssetClick).toHaveBeenCalledWith('PLTR')
   })
 
-  it('renders a bracketed company name as plain text — no link, no validation call', async () => {
+  it('links a bracketed company/fund name once the market search resolves it', async () => {
+    globalThis.fetch = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ data: [{ symbol: 'ARKK', instrument_name: 'ARK Innovation ETF', instrument_type: 'ETF', country: 'United States' }] }),
+    }))
+    const onAssetClick = vi.fn()
+    wrap(<AssetText text="the [ARK Innovation ETF] today" onAssetClick={onAssetClick} />)
+    const link = await screen.findByText('ARK Innovation ETF')
+    await waitFor(() => expect(link).toHaveAttribute('data-ticker', 'ARKK'))
+    expect(screen.queryByText(/\[/)).not.toBeInTheDocument()
+    fireEvent.click(link)
+    expect(onAssetClick).toHaveBeenCalledWith('ARKK')
+  })
+
+  it('renders a bracketed name as plain text (brackets stripped) when it does not resolve', async () => {
     globalThis.fetch = vi.fn(async () => ({ ok: true, json: async () => ({ data: [] }) }))
     wrap(<AssetText text="the [whole market] today" onAssetClick={vi.fn()} />)
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled())
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
     expect(screen.queryByText(/\[/)).not.toBeInTheDocument()
     expect(screen.getByText(/whole market/)).toBeInTheDocument()
-    expect(globalThis.fetch).not.toHaveBeenCalled()   // names are never fuzzy-searched
   })
 })
 

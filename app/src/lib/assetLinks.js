@@ -12,7 +12,8 @@
 //     holdings/watchlist, or an explicit known cashtag). Links immediately.
 //   • VALIDATE — a bracketed entity (or unknown cashtag) whose ticker must be
 //     confirmed against live market data before linking. The whole bracketed
-//     string is searched as one unit, so multi-word names just work.
+//     string is searched as one unit, so multi-word names (e.g. "ARK Innovation
+//     ETF") resolve via the Markets symbol search and link if found.
 
 // Curated registry of well-known assets: ticker -> recognizable names/aliases.
 // Fast path only — anything else still resolves via live validation.
@@ -120,10 +121,12 @@ export function findAssetSpans(text, { knownTickers = [] } = {}) {
     const known = fastResolve(inner, tickerMap)
     if (known) cand.push({ ...span, ticker: known })            // registry / owned — free
     else if (looksLikeTicker(inner)) cand.push({ ...span, vtype: 'ticker', query: inner })
-    // Otherwise it's a company name with no ticker: strip the brackets and render
-    // it as plain text. We deliberately do NOT fuzzy-search names against market
-    // data — only ticker-shaped mentions are validated (one cheap exact lookup).
-    else cand.push({ ...span })
+    // Otherwise it's a multi-word company / fund name with no ticker (e.g.
+    // "ARK Innovation ETF"). The LLM identified it as a tradable asset, so we
+    // confirm it against the Markets symbol search and link it if it resolves.
+    // (A "Name (TICKER)" pair is collapsed server-side to bracket only the
+    // ticker, so a lone bracketed name here means no ticker was given.)
+    else cand.push({ ...span, vtype: 'entity', query: inner })
   }
 
   const inBracket = (s, e) => brackets.some(([bs, be]) => s < be && e > bs)
