@@ -268,7 +268,7 @@ function GlossaryEntry({ entry }) {
   return (
     <>
       <span className="mb-1 block font-sans text-xs font-bold text-ink-900">{entry.title}</span>
-      <span className="block font-sans text-xs leading-relaxed text-ink-600">{entry.definition}</span>
+      <span className="block font-sans text-xs font-normal leading-relaxed text-ink-600">{entry.definition}</span>
     </>
   );
 }
