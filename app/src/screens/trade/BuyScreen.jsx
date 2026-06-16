@@ -94,19 +94,11 @@ export default function BuyScreen() {
       </div>
 
       <div>
-        <div className="mb-2 font-sans text-[13px] text-ink-500"><TermUnderline termKey="market_order">Order type</TermUnderline></div>
+        <div className="mb-2 font-sans text-[13px] text-ink-500">Order type</div>
         <div className="flex gap-2.5">
           <OrderTypeCard label="Market order" desc={canExec ? 'Execute now at current price' : 'Execute at next market open'} active={orderType==='MARKET'} onClick={() => setOrderType('MARKET')}/>
           <OrderTypeCard label="Limit order" desc="Only fill if price reaches your target" active={orderType==='LIMIT'} onClick={() => setOrderType('LIMIT')}/>
         </div>
-        {orderType === 'MARKET' && (
-          <div className="mt-2.5 flex gap-2">
-            <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-pill border border-aqua-400/40 bg-aqua-50 text-[11px] text-aqua-400">◇</div>
-            <div className="font-sans text-xs italic leading-relaxed text-ink-500">
-              A <TermUnderline>market order</TermUnderline> fills immediately. The final price may vary slightly (<TermUnderline>slippage</TermUnderline>).
-            </div>
-          </div>
-        )}
         {orderType === 'LIMIT' && (
           <div className="mt-2 grid grid-cols-2 items-center gap-2.5">
             <input
@@ -305,7 +297,7 @@ export function TifToggle({ tif, setTif }) {
 export function OrderTypeCard({ label, desc, active, onClick }) {
   return (
     <div onClick={onClick} className={cn('flex-1 cursor-pointer rounded-input px-3.5 py-3', active ? 'border-2 border-ame-400 bg-ame-50' : 'border border-ink-100 bg-white')}>
-      <div className={cn('mb-[3px] font-sans text-sm', active ? 'font-bold text-ame-600' : 'font-medium text-ink-700')}>{label}</div>
+      <div className={cn('mb-[3px] font-sans text-sm', active ? 'font-bold text-ame-600' : 'font-medium text-ink-700')}><TermUnderline>{label}</TermUnderline></div>
       <div className={cn('font-sans text-xs leading-snug', active ? 'text-ame-400' : 'text-ink-400')}>{desc}</div>
     </div>
   )
