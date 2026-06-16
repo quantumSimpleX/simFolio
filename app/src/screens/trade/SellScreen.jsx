@@ -9,7 +9,7 @@ import { usePlaceOrder } from '../../hooks/usePlaceOrder'
 import { useStockDetail, useCandles } from '../../hooks/useStockDetail'
 import { ChartPanel, RangeButtons } from '../../components/Charts'
 import { TRANSACTION_FEE } from '../../lib/fees'
-import { OrderTypeCard, TifToggle } from './BuyScreen'
+import { OrderTypeCard, TifToggle, QtyInputBlock } from './BuyScreen'
 
 function detectAssetType(ticker) {
   const crypto = ['BTC','ETH','SOL','DOGE','XRP','ADA','AVAX']
@@ -72,8 +72,6 @@ export default function SellScreen() {
     )
   }
 
-  const qtyChoices = Array.from({ length: Math.min(maxQty, 5) }, (_, i) => i + 1)
-
   const sellCTAs = (
     <div className="flex flex-col gap-2.5">
       <div onClick={!isPending ? handleSell : undefined} className={cn('flex h-12 items-center justify-center rounded-input bg-red font-sans text-[15px] font-semibold text-white', isPending ? 'cursor-default opacity-60' : 'cursor-pointer')}>
@@ -120,20 +118,7 @@ export default function SellScreen() {
 
       <div>
         <div className="mb-2 font-sans text-[13px] text-ink-500">Shares to sell (of {maxQty})</div>
-        <div className="flex h-14 items-center justify-between rounded-input border-[1.5px] border-red bg-white px-4">
-          <div className="font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-red">Shares</div>
-          <div className="font-display text-[28px] font-bold tracking-[-0.02em] text-ink-900">{qty}</div>
-        </div>
-        <div className="mt-2 flex gap-2">
-          {qtyChoices.map(n => (
-            <div key={n} onClick={() => setQty(n)} className={cn('flex h-9 flex-1 cursor-pointer items-center justify-center rounded-input border font-sans text-[13px]', qty===n ? 'border-red bg-redBg font-semibold text-red' : 'border-ink-100 bg-white font-normal text-ink-500')}>
-              {n === maxQty ? `All ${n}` : n}
-            </div>
-          ))}
-          {maxQty > 5 && (
-            <div onClick={() => setQty(maxQty)} className={cn('flex h-9 flex-1 cursor-pointer items-center justify-center rounded-input border font-sans text-[13px]', qty===maxQty ? 'border-red bg-redBg font-semibold text-red' : 'border-ink-100 bg-white font-normal text-ink-500')}>All</div>
-          )}
-        </div>
+        <QtyInputBlock qty={qty} setQty={setQty} price={price} accent="red" max={maxQty}/>
       </div>
 
       <div>

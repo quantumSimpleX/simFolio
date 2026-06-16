@@ -5,9 +5,15 @@ const MOMCAKE = "'MOMCAKE', 'Helvetica Neue', system-ui, sans-serif";
 const BOURBON = "'Bourbon Grotesque', 'MOMCAKE', 'Helvetica Neue', system-ui, sans-serif";
 
 export default function QSWordmark({ onDark = false, size = 44 }) {
-  const outerColor = onDark ? '#FFFFFF' : '#0A0E14';
-  const innerColor = onDark ? '#0A0E14' : '#FFFFFF';
-  const textColor = onDark ? '#FFFFFF' : '#0A0E14';
+  // Colors track the theme via CSS variables so the mark always shows the
+  // opposite color of its surface (dark on light mode, light on dark mode).
+  // `onDark` picks the pair for the dark brand panel (sits on --ink-900) vs.
+  // the --paper surface; both --paper and --ink-900 flip with [data-theme].
+  const fg = onDark ? 'var(--paper)' : 'var(--ink-900)';
+  const bg = onDark ? 'var(--ink-900)' : 'var(--paper)';
+  const outerColor = fg;
+  const innerColor = bg;
+  const textColor = fg;
   const fontSize = size * 0.5;
 
   return (

@@ -217,12 +217,15 @@ function MarketClosedBanner() {
   )
 }
 
-function QtyInputBlock({ qty, setQty, price }) {
-  // Shares (qty) stays the source of truth in the parent. The dollar field shows
-  // shares × price, except while it's being edited — then it shows the user's
-  // draft and we compute the shares that amount buys. `amountDraft` is non-null
-  // only during editing, so no effect/sync is needed.
+// Tied Shares + Amount($) inputs. Shares (qty) stays the source of truth in the
+// parent; the dollar field shows shares × price, except while it's being edited —
+// then it shows the user's draft and we compute the shares that amount buys.
+// `accent` themes it ('ame' for buy, 'red' for sell); `max` caps the quantity
+// (e.g. shares owned when selling).
+export function QtyInputBlock({ qty, setQty, price, accent = 'ame', max = null }) {
   const [amountDraft, setAmountDraft] = useState(null)
+
+  const clamp = v => (max != null ? Math.min(v, max) : v)
 
   const derivedAmount = (parseFloat(qty) || 0) * price
   const amountValue = amountDraft !== null
@@ -231,7 +234,7 @@ function QtyInputBlock({ qty, setQty, price }) {
 
   function onSharesChange(e) {
     const v = parseFloat(e.target.value)
-    if (!isNaN(v) && v > 0) setQty(v)
+    if (!isNaN(v) && v > 0) setQty(clamp(v))
     else if (e.target.value === '') setQty('')
   }
 
@@ -239,12 +242,17 @@ function QtyInputBlock({ qty, setQty, price }) {
     const raw = e.target.value
     setAmountDraft(raw)
     const amt = parseFloat(raw)
-    if (!isNaN(amt) && amt > 0 && price > 0) setQty(Math.round((amt / price) * 100) / 100)
+    if (!isNaN(amt) && amt > 0 && price > 0) setQty(clamp(Math.round((amt / price) * 100) / 100))
     else if (raw === '') setQty('')
   }
 
-  const fieldClass = 'flex h-14 min-w-0 flex-1 items-center justify-between rounded-input border-[1.5px] border-ame-400 bg-white px-4 [box-shadow:0_0_0_3px_color-mix(in_srgb,var(--ame-400)_10%,transparent)]'
-  const labelClass = 'flex-shrink-0 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-ame-400'
+  const fieldClass = cn(
+    'flex h-14 min-w-0 flex-1 items-center justify-between rounded-input border-[1.5px] bg-white px-4',
+    accent === 'red'
+      ? 'border-red [box-shadow:0_0_0_3px_color-mix(in_srgb,var(--red)_10%,transparent)]'
+      : 'border-ame-400 [box-shadow:0_0_0_3px_color-mix(in_srgb,var(--ame-400)_10%,transparent)]',
+  )
+  const labelClass = cn('flex-shrink-0 font-sans text-[11px] font-semibold uppercase tracking-[0.14em]', accent === 'red' ? 'text-red' : 'text-ame-400')
   const inputClass = 'w-full min-w-0 border-none bg-transparent text-right font-display text-[24px] font-bold tracking-[-0.02em] text-ink-900 outline-none'
 
   return (
@@ -255,6 +263,7 @@ function QtyInputBlock({ qty, setQty, price }) {
           type="number"
           min="0.01"
           step="0.01"
+          max={max ?? undefined}
           value={qty}
           onFocus={e => e.target.select()}
           onChange={onSharesChange}
