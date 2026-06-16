@@ -368,7 +368,7 @@ function MultiGoalPicker({ choices, value, onChange }) {
             key={title}
             onClick={() => toggle(title)}
             className={cn(
-              'rounded-card border-[1.5px] px-4 py-3.5',
+              'rounded-card border-[1.5px] px-4 py-1.5',
               checked ? 'border-ame-400 bg-ame-50' : 'border-ink-200 bg-white',
               disabled ? 'pointer-events-none cursor-default opacity-40' : 'cursor-pointer',
             )}
@@ -379,7 +379,9 @@ function MultiGoalPicker({ choices, value, onChange }) {
                 checked ? 'border-ame-400 bg-ame-400' : 'border-ink-200 bg-white',
               )}>{checked ? '✓' : ''}</div>
               <div className="font-sans font-semibold text-ink-900" style={{ fontSize: fluid(15, 18) }}>
-                {termKey ? <TermUnderline termKey={termKey}>{title}</TermUnderline> : title}
+                {termKey
+                  ? <span onClick={e => e.stopPropagation()}><TermUnderline termKey={termKey}>{title}</TermUnderline></span>
+                  : title}
               </div>
             </div>
             {desc && (
