@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { CTA, SocialBtn, Divider, Field, NavToggles } from '../../components/Primitives';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { isOnboardingComplete } from '../../lib/onboarding';
 
 export default function SignIn() {
   const navigate = useNavigate();
@@ -16,8 +17,9 @@ export default function SignIn() {
     setError('');
     setLoading(true);
     try {
-      await signIn(email, password);
-      navigate('/portfolio');
+      const data = await signIn(email, password);
+      const complete = await isOnboardingComplete(data.user.id);
+      navigate(complete ? '/portfolio' : '/onboarding');
     } catch (err) {
       setError(err.message);
     } finally {
