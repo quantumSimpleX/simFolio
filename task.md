@@ -487,3 +487,125 @@ wouldn't link (the ticker was buried inside).
   sign-up + sign-in), and the mobile `WelcomeMobile` / `SignUp` / `SignIn` headers. Removed the
   redundant verbose "Tooltip language" rows from `WelcomeDesktop` / `WelcomeMobile` / `SignUp`.
 - **249/249 Vitest pass (100%)**, lint clean, build ✓.
+
+---
+
+## Feature — Enrich Educational Tooltips (`feature/tooltip-glossary`)
+
+Goal: every piece of unfamiliar financial terminology in the UI shows a tooltip (dotted amethyst
+underline → desktop hover / mobile bottom sheet) with a plain-language definition in **English +
+Traditional Chinese**. Acronyms must be spelled out in full in the definition (e.g. "P/E" →
+"Price-to-Earnings Ratio").
+
+Reuse the existing system — do NOT rebuild:
+- `app/src/data/glossary.json` (term store, `{ en, zh-TW }` × `{ title, definition }`)
+- `app/src/components/Primitives.jsx` → `TERM_MAP` (display text → key) + `TermUnderline` component
+
+### T1 — Add new glossary terms to `app/src/data/glossary.json`
+Add the keys below (existing 14 stay untouched). Definitions simple enough for a high-schooler
+with zero finance background; spell out every acronym in full. 繁中 follows house style: Chinese
+title with the English term in parentheses, e.g. `本益比 (P/E Ratio)`.
+
+- [x] T1.1 `eps` — "EPS (Earnings Per Share)": company profit divided by number of shares.
+- [x] T1.2 `beta` — how much a stock moves vs. the overall market (1=with market, >1=swings more).
+- [x] T1.3 `volume` — number of shares traded in a period (e.g. today).
+- [x] T1.4 `avg_volume` — "Average Volume": typical shares traded per day recently; a baseline.
+- [x] T1.5 `exchange` — the marketplace where a stock is bought and sold (NASDAQ, NYSE).
+- [x] T1.6 `52w_range` — "52-Week Range": lowest and highest price over the past year.
+- [x] T1.7 `shares` — units of ownership in a company; one share = one small slice.
+- [x] T1.8 `ticker` — "Ticker Symbol": the short letter code for a stock (e.g. AAPL).
+- [x] T1.9 `position` — a stock you currently own; the shares you hold in one company.
+- [x] T1.10 `holdings` — all the stocks and investments you currently own.
+- [x] T1.11 `bid_ask_spread` — "Bid-Ask Spread": gap between top buyer price and lowest seller price.
+- [x] T1.12 `gross_cost` — total price of your purchase before fees.
+- [x] T1.13 `gross_proceeds` — total money from your sale before fees.
+- [x] T1.14 `net_proceeds` — money actually added/removed from your cash after fees.
+- [x] T1.15 `execution_price` — the actual price per share your order filled at.
+- [x] T1.16 `time_in_force` — how long your order stays active before it expires/cancels.
+- [x] T1.17 `gtc_order` — "GTC (Good-Till-Cancelled)": order stays open until filled or cancelled.
+- [x] T1.18 `day_order` — "Day Order": expires at the end of the trading day if not filled.
+- [x] T1.19 `crypto` — "Cryptocurrency": digital money (e.g. Bitcoin) that trades like a stock.
+- [x] T1.20 `index` — "Market Index": a scoreboard tracking a group of stocks (S&P 500, NASDAQ, DOW).
+- [x] T1.21 `watchlist` — a saved list of stocks you watch without owning them.
+- [x] T1.22 `dividend` — a cash payment a company shares with shareholders from its profits.
+
+### T2 — Extend `TERM_MAP` in `app/src/components/Primitives.jsx`
+- [x] T2.1 Add aliases so on-screen labels resolve: `'p/e'→pe_ratio`, `'eps'→eps`, `'beta'→beta`,
+  `'β'→beta`, `'div yield'→dividend_yield`, `'volume'→volume`, `'avg volume'→avg_volume`,
+  `'exchange'→exchange`, `'52w range'→52w_range`, `'shares'→shares`, `'shares to sell'→shares`,
+  `'ticker'→ticker`, `'positions'→position`, `'your position'→position`, `'holdings'→holdings`,
+  `'bid-ask spread'→bid_ask_spread`, `'gross cost'→gross_cost`, `'gross proceeds'→gross_proceeds`,
+  `'net to cash'→net_proceeds`, `'net deducted'→net_proceeds`, `'total deducted'→net_proceeds`,
+  `'executed at'→execution_price`, `'execution price'→execution_price`,
+  `'time in force'→time_in_force`, `'gtc'→gtc_order`, `'day'→day_order`, `'crypto'→crypto`,
+  `'major indices'→index`, `'watchlist'→watchlist`, `'watching'→watchlist`.
+- [x] T2.2 Verify the punctuation-stripped fallback doesn't mis-resolve; pass explicit `termKey`
+  at a call site only where the visible label is ambiguous.
+
+### T3 — Wire UI labels (wrap label text only; never wrap numeric values; no layout refactor)
+- [x] T3.1 `components/Fundamentals.jsx` — wrap inline "P/E", "EPS", "β" labels; confirm `·`-layout.
+- [x] T3.2 `screens/markets/StockDetail.jsx` — labels already wrapped; verify they light up via map.
+- [x] T3.3 `screens/markets/Markets.jsx` — wrap "Major indices", "Watchlist" headers.
+- [x] T3.4 `screens/trade/BuyScreen.jsx` — wrap "Order type", "Order summary", "Shares", TIF/GTC/DAY.
+- [x] T3.5 `screens/trade/SellScreen.jsx` — wrap "Shares to sell", "Order type".
+- [x] T3.6 `screens/trade/TradeReceipt.jsx` — wrap "Gross proceeds"/"Gross cost", "Bid-ask spread",
+  "Executed at", "Net to cash"/"Net deducted".
+- [x] T3.7 `components/FilledRow.jsx` — wrap "Execution price", "Gross cost"/"Gross proceeds",
+  "Total deducted"/"Net to cash".
+- [x] T3.8 `components/OrderCard.jsx` — wrap "Limit price".
+- [x] T3.9 `components/PositionCard.jsx` & `HoldingRow.jsx` — wrap "Your position" and "shares".
+- [x] T3.10 `screens/portfolio/PortfolioMobile.jsx` & `PortfolioDesktop.jsx` — wrap "Holdings",
+  "Positions" stat labels.
+
+### T4 — Verification
+- [ ] T4.1 `cd app && npm run lint` — no new errors.
+- [ ] T4.2 `cd app && npm run test` — all suites green.
+- [ ] T4.3 `cd app && npm run test:coverage` — touched files ≥ 80% line coverage.
+
+### QA findings — tooltip glossary
+QA built `app/src/test/glossary.test.jsx` (cases A–F, data-driven over all 36 keys) and ran the
+full suite + coverage.
+
+**No implementation bugs found.** The DEV glossary/TERM_MAP/TermUnderline work passed every
+new test (158 sub-tests via `it.each`, 0 failures).
+
+Test-only breakages (fixed by QA, not DEV bugs — caused by the new `<TermUnderline>` wrapping
+splitting previously-contiguous text nodes):
+- `src/test/components.test.jsx` "renders market cap, P/E, EPS, beta": asserted `getByText('P/E:')`
+  — the `:` is now a sibling of the wrapped `P/E` label. Changed to `getByText('P/E')`.
+- `src/test/components.test.jsx` "HoldingRow formats shares and percent": asserted `getByText('5 shares')`
+  — `shares` is now a TermUnderline trigger span. Changed to a normalised `container.textContent` match.
+
+Pre-existing failures (now FIXED): `src/test/onboarding.flow.test.jsx` — 4 tests asserted the old
+goal-card text `'Shielding purchasing power from inflation'`. That copy was rewritten to plain
+language in an earlier commit this session, so the test's `goalTitle` constant was stale. Updated
+it to the new label text. Suite now **407/407 pass (100%)**.
+
+### Status / results — dev
+- **T1** — added 22 glossary keys to `app/src/data/glossary.json` (now 36 total, valid JSON):
+  `eps, beta, volume, avg_volume, exchange, 52w_range, shares, ticker, position, holdings,
+  bid_ask_spread, gross_cost, gross_proceeds, net_proceeds, execution_price, time_in_force,
+  gtc_order, day_order, crypto, index, watchlist, dividend`. Each has EN + zh-TW (genuine
+  Traditional Chinese, house style with English term in parens); all acronyms spelled out.
+- **T2** — extended `TERM_MAP` in `Primitives.jsx` with all listed aliases. Verified the
+  punctuation-stripped fallback doesn't mis-resolve (`'p/e'`, `'β'`, `'div yield'` all match
+  via exact lowercased key, tried before the stripped fallback).
+- **T3** — wired labels (label text only, never values; no layout refactor):
+  - `components/Fundamentals.jsx` — wrapped inline `P/E`/`EPS`/`β` labels (added import).
+  - `screens/markets/StockDetail.jsx` — already-wrapped grid labels now resolve via map (no JSX edit).
+  - `screens/markets/Markets.jsx` — wrapped `Major indices`, `Watchlist` headers (added import).
+  - `screens/trade/BuyScreen.jsx` — `Order type`→termKey market_order, `Shares` (QtyInputBlock),
+    `Good until`→termKey time_in_force. Left `Order summary` plain (no matching key); left the
+    GTC/DAY chips unwrapped to avoid hijacking their onClick / mobile sheet-trigger.
+  - `screens/trade/SellScreen.jsx` — `Shares to sell`→termKey shares, `Order type`→market_order.
+  - `screens/trade/TradeReceipt.jsx` — `Executed at`, `Gross proceeds`, `Gross cost`, `Net to cash`,
+    `Net deducted` (Bid-ask spread / Slippage already wrapped).
+  - `components/FilledRow.jsx` — `Execution price`, `Gross cost`/`Gross proceeds`, `Total deducted`/
+    `Net to cash`, `Transaction fee`, `Limit price`→termKey limit_order (added import).
+  - `components/OrderCard.jsx` — `Limit price`→termKey limit_order.
+  - `components/PositionCard.jsx` — `Your position` (added import).
+  - `components/HoldingRow.jsx` — `shares` (added import).
+  - `screens/portfolio/PortfolioMobile.jsx` — `Holdings` + `Positions` stat label→termKey position.
+  - `screens/portfolio/PortfolioDesktop.jsx` — `Holdings`.
+- **Lint:** `npm run lint` shows only the pre-existing `HeroChatPanel.jsx:10` react-refresh error
+  (out of scope, predates this feature). No new lint errors introduced.

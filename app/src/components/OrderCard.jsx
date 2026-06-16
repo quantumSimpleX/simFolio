@@ -26,9 +26,9 @@ export default function OrderCard({ order, onCancel }) {
 
       {isLimit && order.limit_price && (
         <div className="flex overflow-hidden rounded-input bg-ink-50">
-          {[['Limit price', `$${parseFloat(order.limit_price).toFixed(2)}`], ['Executes when', `${order.ticker} ≤ $${parseFloat(order.limit_price).toFixed(2)}`]].map(([l, v], i) => (
+          {[['Limit price', `$${parseFloat(order.limit_price).toFixed(2)}`, 'limit_order'], ['Executes when', `${order.ticker} ≤ $${parseFloat(order.limit_price).toFixed(2)}`, null]].map(([l, v, key], i) => (
             <div key={l} className={`flex-1 px-3 py-2 ${i === 0 ? 'border-r border-ink-100' : ''}`}>
-              <div className="mb-0.5 font-sans text-[11px] text-ink-400">{l}</div>
+              <div className="mb-0.5 font-sans text-[11px] text-ink-400">{key ? <TermUnderline termKey={key}>{l}</TermUnderline> : l}</div>
               <div className="font-sans text-sm font-bold text-ink-900">{v}</div>
             </div>
           ))}

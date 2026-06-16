@@ -117,12 +117,12 @@ export default function SellScreen() {
       </div>
 
       <div>
-        <div className="mb-2 font-sans text-[13px] text-ink-500">Shares to sell (of {maxQty})</div>
+        <div className="mb-2 font-sans text-[13px] text-ink-500"><TermUnderline termKey="shares">Shares to sell</TermUnderline> (of {maxQty})</div>
         <QtyInputBlock qty={qty} setQty={setQty} price={price} accent="red" max={maxQty}/>
       </div>
 
       <div>
-        <div className="mb-2 font-sans text-[13px] text-ink-500">Order type</div>
+        <div className="mb-2 font-sans text-[13px] text-ink-500"><TermUnderline termKey="market_order">Order type</TermUnderline></div>
         <div className="flex gap-2.5">
           <OrderTypeCard label="Market order" desc="Sell now at current price" active={orderType==='MARKET'} onClick={() => setOrderType('MARKET')}/>
           <OrderTypeCard label="Limit order" desc="Only fill if price reaches your target" active={orderType==='LIMIT'} onClick={() => setOrderType('LIMIT')}/>

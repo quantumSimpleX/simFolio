@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '../../lib/utils'
-import { Eyebrow, MktStatus } from '../../components/Primitives'
+import { Eyebrow, MktStatus, TermUnderline } from '../../components/Primitives'
 import { WatchRow } from '../../components/WatchRow'
 import { SearchResultRow } from '../../components/SearchResultRow'
 import { AppShell } from '../../components/AppShell'
@@ -95,7 +95,7 @@ export default function Markets() {
       </div>
 
       {/* Indices — fluid grid */}
-      <div className="mb-2"><Eyebrow>Major indices</Eyebrow></div>
+      <div className="mb-2"><Eyebrow><TermUnderline>Major indices</TermUnderline></Eyebrow></div>
       <div className="mb-7 grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
         {INDEX_SYMBOLS.map(sym => {
           const q = quoteMap[sym]
@@ -114,7 +114,7 @@ export default function Markets() {
       </div>
 
       {/* Watchlist — single column on mobile, two columns on wider screens */}
-      <div className="mb-1"><Eyebrow>Watchlist</Eyebrow></div>
+      <div className="mb-1"><Eyebrow><TermUnderline>Watchlist</TermUnderline></Eyebrow></div>
       {watchlist.length === 0 ? (
         <div className="py-5 font-sans text-sm text-ink-400">
           Search above to add stocks to your watchlist.

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { StatusPill } from './Primitives'
+import { StatusPill, TermUnderline } from './Primitives'
 import { Card } from './ui/card'
 import { cn } from '../lib/utils'
 
@@ -59,13 +59,13 @@ export default function FilledRow({ order, dimmed }) {
           <DetailRow label="Order type" value={order.type === 'LIMIT' ? 'Limit order' : 'Market order'}/>
           <DetailRow label="Side" value={isBuy ? 'Buy' : 'Sell'}/>
           <DetailRow label="Filled quantity" value={`${parseFloat(exec.filled_qty)} shares`}/>
-          <DetailRow label="Execution price" value={`$${execPrice.toFixed(4)} / share`}/>
+          <DetailRow label={<TermUnderline>Execution price</TermUnderline>} value={`$${execPrice.toFixed(4)} / share`}/>
           {order.type === 'LIMIT' && order.limit_price && (
-            <DetailRow label="Limit price" value={`$${parseFloat(order.limit_price).toFixed(2)}`}/>
+            <DetailRow label={<TermUnderline termKey="limit_order">Limit price</TermUnderline>} value={`$${parseFloat(order.limit_price).toFixed(2)}`}/>
           )}
-          <DetailRow label={isBuy ? 'Gross cost' : 'Gross proceeds'} value={`$${gross.toFixed(2)}`}/>
-          {fee != null && <DetailRow label="Transaction fee" value={`${isBuy ? '+' : '−'}$${fee.toFixed(2)}`}/>}
-          {net != null && <DetailRow label={isBuy ? 'Total deducted' : 'Net to cash'} value={`$${net.toFixed(2)}`} bold/>}
+          <DetailRow label={<TermUnderline>{isBuy ? 'Gross cost' : 'Gross proceeds'}</TermUnderline>} value={`$${gross.toFixed(2)}`}/>
+          {fee != null && <DetailRow label={<TermUnderline>Transaction fee</TermUnderline>} value={`${isBuy ? '+' : '−'}$${fee.toFixed(2)}`}/>}
+          {net != null && <DetailRow label={<TermUnderline>{isBuy ? 'Total deducted' : 'Net to cash'}</TermUnderline>} value={`$${net.toFixed(2)}`} bold/>}
           <DetailRow label="Placed" value={fmtDate(order.created_at)}/>
           {exec.executed_at && <DetailRow label="Filled" value={fmtDate(exec.executed_at)}/>}
           <div className="px-0 pb-0.5 pt-2 font-mono text-[10px] text-ink-300">ORDER {order.order_id}</div>

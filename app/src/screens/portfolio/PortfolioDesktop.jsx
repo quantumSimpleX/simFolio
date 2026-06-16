@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { cn } from '../../lib/utils';
-import { Eyebrow } from '../../components/Primitives';
+import { Eyebrow, TermUnderline } from '../../components/Primitives';
 import { AppShell } from '../../components/AppShell';
 import { ChartPanel, RangeButtons } from '../../components/Charts';
 import { HoldingRow } from '../../components/HoldingRow';
@@ -65,7 +65,7 @@ export default function PortfolioDesktop() {
 
           <div className="flex-1">
             <div className="mb-1 flex items-center justify-between">
-              <Eyebrow>Holdings</Eyebrow>
+              <Eyebrow><TermUnderline>Holdings</TermUnderline></Eyebrow>
               <div onClick={() => navigate('/markets')} className="flex h-8 cursor-pointer items-center rounded-input border border-ink-100 px-3.5 font-sans text-[13px] text-ame-400">+ Add position</div>
             </div>
             {!loading && displayHoldings.length === 0 ? (

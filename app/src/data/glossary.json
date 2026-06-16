@@ -54,5 +54,93 @@
   "expense_ratio": {
     "en":   { "title": "Expense Ratio",     "definition": "The annual fee an ETF charges, expressed as a percentage of your investment. A 0.03% expense ratio on $1,000 costs you $0.30 per year." },
     "zh-TW":{ "title": "費用率 (Expense Ratio)",  "definition": "ETF每年收取的管理費，以投資金額的百分比表示。0.03%的費用率意味著每投資1,000元，每年費用為0.30元。" }
+  },
+  "eps": {
+    "en":   { "title": "EPS (Earnings Per Share)", "definition": "A company's total profit divided by its number of shares. It shows how much profit belongs to each single share." },
+    "zh-TW":{ "title": "每股盈餘 (EPS, Earnings Per Share)", "definition": "公司的總利潤除以股份總數，顯示每一股能分到多少利潤。" }
+  },
+  "beta": {
+    "en":   { "title": "Beta",              "definition": "How much a stock tends to move compared to the overall market. A beta of 1 means it moves with the market; above 1 means it swings more." },
+    "zh-TW":{ "title": "貝塔值 (Beta)",        "definition": "股票相對於整體市場的波動程度。貝塔值為1代表與市場同步；大於1代表波動更劇烈。" }
+  },
+  "volume": {
+    "en":   { "title": "Volume",            "definition": "The number of shares traded during a period, such as today. High volume means a lot of buying and selling activity." },
+    "zh-TW":{ "title": "成交量 (Volume)",      "definition": "某段期間（例如今天）內成交的股數。成交量高代表買賣交易很活躍。" }
+  },
+  "avg_volume": {
+    "en":   { "title": "Average Volume",    "definition": "The typical number of shares traded per day over a recent period. It gives you a baseline to judge whether today's activity is unusual." },
+    "zh-TW":{ "title": "平均成交量 (Average Volume)", "definition": "近期內每天通常成交的股數，可作為判斷今日交易是否異常的基準。" }
+  },
+  "exchange": {
+    "en":   { "title": "Exchange",          "definition": "The marketplace where a stock is bought and sold, such as NASDAQ or the New York Stock Exchange (NYSE)." },
+    "zh-TW":{ "title": "交易所 (Exchange)",    "definition": "買賣股票的市場，例如那斯達克 (NASDAQ) 或紐約證券交易所 (NYSE)。" }
+  },
+  "52w_range": {
+    "en":   { "title": "52-Week Range",     "definition": "The lowest and highest price the stock has traded over the past year. It shows how far the price has moved." },
+    "zh-TW":{ "title": "52週區間 (52-Week Range)", "definition": "過去一年內該股票成交的最低與最高價格，顯示股價的波動範圍。" }
+  },
+  "shares": {
+    "en":   { "title": "Shares",            "definition": "Units of ownership in a company. One share equals one small slice of that company." },
+    "zh-TW":{ "title": "股份 (Shares)",        "definition": "公司所有權的單位。一股代表公司的一小部分。" }
+  },
+  "ticker": {
+    "en":   { "title": "Ticker Symbol",     "definition": "The short letter code used to identify a stock, for example AAPL for Apple." },
+    "zh-TW":{ "title": "股票代號 (Ticker Symbol)", "definition": "用來辨識股票的簡短字母代碼，例如蘋果公司的 AAPL。" }
+  },
+  "position": {
+    "en":   { "title": "Position",          "definition": "A stock you currently own — the shares you hold in one company." },
+    "zh-TW":{ "title": "持倉 (Position)",      "definition": "您目前持有的股票，也就是您在某一家公司所擁有的股份。" }
+  },
+  "holdings": {
+    "en":   { "title": "Holdings",          "definition": "All the stocks and investments you currently own, taken together." },
+    "zh-TW":{ "title": "持股 (Holdings)",      "definition": "您目前擁有的所有股票與投資的總和。" }
+  },
+  "bid_ask_spread": {
+    "en":   { "title": "Bid-Ask Spread",    "definition": "The gap between the highest price a buyer will pay (bid) and the lowest price a seller will accept (ask)." },
+    "zh-TW":{ "title": "買賣價差 (Bid-Ask Spread)", "definition": "買方願意付的最高價格（買價）與賣方願意接受的最低價格（賣價）之間的差距。" }
+  },
+  "gross_cost": {
+    "en":   { "title": "Gross Cost",        "definition": "The total price of your purchase before any fees are added." },
+    "zh-TW":{ "title": "總成本 (Gross Cost)",  "definition": "您這筆買進在加上任何手續費之前的總價格。" }
+  },
+  "gross_proceeds": {
+    "en":   { "title": "Gross Proceeds",    "definition": "The total amount of money from your sale before any fees are subtracted." },
+    "zh-TW":{ "title": "總收入 (Gross Proceeds)", "definition": "您這筆賣出在扣除任何手續費之前所獲得的總金額。" }
+  },
+  "net_proceeds": {
+    "en":   { "title": "Net Proceeds",      "definition": "The money actually added to or removed from your cash after all fees are counted." },
+    "zh-TW":{ "title": "淨收入 (Net Proceeds)", "definition": "計入所有手續費後，實際進出您現金帳戶的金額。" }
+  },
+  "execution_price": {
+    "en":   { "title": "Execution Price",   "definition": "The actual price per share at which your order was filled." },
+    "zh-TW":{ "title": "成交價格 (Execution Price)", "definition": "您的訂單實際成交時每股的價格。" }
+  },
+  "time_in_force": {
+    "en":   { "title": "Time in Force",     "definition": "How long your order stays active before it expires or is cancelled." },
+    "zh-TW":{ "title": "委託效期 (Time in Force)", "definition": "您的訂單在過期或取消之前會保持有效多久。" }
+  },
+  "gtc_order": {
+    "en":   { "title": "GTC (Good-Till-Cancelled)", "definition": "An order that stays open until it is filled or you cancel it, even across multiple days." },
+    "zh-TW":{ "title": "長效單 (GTC, Good-Till-Cancelled)", "definition": "一種訂單，會一直保持有效直到成交或您主動取消，即使跨越多個交易日。" }
+  },
+  "day_order": {
+    "en":   { "title": "Day Order",         "definition": "An order that expires at the end of the trading day if it has not been filled." },
+    "zh-TW":{ "title": "當日有效單 (Day Order)", "definition": "若當天交易結束前未成交，這種訂單就會自動失效。" }
+  },
+  "crypto": {
+    "en":   { "title": "Cryptocurrency",    "definition": "Digital money, such as Bitcoin, that you can buy and sell much like a stock." },
+    "zh-TW":{ "title": "加密貨幣 (Cryptocurrency)", "definition": "數位貨幣，例如比特幣，可以像股票一樣買進與賣出。" }
+  },
+  "index": {
+    "en":   { "title": "Market Index",      "definition": "A scoreboard that tracks a group of stocks together, such as the S&P 500, NASDAQ, or Dow." },
+    "zh-TW":{ "title": "市場指數 (Market Index)", "definition": "用來追蹤一群股票整體表現的計分板，例如標普500、那斯達克或道瓊指數。" }
+  },
+  "watchlist": {
+    "en":   { "title": "Watchlist",         "definition": "A saved list of stocks you keep an eye on without owning them." },
+    "zh-TW":{ "title": "觀察清單 (Watchlist)", "definition": "您持續關注但尚未持有的股票清單。" }
+  },
+  "dividend": {
+    "en":   { "title": "Dividend",          "definition": "A cash payment a company shares with its shareholders out of its profits." },
+    "zh-TW":{ "title": "股息 (Dividend)",      "definition": "公司從利潤中分配給股東的現金。" }
   }
 }

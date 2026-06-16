@@ -23,7 +23,9 @@ describe('Fundamentals', () => {
     render(<div><Fundamentals q={{ marketCap: 2.5e12, peRatio: 30, eps: 6.1, beta: 1.2 }} /></div>)
     expect(screen.getByText('$2.5T')).toBeInTheDocument()
     expect(screen.getByText('30.0')).toBeInTheDocument()
-    expect(screen.getByText('P/E:')).toBeInTheDocument()
+    // "P/E" label is now wrapped in <TermUnderline>, so the ":" is a sibling
+    // text node — match on the trigger span text instead of the joined string.
+    expect(screen.getByText('P/E')).toBeInTheDocument()
   })
   it('handles missing quote gracefully', () => {
     render(<div data-testid="f"><Fundamentals q={null} /></div>)
@@ -45,8 +47,10 @@ describe('StockRow / HoldingRow', () => {
     expect(onClick).toHaveBeenCalled()
   })
   it('HoldingRow formats shares and percent', () => {
-    wrap(<HoldingRow ticker="NVDA" name="NVIDIA" qty={5} value={1000} pct={12.3} pos={true} />)
-    expect(screen.getByText('5 shares')).toBeInTheDocument()
+    const { container } = wrap(<HoldingRow ticker="NVDA" name="NVIDIA" qty={5} value={1000} pct={12.3} pos={true} />)
+    // "shares" is now a <TermUnderline> trigger, splitting "5 shares" across
+    // nodes — assert on the normalised text content instead.
+    expect(container.textContent.replace(/\s+/g, ' ')).toContain('5 shares')
     expect(screen.getByText('+12.3%')).toBeInTheDocument()
   })
 })

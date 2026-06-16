@@ -84,3 +84,84 @@ links only precise signals: explicit cashtags, registry names, and known/owned t
 
 Discovered issues and their resolution are appended to `task.md` under the "QA findings" sections
 (asset-mention feature, iteration 2, iteration 3).
+
+---
+
+# Unit Test Plan — Enrich Educational Tooltips (`feature/tooltip-glossary`)
+
+Covers the expanded glossary + tooltip wiring: every new financial term has an EN + 繁中 entry,
+each acronym is spelled out in full, and the on-screen labels resolve to a working tooltip
+(desktop hover card / mobile bottom sheet).
+
+- **Target:** ≥ 80% line coverage on touched files (`glossary.json` data, `Primitives.jsx`
+  `TermUnderline`/`TERM_MAP`); overall suite pass rate > 95%.
+- **Test file:** `app/src/test/glossary.test.jsx` (new); extend `app/src/test/primitives.test.jsx`.
+- **Run:** `cd app && npx vitest run src/test/glossary.test.jsx`
+  Coverage: `cd app && npm run test:coverage`
+
+## Units under test
+
+| File | What it does |
+|------|--------------|
+| `data/glossary.json` | Term store; every key has `en` + `zh-TW`, each `{ title, definition }`. |
+| `components/Primitives.jsx` | `TERM_MAP` display→key map; `TermUnderline` render + lookup. |
+
+## Test cases
+
+### A. Glossary data integrity (data-driven loop over ALL keys)
+1. Every glossary key has both `en` and `zh-TW` objects.
+2. Every entry's `title` and `definition` (both languages) are non-empty strings.
+3. No `zh-TW` definition is accidentally identical to its `en` definition (real translation).
+4. The 22 new keys (eps, beta, volume, avg_volume, exchange, 52w_range, shares, ticker, position,
+   holdings, bid_ask_spread, gross_cost, gross_proceeds, net_proceeds, execution_price,
+   time_in_force, gtc_order, day_order, crypto, index, watchlist, dividend) all exist.
+
+### B. Acronyms spelled out in full
+5. `eps` definition/title contains "Earnings Per Share".
+6. `gtc_order` contains "Good-Till-Cancelled".
+7. Existing `pe_ratio` contains "Price-to-Earnings"; `etf` contains "Exchange-Traded Fund";
+   `market_cap` (title or def) covers "Market Cap".
+
+### C. TERM_MAP resolution (parametrized)
+8. Each display label → expected key: "P/E"→pe_ratio, "EPS"→eps, "Beta"→beta, "Volume"→volume,
+   "Avg volume"→avg_volume, "Exchange"→exchange, "52W range"→52w_range, "Div yield"→dividend_yield,
+   "Shares"→shares, "Holdings"→holdings, "Positions"→position.
+9. Every value in `TERM_MAP` points at a key that exists in `glossary.json` (no dangling aliases).
+
+### D. `TermUnderline` rendering (desktop)
+10. Renders a tooltip on hover for each new label ("P/E", "EPS", "Beta", "Volume", "Exchange") —
+    definition text appears (parametrized).
+11. An explicit `termKey` prop overrides display-text lookup.
+12. Unknown/unmapped label still renders plain underline, no crash, no tooltip.
+
+### E. `TermUnderline` mobile + i18n
+13. Mobile (innerWidth < 768): tapping a term opens a bottom sheet with EN / 繁中 tabs.
+14. With `lang='zh-TW'`, the desktop tooltip shows the Chinese definition.
+
+### F. Integration — screens light up
+15. `StockDetail` fundamentals/stats labels ("P/E", "EPS", "Beta", "Volume", "Avg volume",
+    "Exchange") render as underlined trigger spans.
+16. `Fundamentals` inline labels ("P/E", "EPS", "β") render underlined without breaking the
+    `·`-separated layout (renders text nodes around them).
+
+## Results (latest run)
+
+- **Feature file** (`src/test/glossary.test.jsx`): all green — 158 cases pass (cases A–F; the
+  data-integrity + TERM_MAP loops are `it.each`-parametrized over all 36 glossary keys, which is
+  why the count is high). 0 failures.
+- **Full suite**: 403/407 pass. The 4 failures are all in `onboarding.flow.test.jsx` and are
+  **pre-existing / out of scope** — they fail with the DEV tooltip changes stashed (the touched
+  feature did not modify the onboarding goal-card screen). Excluding those, pass rate is
+  **403/403 = 100%** (> 95% target). Raw pass rate 99.0%.
+- **Coverage** (run excluding the pre-existing failing onboarding file so the v8 summary prints):
+  global **80.55% lines** (clears the 80% gate); `Primitives.jsx` **98.41% lines / 96.96% funcs**
+  (`TERM_MAP` + `TermUnderline` fully exercised); `Fundamentals.jsx` 72.72% lines (integration
+  case F covers the label-wrapping path; the uncovered lines are the `fmtMktCap` <$1M branches).
+  `glossary.json` is pure data (not in the JS coverage table) — every key is asserted by the
+  data-driven loop in case A.
+- **Test fixes by QA**: 2 stale assertions in `components.test.jsx` updated for the new
+  `<TermUnderline>`-split text nodes (see task.md). No implementation bugs found.
+- **Lint**: known pre-existing error in `HeroChatPanel.jsx` only (out of scope).
+
+Discovered issues and their resolution are appended to `task.md` under
+"QA findings — tooltip glossary".
