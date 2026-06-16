@@ -100,7 +100,7 @@ export default function BuyScreen() {
           <OrderTypeCard label="Limit order" desc="Only fill if price reaches your target" active={orderType==='LIMIT'} onClick={() => setOrderType('LIMIT')}/>
         </div>
         {orderType === 'LIMIT' && (
-          <div className="mt-2 grid grid-cols-2 items-center gap-2.5">
+          <div className="mt-2 grid grid-cols-1 items-center gap-2.5 md:grid-cols-2">
             <input
               type="number"
               value={limitPrice}
@@ -283,10 +283,10 @@ export function QtyInputBlock({ qty, setQty, price, accent = 'ame', max = null }
 
 export function TifToggle({ tif, setTif }) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <div className="font-sans text-xs text-ink-400"><TermUnderline termKey="time_in_force">Good until</TermUnderline></div>
+    <div className="flex flex-nowrap items-center gap-2">
+      <div className="whitespace-nowrap font-sans text-xs text-ink-400"><TermUnderline termKey="time_in_force">Good until</TermUnderline></div>
       {[['GTC','Cancelled'], ['DAY','End of day']].map(([val, label]) => (
-        <div key={val} onClick={() => setTif(val)} className={cn('cursor-pointer select-none rounded-pill border px-2.5 py-[3px] font-sans text-xs', tif===val ? 'border-ame-400 bg-ame-50 font-semibold text-ame-600' : 'border-ink-100 bg-white font-normal text-ink-500')}>
+        <div key={val} onClick={() => setTif(val)} className={cn('shrink-0 cursor-pointer select-none whitespace-nowrap rounded-pill border px-2.5 py-[3px] font-sans text-xs', tif===val ? 'border-ame-400 bg-ame-50 font-semibold text-ame-600' : 'border-ink-100 bg-white font-normal text-ink-500')}>
           {label}
         </div>
       ))}

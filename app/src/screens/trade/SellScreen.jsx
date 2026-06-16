@@ -128,7 +128,7 @@ export default function SellScreen() {
           <OrderTypeCard label="Limit order" desc="Only fill if price reaches your target" active={orderType==='LIMIT'} onClick={() => setOrderType('LIMIT')}/>
         </div>
         {orderType === 'LIMIT' && (
-          <div className="mt-2 grid grid-cols-2 items-center gap-2.5">
+          <div className="mt-2 grid grid-cols-1 items-center gap-2.5 md:grid-cols-2">
             <input
               type="number"
               value={limitPrice}
