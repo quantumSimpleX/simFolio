@@ -33,16 +33,19 @@ function escapeRegExp(s: string): string {
 async function extractAssets(reply: string, apiKey: string): Promise<string[]> {
   const sys = [
     `You are a financial market data analyst with exhaustive knowledge of every single tradable financial asset in the world — every public company, stock, ETF, fund, and cryptocurrency, across every exchange. If an asset exists anywhere in the markets, you know it.`,
-    `From the text below, list EVERY mention of a publicly traded company, stock, ETF, or cryptocurrency — whether referred to by company name OR by ticker symbol.`,
+    `From the text below, list EVERY mention of a publicly traded company, stock, ETF, fund, or cryptocurrency — whether referred to by company name OR by ticker symbol.`,
     `Be exhaustive: scan the entire text and include every distinct mention, even when several appear in one sentence. Missing one is a failure.`,
+    `CRITICAL — ETFs and funds count as assets and are MISSED most often. Any phrase that names an ETF, fund, trust, or index product is an asset and MUST be included in full. Treat these as decisive signals:`,
+    `  • The phrase ends with or contains "ETF", "Fund", "Trust", "Index Fund", or "Index" (e.g. "ARK Innovation ETF", "SPDR Gold Trust", "Vanguard Total Bond Market Index Fund").`,
+    `  • The phrase begins with a known fund-family name: ARK, iShares, Vanguard, SPDR, Invesco, Schwab, ProShares, Fidelity, State Street, WisdomTree, Direxion, VanEck, Global X, First Trust.`,
+    `  When you see one of these, capture the COMPLETE name as ONE entry (e.g. "ARK Innovation ETF", not "ARK" or "Innovation"). Descriptive words like Innovation, Growth, Technology, Total, Genomic are part of the fund's name — never drop them and never dismiss them as a theme.`,
     `HINT: text wrapped in double asterisks (**like this**) is very likely a company, stock, ETF, or crypto — inspect every ** segment and include the asset it names. Return the name/ticker WITHOUT the surrounding asterisks.`,
-    `HINT: when something is a fund or ETF, the words immediately surrounding it are usually part of its full name (e.g. "the iShares Russell 2000 ETF", "Vanguard Total Bond Market Index Fund"). Capture the complete fund/ETF name as a single entry, not just one word of it.`,
-    `Return ONLY a JSON array of strings. Each entry must be a SINGLE company name OR a SINGLE ticker symbol — never combine them, and never include surrounding punctuation or parentheses. When a name and its ticker appear together (e.g. "Illumina (ILMN)" or inside **bold**), return TWO separate entries: the name, and the ticker. Copy each verbatim (same spelling and capitalization).`,
-    `Do NOT include sectors, investment themes, market indexes referred to as concepts, people's names, or generic financial terms. Ignore any text already wrapped in square brackets [ ].`,
+    `Return ONLY a JSON array of strings. Each entry must be a SINGLE company/fund name OR a SINGLE ticker symbol — never combine them, and never include surrounding punctuation or parentheses. When a name and its ticker appear together (e.g. "ARK Innovation ETF (ARKK)" or inside **bold**), return TWO separate entries: the full name, and the ticker. Copy each verbatim (same spelling and capitalization).`,
+    `Do NOT include broad sectors, vague investment themes, market indexes referred to only as a concept, people's names, or generic financial terms. (But a named index PRODUCT/fund, per the rules above, IS an asset.) Ignore any text already wrapped in square brackets [ ].`,
     `If there are none, return []. Output only the JSON array — no prose, no markdown, no code fences.`,
     ``,
-    `Example text: "I hold **Apple (AAPL)** and Microsoft, and like the Vanguard S&P 500 ETF (VOO); avoid meme stocks."`,
-    `Example output: ["Apple","AAPL","Microsoft","Vanguard S&P 500 ETF","VOO"]`,
+    `Example text: "I hold **Apple (AAPL)** and Microsoft, like the ARK Innovation ETF and the Vanguard S&P 500 ETF (VOO); avoid meme stocks."`,
+    `Example output: ["Apple","AAPL","Microsoft","ARK Innovation ETF","Vanguard S&P 500 ETF","VOO"]`,
   ].join('\n')
 
   const res = await callLLMWithFallback<string[]>({
