@@ -136,7 +136,7 @@ export default function SellScreen() {
               placeholder={`Min price (current: $${price.toFixed(2)})`}
               className="box-border h-11 min-w-0 flex-1 rounded-input border border-ame-400 bg-white px-3.5 font-sans text-sm text-ink-900 outline-none"
             />
-            <div className="shrink-0"><TifToggle tif={tif} setTif={setTif}/></div>
+            <div className="min-w-0 flex-1"><TifToggle tif={tif} setTif={setTif}/></div>
           </div>
         )}
       </div>
