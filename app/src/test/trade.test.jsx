@@ -51,17 +51,38 @@ describe('SellScreen with a position', () => {
 })
 
 describe('BuyScreen interactions', () => {
-  it('limit buy with GTC default sends limit_price and time_in_force', async () => {
+  it('limit buy sends limit_price and the selected time_in_force', async () => {
     renderWithProviders(<BuyScreen/>, { route: '/buy/AAPL', path: '/buy/:ticker' })
     fireEvent.click((await screen.findAllByText('Limit order'))[0])
     const limitInput = await screen.findByPlaceholderText(/Max price/i)
     fireEvent.change(limitInput, { target: { value: '120' } })
-    expect(screen.getByText('GTC')).toBeInTheDocument() // GTC option visible
+    fireEvent.click(screen.getByText('GTC')) // TIF must be chosen for a limit order
 
     fireEvent.click(screen.getByText(/Queue order|Buy 1 AAPL/))
     await waitFor(() => expect(supabase.functions.invoke).toHaveBeenCalled())
     const [, { body }] = supabase.functions.invoke.mock.calls.at(-1)
     expect(body).toMatchObject({ side: 'BUY', type: 'LIMIT', limit_price: 120, time_in_force: 'GTC' })
+  })
+
+  it('limit buy will not submit until a TIF is selected', async () => {
+    renderWithProviders(<BuyScreen/>, { route: '/buy/AAPL', path: '/buy/:ticker' })
+    fireEvent.click((await screen.findAllByText('Limit order'))[0])
+    const limitInput = await screen.findByPlaceholderText(/Max price/i)
+    fireEvent.change(limitInput, { target: { value: '120' } })
+
+    const buyOrders = () =>
+      supabase.functions.invoke.mock.calls.filter(([, opts]) => opts?.body?.side === 'BUY')
+    const before = buyOrders().length
+
+    // No TIF chosen yet → the order button is inert (no new place-order call).
+    fireEvent.click(screen.getByText(/Queue order|Buy 1 AAPL/))
+    expect(buyOrders()).toHaveLength(before)
+
+    // Choosing a TIF unlocks it.
+    fireEvent.click(screen.getByText('EOD'))
+    fireEvent.click(screen.getByText(/Queue order|Buy 1 AAPL/))
+    await waitFor(() => expect(buyOrders().length).toBe(before + 1))
+    expect(buyOrders().at(-1)[1].body).toMatchObject({ type: 'LIMIT', time_in_force: 'DAY' })
   })
 
   it('quantity input accepts fractional shares', async () => {

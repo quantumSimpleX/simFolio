@@ -34,7 +34,7 @@ export default function SellScreen() {
   const [qty, setQty] = useState(1)
   const [orderType, setOrderType] = useState('MARKET')
   const [limitPrice, setLimitPrice] = useState('')
-  const [tif, setTif] = useState('GTC')
+  const [tif, setTif] = useState(null)
   const [chartRange, setChartRange] = useState('All')
 
   const { data: stock, isLoading } = useStockDetail(ticker)
@@ -44,6 +44,8 @@ export default function SellScreen() {
   const pnl   = qty * price - qty * costBasis
   const pnlPositive = pnl >= 0
   const netToCash = (qty * price - TRANSACTION_FEE).toFixed(2)
+  // Limit orders require both a target price and a time-in-force selection.
+  const limitIncomplete = orderType === 'LIMIT' && (!limitPrice || !tif)
 
   function handleSell() {
     placeOrder({
@@ -74,7 +76,7 @@ export default function SellScreen() {
 
   const sellCTAs = (
     <div className="flex flex-col gap-2.5">
-      <div onClick={!isPending ? handleSell : undefined} className={cn('flex h-12 items-center justify-center rounded-input bg-red font-sans text-[15px] font-semibold text-white', isPending ? 'cursor-default opacity-60' : 'cursor-pointer')}>
+      <div onClick={!isPending && !limitIncomplete ? handleSell : undefined} className={cn('flex h-12 items-center justify-center rounded-input bg-red font-sans text-[15px] font-semibold text-white', isPending || limitIncomplete ? 'cursor-default opacity-60' : 'cursor-pointer')}>
         {isPending ? 'Selling…' : orderType === 'LIMIT' ? `Place limit sell for ${qty} ${ticker}  →` : `Sell ${qty} ${ticker}  →`}
       </div>
       <GhostCTA label="Ask your council first" onClick={() => navigate('/ask')}/>
@@ -123,20 +125,20 @@ export default function SellScreen() {
 
       <div>
         <div className="mb-2 font-sans text-[13px] text-ink-500"><TermUnderline termKey="market_order">Order type</TermUnderline></div>
-        <div className="flex gap-2.5">
+        <div className="grid grid-cols-2 gap-2.5">
           <OrderTypeCard label="Market order" desc="Sell now at current price" active={orderType==='MARKET'} onClick={() => setOrderType('MARKET')}/>
           <OrderTypeCard label="Limit order" desc="Only fill if price reaches your target" active={orderType==='LIMIT'} onClick={() => setOrderType('LIMIT')}/>
         </div>
         {orderType === 'LIMIT' && (
-          <div className="mt-2 flex items-center gap-2.5">
+          <div className="mt-2.5 grid grid-cols-2 items-center gap-2.5">
             <input
               type="number"
               value={limitPrice}
               onChange={e => setLimitPrice(e.target.value)}
               placeholder={`Min price (current: $${price.toFixed(2)})`}
-              className="box-border h-11 min-w-0 flex-1 rounded-input border border-ame-400 bg-white px-3.5 font-sans text-sm text-ink-900 outline-none"
+              className="box-border h-11 w-full rounded-input border border-ame-400 bg-white px-3.5 font-sans text-sm text-ink-900 outline-none"
             />
-            <div className="min-w-0 flex-1"><TifToggle tif={tif} setTif={setTif}/></div>
+            <TifToggle tif={tif} setTif={setTif}/>
           </div>
         )}
       </div>

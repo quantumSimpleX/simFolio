@@ -28,7 +28,7 @@ export default function BuyScreen() {
   const [qty, setQty] = useState(1)
   const [orderType, setOrderType] = useState('MARKET')
   const [limitPrice, setLimitPrice] = useState('')
-  const [tif, setTif] = useState('GTC')
+  const [tif, setTif] = useState(null)
   const [chartRange, setChartRange] = useState('All')
 
   const { data: stock, isLoading } = useStockDetail(ticker)
@@ -44,6 +44,8 @@ export default function BuyScreen() {
   const fee = TRANSACTION_FEE
   const grandTotal = (qty * price + fee).toFixed(2)
   const cashAfter = cashBalance != null ? (cashBalance - parseFloat(grandTotal)).toFixed(2) : null
+  // Limit orders require both a target price and a time-in-force selection.
+  const limitIncomplete = orderType === 'LIMIT' && (!limitPrice || !tif)
 
   function handleBuy() {
     const params = {
@@ -95,20 +97,20 @@ export default function BuyScreen() {
 
       <div>
         <div className="mb-2 font-sans text-[13px] text-ink-500">Order type</div>
-        <div className="flex gap-2.5">
+        <div className="grid grid-cols-2 gap-2.5">
           <OrderTypeCard label="Market order" desc={canExec ? 'Execute now at current price' : 'Execute at next market open'} active={orderType==='MARKET'} onClick={() => setOrderType('MARKET')}/>
           <OrderTypeCard label="Limit order" desc="Only fill if price reaches your target" active={orderType==='LIMIT'} onClick={() => setOrderType('LIMIT')}/>
         </div>
         {orderType === 'LIMIT' && (
-          <div className="mt-2 flex items-center gap-2.5">
+          <div className="mt-2.5 grid grid-cols-2 items-center gap-2.5">
             <input
               type="number"
               value={limitPrice}
               onChange={e => setLimitPrice(e.target.value)}
               placeholder={`Max price (current: $${price})`}
-              className="box-border h-11 min-w-0 flex-1 rounded-input border border-ame-400 bg-white px-3.5 font-sans text-sm text-ink-900 outline-none"
+              className="box-border h-11 w-full rounded-input border border-ame-400 bg-white px-3.5 font-sans text-sm text-ink-900 outline-none"
             />
-            <div className="min-w-0 flex-1"><TifToggle tif={tif} setTif={setTif}/></div>
+            <TifToggle tif={tif} setTif={setTif}/>
           </div>
         )}
       </div>
@@ -128,7 +130,7 @@ export default function BuyScreen() {
         label={canExec ? `Buy ${qty} ${ticker}  →` : `Queue order for next open  →`}
         full
         loading={isPending}
-        disabled={cashBalance != null && cashBalance < parseFloat(grandTotal)}
+        disabled={limitIncomplete || (cashBalance != null && cashBalance < parseFloat(grandTotal))}
         onClick={handleBuy}
       />
       {cashAfter !== null && (
@@ -283,10 +285,10 @@ export function QtyInputBlock({ qty, setQty, price, accent = 'ame', max = null }
 
 export function TifToggle({ tif, setTif }) {
   return (
-    <div className="flex flex-nowrap items-center gap-2">
-      <div className="whitespace-nowrap font-sans text-xs text-ink-400"><TermUnderline termKey="time_in_force">TIF</TermUnderline></div>
+    <div className="flex h-11 items-center gap-2">
+      <span className="shrink-0 whitespace-nowrap font-sans text-sm font-medium text-ink-500"><TermUnderline termKey="time_in_force">TIF</TermUnderline></span>
       {[['GTC','GTC','gtc_order'], ['DAY','EOD','eod_order']].map(([val, label, tkey]) => (
-        <div key={val} onClick={() => setTif(val)} className={cn('shrink-0 cursor-pointer select-none whitespace-nowrap rounded-pill border px-2.5 py-[3px] font-sans text-xs', tif===val ? 'border-ame-400 bg-ame-50 font-semibold text-ame-600' : 'border-ink-100 bg-white font-normal text-ink-500')}>
+        <div key={val} onClick={() => setTif(val)} className={cn('flex h-11 flex-1 cursor-pointer select-none items-center justify-center rounded-input border font-sans text-sm', tif===val ? 'border-ame-400 bg-ame-50 font-semibold text-ame-600' : 'border-ink-200 bg-white font-medium text-ink-600')}>
           <TermUnderline termKey={tkey}>{label}</TermUnderline>
         </div>
       ))}
