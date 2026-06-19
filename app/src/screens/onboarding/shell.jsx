@@ -49,8 +49,12 @@ export function ScreenShell({ children }) {
         <SimPill/>
       </div>
       <div className="flex flex-1 justify-center overflow-auto">
-        <div className="flex w-full max-w-[480px] flex-col gap-5 px-6 pt-5 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+        <div className="flex w-full max-w-[480px] flex-col gap-5 px-6 pt-5 pb-5">
           {children}
+          {/* Real spacer (not padding): mobile Safari drops a scroll container's
+              bottom padding from its scrollable area, leaving the last button flush
+              against the screen edge. A flex-shrink-0 element is always scrollable. */}
+          <div aria-hidden className="flex-shrink-0" style={{ height: 'calc(1.5rem + env(safe-area-inset-bottom))' }}/>
         </div>
       </div>
     </div>

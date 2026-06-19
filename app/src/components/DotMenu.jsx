@@ -23,7 +23,7 @@ export function DotMenu({ items, className }) {
         className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-input text-xl leading-none text-ink-400 hover:bg-ink-50"
       >⋮</div>
       {open && (
-        <div className="absolute right-0 top-full z-20 mt-1 min-w-[180px] overflow-hidden rounded-card border border-ink-100 bg-white py-1 shadow-lg">
+        <div className="absolute right-0 top-full z-20 mt-1 min-w-[180px] overflow-hidden rounded-card border border-ink-200 bg-white py-1 shadow-lg dark:border-ink-300">
           {items.map(item => (
             <div
               key={item.label}

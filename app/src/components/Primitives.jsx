@@ -276,7 +276,7 @@ export function LangToggle() {
       </button>
       {open && (
         <div role="menu" className={cn(
-          'absolute right-0 z-50 min-w-[140px] overflow-hidden rounded-input border border-ink-100 bg-white py-1 shadow-[0_4px_20px_rgba(0,0,0,0.12)]',
+          'absolute right-0 z-50 min-w-[140px] overflow-hidden rounded-input border border-ink-200 bg-white py-1 shadow-[0_4px_20px_rgba(0,0,0,0.12)] dark:border-ink-300',
           dropUp ? 'bottom-full mb-1' : 'top-full mt-1',
         )}>
           {LANGUAGES.map(l => (
