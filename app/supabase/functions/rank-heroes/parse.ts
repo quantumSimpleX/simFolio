@@ -12,7 +12,7 @@ export interface Candidate {
 // unreliable at strict JSON, so we try: (1) parse the whole string, (2) a {"ranked":[...]} object,
 // (3) the first bare [...] array embedded in prose. Only ids present in `validIds` are kept;
 // duplicates are dropped; result is capped at 7. Returns [] when nothing usable is found.
-export function parseRankedIds(rawText: string, validIds: string[]): string[] {
+export function parseRankedIds(rawText: string, validIds: string[], max = 7): string[] {
   const valid = new Set(validIds)
   const out: string[] = []
 
@@ -47,20 +47,25 @@ export function parseRankedIds(rawText: string, validIds: string[]): string[] {
     }
   }
 
-  return out.slice(0, 7)
+  return out.slice(0, max)
 }
 
 // Build the system + user prompt for ranking. Pure so the prompt shape can be eyeballed/tested.
-export function buildRankingPrompt(answers: Record<string, unknown>, candidates: Candidate[]) {
+// `count` is how many ids to rank. When Warren Buffett is in the candidate list (find-a-mentor
+// mode), he's a rankable option; otherwise (onboarding) he's pinned separately and excluded.
+export function buildRankingPrompt(answers: Record<string, unknown>, candidates: Candidate[], count = 7) {
   const roster = candidates
     .map(c => `- ${c.id}: ${c.name} — ${c.style ?? ''}${c.philosophy ? ` (${c.philosophy})` : ''}`)
     .join('\n')
 
+  const warrenInPool = candidates.some(c => c.id === 'warren')
+  const example = Array.from({ length: count }, (_, i) => `"id${i + 1}"`).join(',')
+
   const system = [
     `You are an expert investment advisor helping match a beginner investor to legendary investor personas who would make the best advisors for them.`,
-    `Given the investor's onboarding answers and the list of candidate investors below, rank the SEVEN whose philosophy, style, time horizon, and risk profile best fit this investor.`,
-    `Use your pretrained knowledge of each investor. Do NOT include Warren Buffett — he is always shown separately.`,
-    `Respond with STRICT JSON only, no prose: {"ranked": ["id1","id2","id3","id4","id5","id6","id7"]} using ONLY ids from the candidate list.`,
+    `Given the investor's onboarding answers and the list of candidate investors below, rank the ${count} whose philosophy, style, time horizon, and risk profile best fit this investor.`,
+    `Use your pretrained knowledge of each investor.${warrenInPool ? '' : ' Do NOT include Warren Buffett — he is always shown separately.'}`,
+    `Respond with STRICT JSON only, no prose: {"ranked": [${example}]} using ONLY ids from the candidate list.`,
     ``,
     `CANDIDATES:`,
     roster,

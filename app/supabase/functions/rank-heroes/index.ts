@@ -25,9 +25,10 @@ serve(async (req) => {
   }
 
   try {
-    const { answers, candidates } = await req.json() as {
+    const { answers, candidates, count: rawCount } = await req.json() as {
       answers: Record<string, unknown>
       candidates: Candidate[]
+      count?: number
     }
 
     if (!Array.isArray(candidates) || candidates.length === 0) {
@@ -36,8 +37,12 @@ serve(async (req) => {
       })
     }
 
+    // How many ids to rank (find-a-mentor asks for 8; onboarding defaults to 7). Clamp to a sane
+    // range so a bad client value can't produce a degenerate prompt.
+    const count = Math.min(Math.max(Math.trunc(Number(rawCount) || 7), 1), 20)
+
     const validIds = candidates.map(c => c.id)
-    const { system, user: userPrompt } = buildRankingPrompt(answers ?? {}, candidates)
+    const { system, user: userPrompt } = buildRankingPrompt(answers ?? {}, candidates, count)
 
     // --- DEBUG: input to the LLM hero-matcher ---
     console.log('[rank-heroes] INPUT answers:', JSON.stringify(answers ?? {}))
@@ -55,7 +60,7 @@ serve(async (req) => {
       apiKey: OPENROUTER_KEY,
       label: 'rank-heroes',
       validate: (content) => {
-        const ids = parseRankedIds(content, validIds)
+        const ids = parseRankedIds(content, validIds, count)
         return ids.length > 0 ? ids : null
       },
     })

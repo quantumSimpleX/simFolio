@@ -17,6 +17,7 @@ import Onboarding from './screens/onboarding/Onboarding'
 import PortfolioMobile  from './screens/portfolio/PortfolioMobile'
 import PortfolioDesktop from './screens/portfolio/PortfolioDesktop'
 import AskTab           from './screens/portfolio/AskTab'
+import FindMentor       from './screens/heroes/FindMentor'
 
 import BuyScreen    from './screens/trade/BuyScreen'
 import SellScreen   from './screens/trade/SellScreen'
@@ -83,6 +84,7 @@ export default function App() {
           {/* Authenticated */}
           <Route path="/portfolio"    element={<PrivateRoute>{isMobile ? <PortfolioMobile/> : <PortfolioDesktop/>}</PrivateRoute>}/>
           <Route path="/ask"          element={<PrivateRoute>{isMobile ? <AskTab/> : <PortfolioDesktop/>}</PrivateRoute>}/>
+          <Route path="/find-mentor"  element={<PrivateRoute><FindMentor/></PrivateRoute>}/>
           <Route path="/buy/:ticker"  element={<PrivateRoute><BuyScreen/></PrivateRoute>}/>
           <Route path="/sell/:ticker" element={<PrivateRoute><SellScreen/></PrivateRoute>}/>
           <Route path="/receipt"      element={<PrivateRoute><TradeReceipt/></PrivateRoute>}/>

@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import { HeroAvatar } from './Primitives';
+import { DotMenu } from './DotMenu';
 import { ChatComposer, ChatMessages } from './HeroChatPanel';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { useHeroSelections } from '../hooks/useHeroSelections';
@@ -12,6 +14,7 @@ import { useHeroChat, useHeroHistory } from '../hooks/useHeroChat';
 // portfolio + council context, so any page can drop it in. The council shares one
 // chat window (chat runs against the first hero).
 export function HeroSidebar({ className }) {
+  const navigate = useNavigate();
   const { positions, cashBalance } = usePortfolio();
   const { heroes } = useHeroSelections();
   const { watchlist } = useWatchlist();
@@ -26,7 +29,6 @@ export function HeroSidebar({ className }) {
   const { mutate: sendMessage, isPending, data: lastReply } = useHeroChat(heroId, portfolioContext);
 
   const [input, setInput] = useState('');
-  const [activeTab, setActiveTab] = useState('Council');
 
   function handleSend(text) {
     const msg = (text || input).trim();
@@ -39,10 +41,9 @@ export function HeroSidebar({ className }) {
 
   return (
     <div className={cn('sticky top-7 flex w-[380px] flex-shrink-0 flex-col overflow-hidden rounded-card border border-ink-100 bg-white [height:calc(100dvh/var(--zoom)-132px)]', className)}>
-      <div className="flex h-11 items-stretch border-b border-ink-100">
-        {['Council', ...heroes.map(h => h.name.split(' ')[0])].slice(0,3).map(t => (
-          <div key={t} onClick={() => setActiveTab(t)} className={cn('flex flex-1 cursor-pointer items-center justify-center border-b-2 font-sans text-[15px]', activeTab===t ? 'border-ink-900 font-semibold text-ink-900' : 'border-transparent font-normal text-ink-400')}>{t}</div>
-        ))}
+      <div className="flex h-11 items-center justify-between border-b border-ink-100 pl-4 pr-1.5">
+        <div className="font-sans text-[15px] font-semibold text-ink-900">{primaryHero?.name ?? 'Sage'}</div>
+        <DotMenu items={[{ label: 'Find a new mentor', onSelect: () => navigate('/find-mentor') }]}/>
       </div>
       <div className="flex items-center gap-2.5 border-b border-ink-100 px-3 py-2">
         <div className="flex">

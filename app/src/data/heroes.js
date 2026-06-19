@@ -275,11 +275,12 @@ export function matchHeroes(answers) {
   return ['cathie', 'lynch', 'warren']
 }
 
-// The pool the LLM ranks from: every selectable hero except Sage and Warren Buffett.
+// The pool the LLM ranks from. Onboarding excludes Warren (he's pinned separately); the
+// "find a new mentor" flow passes includeWarren=true to rank from the full 20.
 // Sent to the rank-heroes edge function so heroes.js stays the single source of truth.
-export function candidateHeroes() {
+export function candidateHeroes(includeWarren = false) {
   return Object.values(HERO_DATA)
-    .filter(h => h.id !== 'sage' && h.id !== 'warren')
+    .filter(h => h.id !== 'sage' && (includeWarren || h.id !== 'warren'))
     .map(({ id, name, style, philosophy }) => ({ id, name, style, philosophy }))
 }
 
@@ -310,6 +311,31 @@ export function resolveSelectionHeroes({ llmIds = [], answers = {} } = {}) {
   }
 
   return ['warren', ...picked]
+}
+
+// Resolve an LLM ranking into a final 8-hero list for the "find a new mentor" flow. Unlike
+// resolveSelectionHeroes, Warren is NOT pinned — the 8 are ranked freely from all 20. Always
+// returns up to 8 unique valid ids; invalid ids are dropped and any shortfall is filled from the
+// rule-based ranking, so the grid is complete even when the LLM fails or returns junk.
+export function resolveMentorHeroes({ llmIds = [], answers = {} } = {}) {
+  const valid = new Set(Object.keys(HERO_DATA).filter(id => id !== 'sage'))
+  const seen = new Set()
+  const picked = []
+
+  const take = id => {
+    if (valid.has(id) && !seen.has(id) && picked.length < 8) {
+      seen.add(id)
+      picked.push(id)
+    }
+  }
+
+  if (Array.isArray(llmIds)) llmIds.forEach(take)
+
+  if (picked.length < 8) {
+    rankHeroesForSelection(answers, Object.keys(HERO_DATA).length).forEach(take)
+  }
+
+  return picked
 }
 
 // Map a free-text / chosen "investor I admire" answer to a hero id, or null if none matches.
