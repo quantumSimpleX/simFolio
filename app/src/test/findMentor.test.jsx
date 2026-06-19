@@ -165,7 +165,7 @@ describe('FindMentor screen', () => {
 
     renderWithProviders(<FindMentor/>, { route: '/find-mentor' })
 
-    expect(await screen.findByText(/Based on your investment goals/i)).toBeInTheDocument()
+    expect(await screen.findByText(/legends best suited to you/i)).toBeInTheDocument()
     fireEvent.click(await screen.findByText('Cathie Wood'))
     fireEvent.click(screen.getByText(/Make Cathie Wood my mentor/))
     await waitFor(() => expect(supabase.from).toHaveBeenCalledWith('hero_selections'))

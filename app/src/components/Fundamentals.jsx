@@ -1,6 +1,5 @@
 // Inline fundamentals summary (market cap · P/E · EPS · β) used as the
 // subtitle of a watchlist StockRow on the Markets screen.
-import { TermUnderline } from './Primitives'
 
 function fmtMktCap(v) {
   if (!v) return null
@@ -23,7 +22,7 @@ export function Fundamentals({ q }) {
   return metrics.map((m, i) => (
     <span key={m.label ?? 'cap'}>
       {i > 0 && <span className="mx-0.5 text-ink-200">·</span>}
-      {m.label && <span className="text-ink-400"><TermUnderline>{m.label}</TermUnderline>:</span>}
+      {m.label && <span className="text-ink-400">{m.label}:</span>}
       <span className={`font-semibold ${m.color}`}>{m.value}</span>
     </span>
   ))

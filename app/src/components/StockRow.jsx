@@ -19,7 +19,7 @@ export function StockRow({
       )}
     >
       <div className={cn(
-        'flex h-[46px] w-[46px] flex-shrink-0 items-center justify-center rounded-input font-sans text-[13px] font-bold transition-colors',
+        'flex h-[46px] w-[46px] flex-shrink-0 items-center justify-center rounded-input font-sans text-[15px] font-bold transition-colors',
         highlighted ? 'bg-ame-100 text-ame-600' : 'bg-ink-50 text-ink-500',
       )}>{ticker}</div>
 

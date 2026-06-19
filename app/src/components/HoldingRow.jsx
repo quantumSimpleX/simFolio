@@ -1,12 +1,11 @@
 import { StockRow } from './StockRow';
-import { TermUnderline } from './Primitives';
 
 export function HoldingRow({ ticker, name, qty, value, pct, pos, compact = false, highlighted = false, onClick, onMouseEnter, onMouseLeave }) {
   return (
     <StockRow
       ticker={ticker}
       name={name}
-      subtitle={<span className="font-semibold text-ame-600">{qty} <TermUnderline>shares</TermUnderline></span>}
+      subtitle={<span className="font-semibold text-ame-600">{qty} shares</span>}
       rightTop={`$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
       rightBottom={`${pos ? '+' : ''}${pct.toFixed(1)}%`}
       rightBottomPos={pos}

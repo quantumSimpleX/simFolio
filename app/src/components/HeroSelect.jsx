@@ -17,6 +17,7 @@ export function HeroSelect({
   loadingMessage,
   ctaPrefix = 'Ask',
   ctaSuffix = '',
+  summary = null,
 }) {
   const [picked, setPicked] = useState(null);
   const isDesktop = useIsDesktop();
@@ -29,6 +30,8 @@ export function HeroSelect({
       <SageHeader avatarSize={avatarSize} isDesktop={isDesktop}>
         {loading ? loadingMessage : message}
       </SageHeader>
+
+      {!loading && summary}
 
       {loading ? (
         <div className="grid grid-cols-2 gap-2.5">

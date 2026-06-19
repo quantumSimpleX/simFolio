@@ -29,11 +29,13 @@ export default function FilledRow({ order, dimmed }) {
   const canExpand = !!exec
 
   return (
-    <Card
-      onClick={canExpand ? () => setExpanded(e => !e) : undefined}
-      className={cn('px-4 py-3', dimmed && 'opacity-60', canExpand ? 'cursor-pointer' : 'cursor-default')}
-    >
-      <div className="flex items-center gap-2.5">
+    <Card className={cn('px-4 py-3', dimmed && 'opacity-60')}>
+      {/* Only the header toggles expand/collapse — so terms inside the detail body
+          can be tapped (e.g. to open a tooltip) without closing the card. */}
+      <div
+        onClick={canExpand ? () => setExpanded(e => !e) : undefined}
+        className={cn('flex items-center gap-2.5', canExpand ? 'cursor-pointer' : 'cursor-default')}
+      >
         <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-input bg-ink-50 font-sans text-[11px] font-bold text-ink-500">{order.ticker}</div>
         <div className="flex-1">
           <div className="mb-0.5 flex items-center gap-2">

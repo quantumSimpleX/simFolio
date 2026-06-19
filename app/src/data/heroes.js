@@ -314,10 +314,11 @@ export function resolveSelectionHeroes({ llmIds = [], answers = {} } = {}) {
 }
 
 // Resolve an LLM ranking into a final 8-hero list for the "find a new mentor" flow. Unlike
-// resolveSelectionHeroes, Warren is NOT pinned — the 8 are ranked freely from all 20. Always
-// returns up to 8 unique valid ids; invalid ids are dropped and any shortfall is filled from the
-// rule-based ranking, so the grid is complete even when the LLM fails or returns junk.
-export function resolveMentorHeroes({ llmIds = [], answers = {} } = {}) {
+// resolveSelectionHeroes, Warren is NOT pinned — the 8 are ranked freely from all 20. When
+// `pinnedId` is given (the investor the user admires), it is placed first and the other 7 come
+// from the LLM ranking. Always returns up to 8 unique valid ids; invalid ids are dropped and any
+// shortfall is filled from the rule-based ranking, so the grid is complete even when the LLM fails.
+export function resolveMentorHeroes({ llmIds = [], answers = {}, pinnedId = null } = {}) {
   const valid = new Set(Object.keys(HERO_DATA).filter(id => id !== 'sage'))
   const seen = new Set()
   const picked = []
@@ -329,6 +330,7 @@ export function resolveMentorHeroes({ llmIds = [], answers = {} } = {}) {
     }
   }
 
+  take(pinnedId)
   if (Array.isArray(llmIds)) llmIds.forEach(take)
 
   if (picked.length < 8) {

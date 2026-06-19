@@ -256,19 +256,16 @@ describe('E. TermUnderline mobile + i18n', () => {
 // F. Integration — screens light up
 // ---------------------------------------------------------------------------
 describe('F. Integration — Fundamentals', () => {
-  it('renders P/E, EPS and β as underlined trigger spans without breaking the · layout', () => {
+  it('renders P/E, EPS and β labels as plain text without breaking the · layout', () => {
     const q = { marketCap: 3e12, peRatio: 28.4, eps: 6.13, beta: 1.21 }
     const { container } = renderWithProviders(<Fundamentals q={q} />)
-    // labels present as trigger spans
-    expect(screen.getByText('P/E')).toBeInTheDocument()
-    expect(screen.getByText('EPS')).toBeInTheDocument()
-    expect(screen.getByText('β')).toBeInTheDocument()
+    // labels present (tooltips intentionally removed — terms are explained on the stock detail page)
+    expect(screen.getByText('P/E:')).toBeInTheDocument()
+    expect(screen.getByText('EPS:')).toBeInTheDocument()
+    expect(screen.getByText('β:')).toBeInTheDocument()
     // values and · separators still render around them
     expect(container.textContent).toContain('$3.0T')
     expect(container.textContent).toContain('·')
-    // hovering a label surfaces its glossary definition
-    fireEvent.mouseEnter(screen.getByText('P/E'))
-    expect(document.body.textContent).toContain(glossary.pe_ratio.en.definition)
   })
 
   it('returns — when no quote', () => {
