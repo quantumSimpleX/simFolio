@@ -78,30 +78,39 @@ describe('useBreakpoint', () => {
 })
 
 describe('useWatchlist', () => {
-  beforeEach(() => localStorage.clear())
+  beforeEach(() => __setTableData('watchlist', []))
 
-  it('starts empty, then add/remove/has reflect state and persist', () => {
-    const { result } = renderHook(() => useWatchlist())
-    expect(result.current.watchlist).toEqual([])
+  it('loads the user rows, then add/remove/has reflect state', async () => {
+    __setTableData('watchlist', [{ ticker: 'NVDA' }])
+    const { result } = renderHook(() => useWatchlist(), { wrapper: makeWrapper() })
+    await waitFor(() => expect(result.current.watchlist).toEqual(['NVDA']))
+    expect(result.current.isWatching('nvda')).toBe(true)
     expect(result.current.isWatching('AAPL')).toBe(false)
 
-    act(() => result.current.addToWatchlist('aapl'))
-    expect(result.current.isWatching('AAPL')).toBe(true)
-    expect(JSON.parse(localStorage.getItem('simfolio_watchlist_v2'))).toContain('AAPL')
+    // add (lowercase is normalised). The mock ignores writes, so mirror the
+    // backend write into the seeded table for the post-settle refetch.
+    act(() => {
+      __setTableData('watchlist', [{ ticker: 'NVDA' }, { ticker: 'AAPL' }])
+      result.current.addToWatchlist('aapl')
+    })
+    await waitFor(() => expect(result.current.isWatching('AAPL')).toBe(true))
+    expect(supabase.from).toHaveBeenCalledWith('watchlist')
 
     // adding a duplicate does not grow the list
     const lenBefore = result.current.watchlist.length
     act(() => result.current.addToWatchlist('AAPL'))
     expect(result.current.watchlist.length).toBe(lenBefore)
 
-    act(() => result.current.removeFromWatchlist('aapl'))
-    expect(result.current.isWatching('AAPL')).toBe(false)
+    act(() => {
+      __setTableData('watchlist', [{ ticker: 'NVDA' }])
+      result.current.removeFromWatchlist('aapl')
+    })
+    await waitFor(() => expect(result.current.isWatching('AAPL')).toBe(false))
   })
 
-  it('falls back to an empty list when stored JSON is corrupt', () => {
-    localStorage.setItem('simfolio_watchlist_v2', '{not json')
-    const { result } = renderHook(() => useWatchlist())
-    expect(result.current.watchlist).toEqual([])
+  it('is empty when the user has no rows', async () => {
+    const { result } = renderHook(() => useWatchlist(), { wrapper: makeWrapper() })
+    await waitFor(() => expect(result.current.watchlist).toEqual([]))
   })
 })
 

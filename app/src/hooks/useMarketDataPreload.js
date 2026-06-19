@@ -45,17 +45,13 @@ export function useMarketDataPreload(user = null) {
     userFetchedId.current = user.id
 
     async function preloadUserData() {
-      const { data: positions } = await supabase
-        .from('positions')
-        .select('ticker')
-        .eq('user_id', user.id)
+      const [{ data: positions }, { data: watched }] = await Promise.all([
+        supabase.from('positions').select('ticker').eq('user_id', user.id),
+        supabase.from('watchlist').select('ticker').eq('user_id', user.id),
+      ])
 
       const portfolioTickers = (positions ?? []).map(p => p.ticker)
-
-      const watchlistTickers = (() => {
-        try { return JSON.parse(localStorage.getItem('simfolio_watchlist') ?? '[]') }
-        catch { return [] }
-      })()
+      const watchlistTickers = (watched ?? []).map(w => w.ticker)
 
       // Only fetch tickers not already covered by the static preload
       const userTickers = [...new Set([...portfolioTickers, ...watchlistTickers])]
