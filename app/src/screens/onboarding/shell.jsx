@@ -49,7 +49,7 @@ export function ScreenShell({ children }) {
         <SimPill/>
       </div>
       <div className="flex flex-1 justify-center overflow-auto">
-        <div className="flex w-full max-w-[480px] flex-col gap-5 px-6 pb-8 pt-5">
+        <div className="flex w-full max-w-[480px] flex-col gap-5 px-6 pt-5 pb-[calc(2rem+env(safe-area-inset-bottom))]">
           {children}
         </div>
       </div>

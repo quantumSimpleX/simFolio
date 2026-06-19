@@ -238,6 +238,10 @@ export function FlagIcon({ country, size = 20 }) {
 export function LangToggle() {
   const { lang, setLang } = useLang();
   const [open, setOpen] = useState(false);
+  // Open the menu upward when the trigger sits in the lower half of the screen,
+  // so the items always drop toward the centre and never spill off-screen (which
+  // on mobile would force the user to scroll to reach them).
+  const [dropUp, setDropUp] = useState(false);
   const ref = useRef(null);
   const current = LANGUAGES.find(l => l.code === lang) ?? LANGUAGES[0];
 
@@ -248,6 +252,14 @@ export function LangToggle() {
     return () => document.removeEventListener('mousedown', onDown);
   }, [open]);
 
+  function handleToggle() {
+    if (!open && ref.current) {
+      const { bottom } = ref.current.getBoundingClientRect();
+      setDropUp(bottom > window.innerHeight / 2);
+    }
+    setOpen(o => !o);
+  }
+
   return (
     <div ref={ref} className="relative flex-shrink-0">
       <button
@@ -257,13 +269,16 @@ export function LangToggle() {
         aria-expanded={open}
         title="Tooltip language"
         data-testid="lang-toggle"
-        onClick={() => setOpen(o => !o)}
+        onClick={handleToggle}
         className="flex h-7 w-7 items-center justify-center rounded-input border border-ink-100 bg-white"
       >
         <FlagIcon country={current.country} size={20}/>
       </button>
       {open && (
-        <div role="menu" className="absolute right-0 z-50 mt-1 min-w-[140px] overflow-hidden rounded-input border border-ink-100 bg-white py-1 shadow-[0_4px_20px_rgba(0,0,0,0.12)]">
+        <div role="menu" className={cn(
+          'absolute right-0 z-50 min-w-[140px] overflow-hidden rounded-input border border-ink-100 bg-white py-1 shadow-[0_4px_20px_rgba(0,0,0,0.12)]',
+          dropUp ? 'bottom-full mb-1' : 'top-full mt-1',
+        )}>
           {LANGUAGES.map(l => (
             <button
               key={l.code}
