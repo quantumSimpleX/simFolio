@@ -63,6 +63,27 @@ describe('A. Glossary data integrity', () => {
   it.each(NEW_KEYS)('new key %s exists', (k) => {
     expect(glossary[k]).toBeDefined()
   })
+
+  // Non-English tooltip titles must keep the English term visible (in parentheses) so the
+  // user still learns it — never a full translation. Exempt entries whose localized term
+  // is identical to the English term (e.g. "Beta").
+  const SAME_AS_ENGLISH = new Set(['beta'])
+  it.each(allKeys)('%s ja and es titles include the English term in parentheses', (k) => {
+    for (const lang of ['ja', 'es']) {
+      if (SAME_AS_ENGLISH.has(k)) continue
+      expect(glossary[k][lang].title).toMatch(/\([^)]*[A-Za-z][^)]*\)/)
+    }
+  })
+
+  // Acronyms must be spelled out in full in the localized title, matching the zh-TW format.
+  it.each([
+    ['pe_ratio', 'Price-to-Earnings Ratio'],
+    ['eps', 'Earnings Per Share'],
+    ['time_in_force', 'Time in Force'],
+  ])('%s ja and es titles spell out the acronym', (k, phrase) => {
+    expect(glossary[k].ja.title).toContain(phrase)
+    expect(glossary[k].es.title).toContain(phrase)
+  })
 })
 
 // ---------------------------------------------------------------------------

@@ -109,8 +109,15 @@ export default function BuyScreen() {
               type="number"
               value={limitPrice}
               onChange={e => setLimitPrice(e.target.value)}
+              onFocus={e => {
+                // First focus on an empty field pre-fills the live price and selects it,
+                // so the user can tweak from a sensible default instead of an empty box.
+                const el = e.target
+                if (!limitPrice && price) { setLimitPrice(price.toFixed(2)); requestAnimationFrame(() => el.select()) }
+                else el.select()
+              }}
               placeholder={`Max price (current: $${price})`}
-              className="box-border h-11 w-full rounded-input border border-ame-400 bg-white px-3.5 font-sans text-sm text-ink-900 outline-none"
+              className="no-spinner box-border h-11 w-full rounded-input border border-ame-400 bg-white px-3.5 font-sans text-sm text-ink-900 outline-none"
             />
             <TifToggle tif={tif} setTif={setTif}/>
           </div>
@@ -249,7 +256,7 @@ export function QtyInputBlock({ qty, setQty, price, accent = 'ame', max = null }
       : 'border-ame-400 [box-shadow:0_0_0_3px_color-mix(in_srgb,var(--ame-400)_10%,transparent)]',
   )
   const labelClass = cn('flex-shrink-0 font-sans text-[11px] font-semibold uppercase tracking-[0.14em]', accent === 'red' ? 'text-red' : 'text-ame-400')
-  const inputClass = 'w-full min-w-0 border-none bg-transparent text-right font-display text-[24px] font-bold tracking-[-0.02em] text-ink-900 outline-none'
+  const inputClass = 'no-spinner w-full min-w-0 border-none bg-transparent text-right font-display text-[24px] font-bold tracking-[-0.02em] text-ink-900 outline-none'
 
   return (
     <div className="flex gap-2.5">

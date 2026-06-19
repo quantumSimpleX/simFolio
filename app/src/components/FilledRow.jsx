@@ -57,7 +57,7 @@ export default function FilledRow({ order, dimmed }) {
       </div>
 
       {expanded && exec && (
-        <div className="mt-3 border-t border-ink-100 pt-1">
+        <div className="mt-3 border-t-2 border-ink-200 pt-2">
           <DetailRow label="Order type" value={order.type === 'LIMIT' ? 'Limit order' : 'Market order'}/>
           <DetailRow label="Side" value={isBuy ? 'Buy' : 'Sell'}/>
           <DetailRow label="Filled quantity" value={`${parseFloat(exec.filled_qty)} shares`}/>

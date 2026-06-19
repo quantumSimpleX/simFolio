@@ -116,7 +116,9 @@ export function CTA({ label, full=false, ghost=false, danger=false, disabled=fal
       disabled={disabled}
       loading={loading}
       onClick={!disabled && !loading ? onClick : undefined}
-      className={cn(full && 'w-full')}
+      // shrink-0: never let a tall flex column (e.g. the 8-hero grid) compress the
+      // CTA below its 48px height — it must match the onboarding Continue buttons.
+      className={cn('shrink-0', full && 'w-full')}
       style={style}
     >
       {label}

@@ -137,8 +137,15 @@ export default function SellScreen() {
               type="number"
               value={limitPrice}
               onChange={e => setLimitPrice(e.target.value)}
+              onFocus={e => {
+                // First focus on an empty field pre-fills the live price and selects it,
+                // so the user can tweak from a sensible default instead of an empty box.
+                const el = e.target
+                if (!limitPrice && price) { setLimitPrice(price.toFixed(2)); requestAnimationFrame(() => el.select()) }
+                else el.select()
+              }}
               placeholder={`Min price (current: $${price.toFixed(2)})`}
-              className="box-border h-11 w-full rounded-input border border-ame-400 bg-white px-3.5 font-sans text-sm text-ink-900 outline-none"
+              className="no-spinner box-border h-11 w-full rounded-input border border-ame-400 bg-white px-3.5 font-sans text-sm text-ink-900 outline-none"
             />
             <TifToggle tif={tif} setTif={setTif}/>
           </div>

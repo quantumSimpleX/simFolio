@@ -49,15 +49,29 @@ export function HeroSelect({
                 key={id}
                 onClick={() => setPicked(id)}
                 className={cn(
-                  'flex cursor-pointer items-center gap-3 rounded-card border-[1.5px] p-3',
+                  'cursor-pointer rounded-card border-[1.5px] p-3',
+                  isDesktop ? 'flex items-center gap-3' : 'flex flex-col',
                   isPicked ? 'border-ame-400 bg-ame-50' : 'border-ink-200 bg-white',
                 )}
               >
-                <HeroAvatar id={id} initials={h.initials} color={h.color} size={isDesktop ? 64 : 52}/>
-                <div className="min-w-0 flex-1">
-                  <div className="font-sans font-semibold text-ink-900" style={{ fontSize: fluid(15, 17) }}>{h.name}</div>
-                  <div className="mt-0.5 font-sans leading-snug text-ink-400" style={{ fontSize: fluid(12, 14) }}>{h.style}</div>
-                </div>
+                {isDesktop ? (
+                  <>
+                    <HeroAvatar id={id} initials={h.initials} color={h.color} size={64}/>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-sans font-semibold text-ink-900" style={{ fontSize: fluid(15, 17) }}>{h.name}</div>
+                      <div className="mt-0.5 font-sans leading-snug text-ink-400" style={{ fontSize: fluid(12, 14) }}>{h.style}</div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Mobile: avatar + name on the top row, style spans the full card width below. */}
+                    <div className="flex items-center gap-2.5">
+                      <HeroAvatar id={id} initials={h.initials} color={h.color} size={44}/>
+                      <div className="min-w-0 flex-1 font-sans font-semibold text-ink-900" style={{ fontSize: fluid(15, 17) }}>{h.name}</div>
+                    </div>
+                    <div className="mt-2 font-sans leading-snug text-ink-400" style={{ fontSize: fluid(12, 14) }}>{h.style}</div>
+                  </>
+                )}
               </div>
             );
           })}
