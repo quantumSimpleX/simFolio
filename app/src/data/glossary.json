@@ -1,166 +1,248 @@
 {
   "market_order": {
     "en":   { "title": "Market Order",      "definition": "Buy or sell right now at the current market price. You accept whatever price the market gives you at this moment." },
-    "zh-TW":{ "title": "市價單 (Market Order)", "definition": "立即進行買進或賣出。您願意立刻接受市場上目前的任何報價。" }
+    "zh-TW":{ "title": "市價單 (Market Order)", "definition": "立即進行買進或賣出。您願意立刻接受市場上目前的任何報價。" },
+    "ja":   { "title": "成行注文 (Market Order)", "definition": "現在の市場価格で今すぐ売買します。その瞬間に市場が提示する価格をそのまま受け入れます。" },
+    "es":   { "title": "Orden de Mercado",   "definition": "Compra o vende ahora mismo al precio de mercado actual. Aceptas el precio que el mercado ofrezca en este momento." }
   },
   "limit_order": {
     "en":   { "title": "Limit Order",       "definition": "Set a maximum buy price or minimum sell price. The trade only executes if the stock reaches your exact price." },
-    "zh-TW":{ "title": "限價單 (Limit Order)",  "definition": "由您決定價格。只有當股票達到您設定的精確價格時，交易才會執行。" }
+    "zh-TW":{ "title": "限價單 (Limit Order)",  "definition": "由您決定價格。只有當股票達到您設定的精確價格時，交易才會執行。" },
+    "ja":   { "title": "指値注文 (Limit Order)", "definition": "買いの上限価格、または売りの下限価格を設定します。株価が指定した価格に達したときだけ取引が成立します。" },
+    "es":   { "title": "Orden Limitada",     "definition": "Fija un precio máximo de compra o mínimo de venta. La operación solo se ejecuta si la acción alcanza tu precio exacto." }
   },
   "slippage": {
     "en":   { "title": "Slippage",          "definition": "The small difference between the price you saw when you placed your order and the price you actually paid. Normal in fast-moving markets." },
-    "zh-TW":{ "title": "滑價 (Slippage)",      "definition": "您下單時看到的價格與實際成交價格之間的小差異。在快速波動的市場中屬正常現象。" }
+    "zh-TW":{ "title": "滑價 (Slippage)",      "definition": "您下單時看到的價格與實際成交價格之間的小差異。在快速波動的市場中屬正常現象。" },
+    "ja":   { "title": "スリッページ (Slippage)", "definition": "注文時に見た価格と実際に支払った価格との小さな差です。値動きの速い市場では普通に起こります。" },
+    "es":   { "title": "Deslizamiento (Slippage)", "definition": "La pequeña diferencia entre el precio que viste al colocar la orden y el que realmente pagaste. Es normal en mercados que se mueven rápido." }
   },
   "cost_basis": {
     "en":   { "title": "Cost Basis",        "definition": "The average total amount you paid per share, including any fees. Used to calculate your gain or loss when you sell." },
-    "zh-TW":{ "title": "持倉成本 (Cost Basis)",  "definition": "您購買目前持有股數所花費的每股平均總金額（包含手續費）。用於計算您出售時的損益。" }
+    "zh-TW":{ "title": "持倉成本 (Cost Basis)",  "definition": "您購買目前持有股數所花費的每股平均總金額（包含手續費）。用於計算您出售時的損益。" },
+    "ja":   { "title": "取得原価 (Cost Basis)",  "definition": "手数料を含め、1株あたりに支払った平均総額です。売却時の損益を計算するために使います。" },
+    "es":   { "title": "Costo Base",         "definition": "El importe total promedio que pagaste por acción, incluidas las comisiones. Se usa para calcular tu ganancia o pérdida al vender." }
   },
   "regulatory_fee": {
     "en":   { "title": "Transaction Fee",   "definition": "A flat $1.00 commission charged on every executed trade, buy or sell. Real brokers charge fees too — factoring them in teaches you the true cost of trading." },
-    "zh-TW":{ "title": "交易手續費 (Transaction Fee)", "definition": "每筆成交的買入或賣出訂單收取固定 $1.00 美元手續費。真實券商也會收費——把手續費納入考量，才能了解交易的真實成本。" }
+    "zh-TW":{ "title": "交易手續費 (Transaction Fee)", "definition": "每筆成交的買入或賣出訂單收取固定 $1.00 美元手續費。真實券商也會收費——把手續費納入考量，才能了解交易的真實成本。" },
+    "ja":   { "title": "取引手数料 (Transaction Fee)", "definition": "売買が成立するごとにかかる一律1.00ドルの手数料です。実際の証券会社も手数料を取ります——それを織り込むことで取引の本当のコストが分かります。" },
+    "es":   { "title": "Comisión de Transacción", "definition": "Una comisión fija de $1.00 que se cobra en cada operación ejecutada, sea compra o venta. Los corredores reales también cobran comisiones: incluirlas te enseña el costo real de operar." }
   },
   "pe_ratio": {
     "en":   { "title": "Price-to-Earnings Ratio", "definition": "How much investors pay for each dollar of a company's profit. A high P/E means investors expect strong future growth." },
-    "zh-TW":{ "title": "本益比 (Price-to-Earnings Ratio)", "definition": "股價與每股盈餘的比值。顯示投資人為公司每一元利潤願意付出多少倍。本益比越高，代表市場對未來成長的期待越高。" }
+    "zh-TW":{ "title": "本益比 (Price-to-Earnings Ratio)", "definition": "股價與每股盈餘的比值。顯示投資人為公司每一元利潤願意付出多少倍。本益比越高，代表市場對未來成長的期待越高。" },
+    "ja":   { "title": "株価収益率 (PER)",       "definition": "企業の利益1ドルに対して投資家がいくら払っているかを示します。PERが高いほど、市場が将来の高い成長を期待していることを意味します。" },
+    "es":   { "title": "Relación Precio-Beneficio (PER)", "definition": "Cuánto pagan los inversores por cada dólar de beneficio de una empresa. Un PER alto significa que esperan un fuerte crecimiento futuro." }
   },
   "market_cap": {
     "en":   { "title": "Market Capitalization",        "definition": "The total market value of all a company's shares. Calculated as share price × total shares outstanding." },
-    "zh-TW":{ "title": "市值 (Market Capitalization)",     "definition": "公司所有股份的市場總價值。計算方式：股價 × 流通在外股數。" }
+    "zh-TW":{ "title": "市值 (Market Capitalization)",     "definition": "公司所有股份的市場總價值。計算方式：股價 × 流通在外股數。" },
+    "ja":   { "title": "時価総額 (Market Capitalization)", "definition": "企業の全株式の市場価値の合計です。株価 × 発行済株式数で計算します。" },
+    "es":   { "title": "Capitalización de Mercado",      "definition": "El valor total de mercado de todas las acciones de una empresa. Se calcula como precio por acción × número total de acciones en circulación." }
   },
   "etf": {
     "en":   { "title": "ETF",               "definition": "Exchange-Traded Fund. A basket of many stocks or bonds you can buy as a single share, giving instant diversification at low cost." },
-    "zh-TW":{ "title": "指數股票型基金 (ETF)",     "definition": "可在交易所買賣的基金。一次購入即可擁有數十或數百支股票，以低成本實現分散投資。" }
+    "zh-TW":{ "title": "指數股票型基金 (ETF)",     "definition": "可在交易所買賣的基金。一次購入即可擁有數十或數百支股票，以低成本實現分散投資。" },
+    "ja":   { "title": "上場投資信託 (ETF)",      "definition": "多数の株式や債券を1つの銘柄としてまとめて買えるバスケットです。低コストで瞬時に分散投資ができます。" },
+    "es":   { "title": "ETF (Fondo Cotizado)", "definition": "Fondo Cotizado en Bolsa. Una cesta de muchas acciones o bonos que puedes comprar como una sola participación, logrando diversificación instantánea a bajo costo." }
   },
   "realised_pnl": {
     "en":   { "title": "Realised P&L",      "definition": "Profit or loss that is locked in after you sell. The money actually hits (or leaves) your account." },
-    "zh-TW":{ "title": "已實現損益 (Realised P&L)", "definition": "賣出後確定的獲利或虧損。這筆錢會實際進入或離開您的帳戶。" }
+    "zh-TW":{ "title": "已實現損益 (Realised P&L)", "definition": "賣出後確定的獲利或虧損。這筆錢會實際進入或離開您的帳戶。" },
+    "ja":   { "title": "実現損益 (Realised P&L)", "definition": "売却後に確定する利益または損失です。お金が実際に口座に入る（または出る）ものです。" },
+    "es":   { "title": "Ganancia/Pérdida Realizada", "definition": "La ganancia o pérdida que se fija después de vender. El dinero entra (o sale) realmente de tu cuenta." }
   },
   "unrealised_pnl": {
     "en":   { "title": "Unrealised P&L",    "definition": "The paper profit or loss on positions you still hold. It can change every second and only becomes real when you sell." },
-    "zh-TW":{ "title": "未實現損益 (Unrealised P&L)", "definition": "您持有但尚未賣出倉位的帳面盈虧。每秒都在變動，只有賣出後才會真正實現。" }
+    "zh-TW":{ "title": "未實現損益 (Unrealised P&L)", "definition": "您持有但尚未賣出倉位的帳面盈虧。每秒都在變動，只有賣出後才會真正實現。" },
+    "ja":   { "title": "評価損益 (Unrealised P&L)", "definition": "まだ保有しているポジションの含み益または含み損です。刻一刻と変動し、売却して初めて確定します。" },
+    "es":   { "title": "Ganancia/Pérdida No Realizada", "definition": "La ganancia o pérdida en papel de las posiciones que aún conservas. Cambia a cada segundo y solo se hace real cuando vendes." }
   },
   "52w_high": {
     "en":   { "title": "52-Week High",      "definition": "The highest price the stock has traded in the past year. Often used as a reference point for valuation." },
-    "zh-TW":{ "title": "52週高點 (52-Week High)", "definition": "過去一年內該股票的最高成交價格。常作為估值的參考點。" }
+    "zh-TW":{ "title": "52週高點 (52-Week High)", "definition": "過去一年內該股票的最高成交價格。常作為估值的參考點。" },
+    "ja":   { "title": "52週高値 (52-Week High)", "definition": "過去1年間でその株式が付けた最高値です。バリュエーションの参考点としてよく使われます。" },
+    "es":   { "title": "Máximo de 52 Semanas", "definition": "El precio más alto al que la acción ha cotizado en el último año. Suele usarse como punto de referencia para la valoración." }
   },
   "dividend_yield": {
     "en":   { "title": "Dividend Yield",    "definition": "Annual dividend payments as a percentage of the current share price. A 2% yield means $2 paid per year for every $100 of shares." },
-    "zh-TW":{ "title": "股息殖利率 (Dividend Yield)", "definition": "年度股息占當前股價的百分比。2%殖利率意味著每持有100元股票，每年收到2元股息。" }
+    "zh-TW":{ "title": "股息殖利率 (Dividend Yield)", "definition": "年度股息占當前股價的百分比。2%殖利率意味著每持有100元股票，每年收到2元股息。" },
+    "ja":   { "title": "配当利回り (Dividend Yield)", "definition": "現在の株価に対する年間配当の割合です。利回り2%なら、株式100ドルあたり年間2ドルが支払われることを意味します。" },
+    "es":   { "title": "Rentabilidad por Dividendo", "definition": "Los pagos anuales de dividendos como porcentaje del precio actual de la acción. Un 2% significa $2 pagados al año por cada $100 en acciones." }
   },
   "partial_fill": {
     "en":   { "title": "Partial Fill",      "definition": "When only some of your order is executed because not enough shares were available at your limit price at that moment." },
-    "zh-TW":{ "title": "部分成交 (Partial Fill)", "definition": "因限價時市場上沒有足夠的股票，訂單僅部分成交。" }
+    "zh-TW":{ "title": "部分成交 (Partial Fill)", "definition": "因限價時市場上沒有足夠的股票，訂單僅部分成交。" },
+    "ja":   { "title": "一部約定 (Partial Fill)", "definition": "その時点で指値価格に十分な株数がなかったため、注文の一部だけが約定することです。" },
+    "es":   { "title": "Ejecución Parcial",  "definition": "Cuando solo se ejecuta una parte de tu orden porque no había suficientes acciones disponibles a tu precio límite en ese momento." }
   },
   "expense_ratio": {
     "en":   { "title": "Expense Ratio",     "definition": "The annual fee an ETF charges, expressed as a percentage of your investment. A 0.03% expense ratio on $1,000 costs you $0.30 per year." },
-    "zh-TW":{ "title": "費用率 (Expense Ratio)",  "definition": "ETF每年收取的管理費，以投資金額的百分比表示。0.03%的費用率意味著每投資1,000元，每年費用為0.30元。" }
+    "zh-TW":{ "title": "費用率 (Expense Ratio)",  "definition": "ETF每年收取的管理費，以投資金額的百分比表示。0.03%的費用率意味著每投資1,000元，每年費用為0.30元。" },
+    "ja":   { "title": "経費率 (Expense Ratio)",  "definition": "ETFが毎年徴収する手数料で、投資額に対する割合で表されます。1,000ドルに対し経費率0.03%なら年間0.30ドルかかります。" },
+    "es":   { "title": "Ratio de Gastos",    "definition": "La comisión anual que cobra un ETF, expresada como porcentaje de tu inversión. Un 0.03% sobre $1,000 te cuesta $0.30 al año." }
   },
   "eps": {
     "en":   { "title": "EPS (Earnings Per Share)", "definition": "A company's total profit divided by its number of shares. It shows how much profit belongs to each single share." },
-    "zh-TW":{ "title": "每股盈餘 (EPS, Earnings Per Share)", "definition": "公司的總利潤除以股份總數，顯示每一股能分到多少利潤。" }
+    "zh-TW":{ "title": "每股盈餘 (EPS, Earnings Per Share)", "definition": "公司的總利潤除以股份總數，顯示每一股能分到多少利潤。" },
+    "ja":   { "title": "1株当たり利益 (EPS)",   "definition": "企業の総利益を株式数で割ったものです。1株ごとにどれだけの利益が割り当てられるかを示します。" },
+    "es":   { "title": "BPA (Beneficio por Acción)", "definition": "El beneficio total de una empresa dividido entre su número de acciones. Muestra cuánto beneficio corresponde a cada acción." }
   },
   "beta": {
     "en":   { "title": "Beta",              "definition": "How much a stock tends to move compared to the overall market. A beta of 1 means it moves with the market; above 1 means it swings more." },
-    "zh-TW":{ "title": "貝塔值 (Beta)",        "definition": "股票相對於整體市場的波動程度。貝塔值為1代表與市場同步；大於1代表波動更劇烈。" }
+    "zh-TW":{ "title": "貝塔值 (Beta)",        "definition": "股票相對於整體市場的波動程度。貝塔值為1代表與市場同步；大於1代表波動更劇烈。" },
+    "ja":   { "title": "ベータ (Beta)",        "definition": "株式が市場全体と比べてどれだけ動きやすいかを示します。ベータ1は市場と同じ動き、1超は市場より大きく変動することを意味します。" },
+    "es":   { "title": "Beta",               "definition": "Cuánto tiende a moverse una acción en comparación con el mercado general. Una beta de 1 significa que se mueve con el mercado; por encima de 1, oscila más." }
   },
   "volume": {
     "en":   { "title": "Volume",            "definition": "The number of shares traded during a period, such as today. High volume means a lot of buying and selling activity." },
-    "zh-TW":{ "title": "成交量 (Volume)",      "definition": "某段期間（例如今天）內成交的股數。成交量高代表買賣交易很活躍。" }
+    "zh-TW":{ "title": "成交量 (Volume)",      "definition": "某段期間（例如今天）內成交的股數。成交量高代表買賣交易很活躍。" },
+    "ja":   { "title": "出来高 (Volume)",      "definition": "ある期間（例えば今日）に取引された株数です。出来高が多いと、売買が活発であることを意味します。" },
+    "es":   { "title": "Volumen",            "definition": "El número de acciones negociadas durante un periodo, como hoy. Un volumen alto indica mucha actividad de compra y venta." }
   },
   "avg_volume": {
     "en":   { "title": "Average Volume",    "definition": "The typical number of shares traded per day over a recent period. It gives you a baseline to judge whether today's activity is unusual." },
-    "zh-TW":{ "title": "平均成交量 (Average Volume)", "definition": "近期內每天通常成交的股數，可作為判斷今日交易是否異常的基準。" }
+    "zh-TW":{ "title": "平均成交量 (Average Volume)", "definition": "近期內每天通常成交的股數，可作為判斷今日交易是否異常的基準。" },
+    "ja":   { "title": "平均出来高 (Average Volume)", "definition": "直近の期間における1日あたりの典型的な取引株数です。今日の動きが異常かどうかを判断する基準になります。" },
+    "es":   { "title": "Volumen Promedio",   "definition": "El número típico de acciones negociadas por día en un periodo reciente. Te da una referencia para juzgar si la actividad de hoy es inusual." }
   },
   "exchange": {
     "en":   { "title": "Exchange",          "definition": "The marketplace where a stock is bought and sold, such as NASDAQ or the New York Stock Exchange (NYSE)." },
-    "zh-TW":{ "title": "交易所 (Exchange)",    "definition": "買賣股票的市場，例如那斯達克 (NASDAQ) 或紐約證券交易所 (NYSE)。" }
+    "zh-TW":{ "title": "交易所 (Exchange)",    "definition": "買賣股票的市場，例如那斯達克 (NASDAQ) 或紐約證券交易所 (NYSE)。" },
+    "ja":   { "title": "取引所 (Exchange)",    "definition": "NASDAQやニューヨーク証券取引所（NYSE）など、株式を売買する市場です。" },
+    "es":   { "title": "Bolsa de Valores",   "definition": "El mercado donde se compran y venden las acciones, como NASDAQ o la Bolsa de Nueva York (NYSE)." }
   },
   "52w_range": {
     "en":   { "title": "52-Week Range",     "definition": "The lowest and highest price the stock has traded over the past year. It shows how far the price has moved." },
-    "zh-TW":{ "title": "52週區間 (52-Week Range)", "definition": "過去一年內該股票成交的最低與最高價格，顯示股價的波動範圍。" }
+    "zh-TW":{ "title": "52週區間 (52-Week Range)", "definition": "過去一年內該股票成交的最低與最高價格，顯示股價的波動範圍。" },
+    "ja":   { "title": "52週レンジ (52-Week Range)", "definition": "過去1年間にその株式が取引された最安値と最高値です。価格がどれだけ動いたかを示します。" },
+    "es":   { "title": "Rango de 52 Semanas", "definition": "El precio más bajo y más alto al que la acción ha cotizado durante el último año. Muestra cuánto se ha movido el precio." }
   },
   "shares": {
     "en":   { "title": "Shares",            "definition": "Units of ownership in a company. One share equals one small slice of that company." },
-    "zh-TW":{ "title": "股份 (Shares)",        "definition": "公司所有權的單位。一股代表公司的一小部分。" }
+    "zh-TW":{ "title": "股份 (Shares)",        "definition": "公司所有權的單位。一股代表公司的一小部分。" },
+    "ja":   { "title": "株式 (Shares)",        "definition": "企業の所有権の単位です。1株はその企業のごく小さな一部にあたります。" },
+    "es":   { "title": "Acciones",           "definition": "Unidades de propiedad de una empresa. Una acción equivale a una pequeña porción de esa empresa." }
   },
   "ticker": {
     "en":   { "title": "Ticker Symbol",     "definition": "The short letter code used to identify a stock, for example AAPL for Apple." },
-    "zh-TW":{ "title": "股票代號 (Ticker Symbol)", "definition": "用來辨識股票的簡短字母代碼，例如蘋果公司的 AAPL。" }
+    "zh-TW":{ "title": "股票代號 (Ticker Symbol)", "definition": "用來辨識股票的簡短字母代碼，例如蘋果公司的 AAPL。" },
+    "ja":   { "title": "ティッカーシンボル (Ticker Symbol)", "definition": "株式を識別するための短い文字コードです。例えばアップルはAAPL。" },
+    "es":   { "title": "Símbolo (Ticker)",   "definition": "El código corto de letras que identifica una acción, por ejemplo AAPL para Apple." }
   },
   "position": {
     "en":   { "title": "Position",          "definition": "A stock you currently own — the shares you hold in one company." },
-    "zh-TW":{ "title": "持倉 (Position)",      "definition": "您目前持有的股票，也就是您在某一家公司所擁有的股份。" }
+    "zh-TW":{ "title": "持倉 (Position)",      "definition": "您目前持有的股票，也就是您在某一家公司所擁有的股份。" },
+    "ja":   { "title": "ポジション (Position)",  "definition": "現在保有している株式——ある企業について持っている株式のことです。" },
+    "es":   { "title": "Posición",           "definition": "Una acción que posees actualmente: las participaciones que tienes en una empresa." }
   },
   "holdings": {
     "en":   { "title": "Holdings",          "definition": "All the stocks and investments you currently own, taken together." },
-    "zh-TW":{ "title": "持股 (Holdings)",      "definition": "您目前擁有的所有股票與投資的總和。" }
+    "zh-TW":{ "title": "持股 (Holdings)",      "definition": "您目前擁有的所有股票與投資的總和。" },
+    "ja":   { "title": "保有銘柄 (Holdings)",    "definition": "現在保有しているすべての株式や投資をまとめたものです。" },
+    "es":   { "title": "Cartera (Holdings)", "definition": "Todas las acciones e inversiones que posees actualmente, en conjunto." }
   },
   "bid_ask_spread": {
     "en":   { "title": "Bid-Ask Spread",    "definition": "The gap between the highest price a buyer will pay (bid) and the lowest price a seller will accept (ask)." },
-    "zh-TW":{ "title": "買賣價差 (Bid-Ask Spread)", "definition": "買方願意付的最高價格（買價）與賣方願意接受的最低價格（賣價）之間的差距。" }
+    "zh-TW":{ "title": "買賣價差 (Bid-Ask Spread)", "definition": "買方願意付的最高價格（買價）與賣方願意接受的最低價格（賣價）之間的差距。" },
+    "ja":   { "title": "ビッド・アスク・スプレッド (Bid-Ask Spread)", "definition": "買い手が払う最高価格（ビッド）と売り手が受け入れる最低価格（アスク）との差です。" },
+    "es":   { "title": "Diferencial Compra-Venta", "definition": "La diferencia entre el precio máximo que un comprador pagará (compra) y el mínimo que un vendedor aceptará (venta)." }
   },
   "gross_cost": {
     "en":   { "title": "Gross Cost",        "definition": "The total price of your purchase before any fees are added." },
-    "zh-TW":{ "title": "總成本 (Gross Cost)",  "definition": "您這筆買進在加上任何手續費之前的總價格。" }
+    "zh-TW":{ "title": "總成本 (Gross Cost)",  "definition": "您這筆買進在加上任何手續費之前的總價格。" },
+    "ja":   { "title": "総コスト (Gross Cost)",  "definition": "手数料が加わる前の、購入の合計金額です。" },
+    "es":   { "title": "Costo Bruto",        "definition": "El precio total de tu compra antes de añadir cualquier comisión." }
   },
   "gross_proceeds": {
     "en":   { "title": "Gross Proceeds",    "definition": "The total amount of money from your sale before any fees are subtracted." },
-    "zh-TW":{ "title": "總收入 (Gross Proceeds)", "definition": "您這筆賣出在扣除任何手續費之前所獲得的總金額。" }
+    "zh-TW":{ "title": "總收入 (Gross Proceeds)", "definition": "您這筆賣出在扣除任何手續費之前所獲得的總金額。" },
+    "ja":   { "title": "総収入 (Gross Proceeds)", "definition": "手数料が差し引かれる前の、売却で得た合計金額です。" },
+    "es":   { "title": "Ingresos Brutos",    "definition": "La cantidad total de dinero de tu venta antes de restar cualquier comisión." }
   },
   "net_proceeds": {
     "en":   { "title": "Net Proceeds",      "definition": "The money actually added to or removed from your cash after all fees are counted." },
-    "zh-TW":{ "title": "淨收入 (Net Proceeds)", "definition": "計入所有手續費後，實際進出您現金帳戶的金額。" }
+    "zh-TW":{ "title": "淨收入 (Net Proceeds)", "definition": "計入所有手續費後，實際進出您現金帳戶的金額。" },
+    "ja":   { "title": "純収入 (Net Proceeds)", "definition": "すべての手数料を計上した後、実際に現金に加算（または減算）される金額です。" },
+    "es":   { "title": "Ingresos Netos",     "definition": "El dinero que realmente se suma o se resta de tu efectivo después de contar todas las comisiones." }
   },
   "execution_price": {
     "en":   { "title": "Execution Price",   "definition": "The actual price per share at which your order was filled." },
-    "zh-TW":{ "title": "成交價格 (Execution Price)", "definition": "您的訂單實際成交時每股的價格。" }
+    "zh-TW":{ "title": "成交價格 (Execution Price)", "definition": "您的訂單實際成交時每股的價格。" },
+    "ja":   { "title": "約定価格 (Execution Price)", "definition": "あなたの注文が成立した実際の1株あたりの価格です。" },
+    "es":   { "title": "Precio de Ejecución", "definition": "El precio real por acción al que se ejecutó tu orden." }
   },
   "time_in_force": {
     "en":   { "title": "TIF (Time in Force)", "definition": "How long your order stays active before it expires or is cancelled." },
-    "zh-TW":{ "title": "委託效期 (TIF, Time in Force)", "definition": "您的訂單在過期或取消之前會保持有效多久。" }
+    "zh-TW":{ "title": "委託效期 (TIF, Time in Force)", "definition": "您的訂單在過期或取消之前會保持有效多久。" },
+    "ja":   { "title": "有効期間 (TIF)",       "definition": "注文が失効またはキャンセルされるまで、どのくらい有効であり続けるかです。" },
+    "es":   { "title": "Vigencia (Time in Force)", "definition": "Cuánto tiempo permanece activa tu orden antes de caducar o cancelarse." }
   },
   "gtc_order": {
     "en":   { "title": "GTC (Good Till Cancel)", "definition": "An order that stays open until it is filled or you cancel it, even across multiple days." },
-    "zh-TW":{ "title": "長效單 (GTC, Good Till Cancel)", "definition": "一種訂單，會一直保持有效直到成交或您主動取消，即使跨越多個交易日。" }
+    "zh-TW":{ "title": "長效單 (GTC, Good Till Cancel)", "definition": "一種訂單，會一直保持有效直到成交或您主動取消，即使跨越多個交易日。" },
+    "ja":   { "title": "GTC注文 (Good Till Cancel)", "definition": "約定するか、あなたがキャンセルするまで、複数日にわたっても有効であり続ける注文です。" },
+    "es":   { "title": "GTC (Válida Hasta Cancelar)", "definition": "Una orden que permanece abierta hasta que se ejecuta o la cancelas, incluso durante varios días." }
   },
   "eod_order": {
     "en":   { "title": "EOD (Good Till End of Day)", "definition": "An order that expires at the end of the trading day if it has not been filled." },
-    "zh-TW":{ "title": "當日有效單 (EOD, Good Till End of Day)", "definition": "若當天交易結束前未成交，這種訂單就會自動失效。" }
+    "zh-TW":{ "title": "當日有效單 (EOD, Good Till End of Day)", "definition": "若當天交易結束前未成交，這種訂單就會自動失效。" },
+    "ja":   { "title": "EOD注文 (Good Till End of Day)", "definition": "約定しなかった場合、その取引日の終わりに失効する注文です。" },
+    "es":   { "title": "EOD (Válida Hasta Fin del Día)", "definition": "Una orden que caduca al final de la jornada de negociación si no se ha ejecutado." }
   },
   "crypto": {
     "en":   { "title": "Cryptocurrency",    "definition": "Digital money, such as Bitcoin, that you can buy and sell much like a stock." },
-    "zh-TW":{ "title": "加密貨幣 (Cryptocurrency)", "definition": "數位貨幣，例如比特幣，可以像股票一樣買進與賣出。" }
+    "zh-TW":{ "title": "加密貨幣 (Cryptocurrency)", "definition": "數位貨幣，例如比特幣，可以像股票一樣買進與賣出。" },
+    "ja":   { "title": "暗号資産 (Cryptocurrency)", "definition": "ビットコインなど、株式とほぼ同じように売買できるデジタル通貨です。" },
+    "es":   { "title": "Criptomoneda",       "definition": "Dinero digital, como el Bitcoin, que puedes comprar y vender de forma muy parecida a una acción." }
   },
   "index": {
     "en":   { "title": "Market Index",      "definition": "A scoreboard that tracks a group of stocks together, such as the S&P 500, NASDAQ, or Dow." },
-    "zh-TW":{ "title": "市場指數 (Market Index)", "definition": "用來追蹤一群股票整體表現的計分板，例如標普500、那斯達克或道瓊指數。" }
+    "zh-TW":{ "title": "市場指數 (Market Index)", "definition": "用來追蹤一群股票整體表現的計分板，例如標普500、那斯達克或道瓊指數。" },
+    "ja":   { "title": "株価指数 (Market Index)", "definition": "S&P 500、NASDAQ、ダウなど、株式のグループをまとめて追跡するスコアボードです。" },
+    "es":   { "title": "Índice de Mercado",  "definition": "Un marcador que sigue a un grupo de acciones en conjunto, como el S&P 500, el NASDAQ o el Dow." }
   },
   "watchlist": {
     "en":   { "title": "Watchlist",         "definition": "A saved list of stocks you keep an eye on without owning them." },
-    "zh-TW":{ "title": "觀察清單 (Watchlist)", "definition": "您持續關注但尚未持有的股票清單。" }
+    "zh-TW":{ "title": "觀察清單 (Watchlist)", "definition": "您持續關注但尚未持有的股票清單。" },
+    "ja":   { "title": "ウォッチリスト (Watchlist)", "definition": "保有はせずに注目している株式を保存したリストです。" },
+    "es":   { "title": "Lista de Seguimiento", "definition": "Una lista guardada de acciones que vigilas sin poseerlas." }
   },
   "dividend": {
     "en":   { "title": "Dividend",          "definition": "A cash payment a company shares with its shareholders out of its profits." },
-    "zh-TW":{ "title": "股息 (Dividend)",      "definition": "公司從利潤中分配給股東的現金。" }
+    "zh-TW":{ "title": "股息 (Dividend)",      "definition": "公司從利潤中分配給股東的現金。" },
+    "ja":   { "title": "配当 (Dividend)",      "definition": "企業が利益の中から株主に分配する現金の支払いです。" },
+    "es":   { "title": "Dividendo",          "definition": "Un pago en efectivo que una empresa reparte a sus accionistas con cargo a sus beneficios." }
   },
   "beat_inflation": {
     "en":   { "title": "Beat Inflation",    "definition": "Growing your money faster than prices rise, so it keeps its buying power. Prices for everyday things creep up each year; beating inflation means your savings can still buy just as much later." },
-    "zh-TW":{ "title": "對抗通膨 (Beat Inflation)", "definition": "讓你的錢成長得比物價上漲更快，以維持購買力。日常用品的價格每年通常會逐漸上升；對抗通膨就是讓你的存款未來仍能買到一樣多的東西。" }
+    "zh-TW":{ "title": "對抗通膨 (Beat Inflation)", "definition": "讓你的錢成長得比物價上漲更快，以維持購買力。日常用品的價格每年通常會逐漸上升；對抗通膨就是讓你的存款未來仍能買到一樣多的東西。" },
+    "ja":   { "title": "インフレに勝つ (Beat Inflation)", "definition": "物価の上昇よりも速くお金を増やし、購買力を保つことです。日用品の価格は毎年少しずつ上がります。インフレに勝つとは、貯蓄が将来も同じだけ買える状態を保つことです。" },
+    "es":   { "title": "Superar la Inflación", "definition": "Hacer crecer tu dinero más rápido de lo que suben los precios, para que mantenga su poder de compra. Los precios cotidianos suben cada año; superar la inflación significa que tus ahorros aún podrán comprar lo mismo más adelante." }
   },
   "grow_wealth": {
     "en":   { "title": "Grow Wealth",       "definition": "Building up more money over time by reinvesting your gains, so your money earns money — and those earnings earn even more, like a snowball getting bigger." },
-    "zh-TW":{ "title": "財富增值 (Grow Wealth)", "definition": "透過把獲利再投入，讓財富隨時間累積：你的錢會賺錢，而賺到的錢又會繼續賺錢，就像滾雪球一樣越滾越大。" }
+    "zh-TW":{ "title": "財富增值 (Grow Wealth)", "definition": "透過把獲利再投入，讓財富隨時間累積：你的錢會賺錢，而賺到的錢又會繼續賺錢，就像滾雪球一樣越滾越大。" },
+    "ja":   { "title": "資産を増やす (Grow Wealth)", "definition": "利益を再投資して時間をかけてお金を積み上げることです。お金がお金を生み、その利益がさらに利益を生む——雪だるまが大きくなるように。" },
+    "es":   { "title": "Hacer Crecer tu Patrimonio", "definition": "Acumular más dinero con el tiempo reinvirtiendo tus ganancias, para que tu dinero genere dinero, y esas ganancias generen aún más, como una bola de nieve que crece." }
   },
   "passive_income": {
     "en":   { "title": "Passive Income",    "definition": "Money you receive regularly without having to work for it each time — for example, the cash dividend payments a company sends to its shareholders." },
-    "zh-TW":{ "title": "被動收入 (Passive Income)", "definition": "你不必每次出力就能定期收到的錢，例如公司發給股東的現金股息。" }
+    "zh-TW":{ "title": "被動收入 (Passive Income)", "definition": "你不必每次出力就能定期收到的錢，例如公司發給股東的現金股息。" },
+    "ja":   { "title": "受動的所得 (Passive Income)", "definition": "毎回働かなくても定期的に受け取れるお金です——例えば、企業が株主に送る現金配当。" },
+    "es":   { "title": "Ingreso Pasivo",     "definition": "Dinero que recibes con regularidad sin tener que trabajar cada vez por él, por ejemplo los pagos de dividendos en efectivo que una empresa envía a sus accionistas." }
   },
   "diversify_risk": {
     "en":   { "title": "Diversify Risk",    "definition": "Spreading your money across many different investments instead of just one, so if a single one does badly, you do not lose everything." },
-    "zh-TW":{ "title": "分散風險 (Diversify Risk)", "definition": "把資金分散投資在許多不同標的，而不是只押注一個；這樣即使其中一個表現不佳，你也不會血本無歸。" }
+    "zh-TW":{ "title": "分散風險 (Diversify Risk)", "definition": "把資金分散投資在許多不同標的，而不是只押注一個；這樣即使其中一個表現不佳，你也不會血本無歸。" },
+    "ja":   { "title": "リスク分散 (Diversify Risk)", "definition": "1つだけでなく多くの異なる投資にお金を分散することです。1つがうまくいかなくても、すべてを失わずに済みます。" },
+    "es":   { "title": "Diversificar el Riesgo", "definition": "Repartir tu dinero entre muchas inversiones distintas en lugar de una sola, para que si a una le va mal, no lo pierdas todo." }
   },
   "stock_ownership": {
     "en":   { "title": "Stock Ownership",   "definition": "Buying shares means you own a small piece of a real company. As a part-owner, you share in its success when the business does well." },
-    "zh-TW":{ "title": "股票持有 (Stock Ownership)", "definition": "買進股票代表你擁有一家真實公司的一小部分。身為部分股東，當公司經營良好時，你也能分享它的成功。" }
+    "zh-TW":{ "title": "股票持有 (Stock Ownership)", "definition": "買進股票代表你擁有一家真實公司的一小部分。身為部分股東，當公司經營良好時，你也能分享它的成功。" },
+    "ja":   { "title": "株式の保有 (Stock Ownership)", "definition": "株式を買うことは、実在する企業のごく一部を所有することを意味します。共同所有者として、事業が好調なときはその成功を分かち合えます。" },
+    "es":   { "title": "Propiedad de Acciones", "definition": "Comprar acciones significa poseer una pequeña parte de una empresa real. Como copropietario, compartes su éxito cuando al negocio le va bien." }
   }
 }

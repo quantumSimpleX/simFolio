@@ -19,14 +19,14 @@ export function StockRow({
       )}
     >
       <div className={cn(
-        'flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-input font-sans text-[11px] font-bold transition-colors',
+        'flex h-[46px] w-[46px] flex-shrink-0 items-center justify-center rounded-input font-sans text-[13px] font-bold transition-colors',
         highlighted ? 'bg-ame-100 text-ame-600' : 'bg-ink-50 text-ink-500',
       )}>{ticker}</div>
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           <div className={cn(
-            'truncate font-sans text-base',
+            'truncate font-sans text-lg',
             name ? 'font-semibold text-ink-900' : 'font-normal text-ink-400',
           )}>
             {name || ticker}
@@ -40,7 +40,7 @@ export function StockRow({
 
       <div className="flex-shrink-0 text-right">
         {rightTop && (
-          <div className="font-sans text-base font-semibold text-ink-900">{rightTop}</div>
+          <div className="font-sans text-lg font-semibold text-ink-900">{rightTop}</div>
         )}
         {rightBottom && (
           <div className={cn(

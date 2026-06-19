@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BottomNav, TopNav } from '../../components/Nav';
+import { DotMenu } from '../../components/DotMenu';
 import { ChatComposer, ChatMessages } from '../../components/HeroChatPanel';
 import { useHeroChat, useHeroHistory } from '../../hooks/useHeroChat';
 import { useHeroSelections } from '../../hooks/useHeroSelections';
@@ -9,6 +11,7 @@ import { buildHeroContext } from '../../lib/heroContext';
 import { HeroAvatar } from '../../components/Primitives';
 
 export default function AskTab() {
+  const navigate = useNavigate();
   const { heroes } = useHeroSelections();
   const { positions, cashBalance } = usePortfolio();
   const { watchlist } = useWatchlist();
@@ -48,7 +51,10 @@ export default function AskTab() {
           <div className="font-sans text-lg font-semibold text-ink-900">Your Council</div>
           <div className="font-sans text-sm text-ink-400">{councilNames || 'Sage'}</div>
         </div>
-        <div className="ml-auto h-[7px] w-[7px] rounded-pill bg-aqua-400"/>
+        <div className="ml-auto flex items-center gap-1.5">
+          <div className="h-[7px] w-[7px] rounded-pill bg-aqua-400"/>
+          <DotMenu items={[{ label: 'Find a new mentor', onSelect: () => navigate('/find-mentor') }]}/>
+        </div>
       </div>
 
       <ChatMessages

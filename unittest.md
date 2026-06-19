@@ -165,3 +165,114 @@ each acronym is spelled out in full, and the on-screen labels resolve to a worki
 
 Discovered issues and their resolution are appended to `task.md` under
 "QA findings — tooltip glossary".
+
+---
+---
+
+# Unit Test Plan — Change a Hero ("Find a new mentor")  — 2026-06-19
+
+- **Target:** ≥ 85% line coverage on the new/changed feature files; overall suite pass rate > 95%.
+- **New test files:**
+  - `app/src/test/heroRanking.test.js`   — `candidateHeroes(true)`, `resolveMentorHeroes`
+  - `app/src/test/findMentor.test.jsx`   — `HeroSelect`, `DotMenu`, `FindMentor` screen, hooks
+- **Run:** `cd app && npx vitest run src/test/heroRanking.test.js src/test/findMentor.test.jsx`
+  Coverage: `cd app && npx vitest run --coverage`
+- Existing `onboarding.flow.test.jsx`, `heroes.test.js`, `heroChat.test.jsx` must still pass
+  unchanged (proves the refactor is behaviour-preserving).
+
+## Units under test
+
+| File | What it does |
+|------|--------------|
+| `data/heroes.js` | `candidateHeroes(includeWarren)`, `resolveMentorHeroes` (pure) |
+| `components/HeroSelect.jsx` | reusable grid screen (loading skeleton, pick, CTA, onChoose) |
+| `components/DotMenu.jsx` | ⋮ menu open/close/select/outside-click |
+| `hooks/useChangeHero.js` | replace single hero_selection + invalidate |
+| `hooks/useOnboardingAnswers.js` | DB → localStorage fallback |
+| `screens/heroes/FindMentor.jsx` | wires answers→ranking→HeroSelect→swap→navigate |
+
+## Test cases
+
+### A. `candidateHeroes` / `resolveMentorHeroes` (heroRanking.test.js)
+1. `candidateHeroes()` → 19, excludes sage+warren (regression).
+2. `candidateHeroes(true)` → 20, includes warren, excludes sage.
+3. `resolveMentorHeroes({llmIds:[8 valid], answers})` → those 8, order preserved, no forced warren.
+4. Warren **may** appear when ranked (not pinned, not dropped) — include warren in llmIds, assert present.
+5. Drops unknown ids + sage; dedups; caps at 8.
+6. Short llmIds → filled from `rankHeroesForSelection(answers,20)` to exactly 8 unique.
+7. Garbage/missing input (`undefined`, non-array) → returns 8 unique valid ids, no throw.
+
+### B. `HeroSelect` component (findMentor.test.jsx)
+1. `loading` → renders the loading message + 8 skeleton tiles, no grid cards.
+2. Loaded → renders one card per `heroIds` with hero name + style; shows `message`.
+3. CTA disabled until a card is picked; label is the disabled placeholder.
+4. Pick a card → CTA reads `"{ctaPrefix} {name} …"`; clicking calls `onChoose(id)`.
+5. `onBack` rendered + fires when provided.
+
+### C. `DotMenu` component
+1. Menu hidden initially; clicking ⋮ reveals items.
+2. Clicking an item calls its `onSelect` and closes the menu.
+3. Outside click closes the menu without firing any item.
+
+### D. `useChangeHero` hook (renderHook + supabaseMock)
+1. `mutate(id)` issues delete then insert on `hero_selections`; resolves; invalidates query.
+2. Surfaces error state when insert errors (mock error path).
+
+### E. `useOnboardingAnswers` hook
+1. Returns DB answers when `users.onboarding_answers` present.
+2. Falls back to `localStorage('simfolio_onboarding_answers')` when DB empty.
+3. Returns `{}`/empty when neither present (no throw).
+
+### F. `FindMentor` screen (smoke)
+1. Renders the mentor Sage copy.
+2. With seeded ranking, shows hero cards; picking one + clicking CTA calls change-hero and
+   navigates away (assert navigation target rendered / mock called).
+
+### G. Regression
+1. `onboarding.flow.test.jsx` green (grid still Warren-first, "Ask {name}" CTA).
+2. `heroes.test.js` green (`candidateHeroes()` default still 19).
+
+## Coverage strategy
+- Pure functions (A) give cheap, high line coverage on `heroes.js` additions.
+- Component tests (B,C) cover both branches (loading/loaded, open/closed, picked/unpicked).
+- Hook tests (D,E) cover success + fallback/error branches.
+- Screen smoke (F) stitches the wiring; exercises the navigate + mutate calls.
+
+---
+
+# Unit Test Plan — Larger rows + JA/ES tooltips + flag picker
+
+_Added 2026-06-19. Target ≥85% line coverage on touched files._
+
+## A. Glossary data integrity (`glossary.test.jsx`, extend)
+- A1. Every key has `ja` and `es` objects (in addition to en/zh-TW).
+- A2. For ja and es: `title` and `definition` are non-empty strings.
+- A3. ja `definition` ≠ en `definition`; es `definition` ≠ en `definition` (real translations).
+
+## B. FlagIcon (`primitives.test.jsx`)
+- B1. `FlagIcon` renders an `<svg>` for each of US, TW, JP, ES (4 svgs).
+
+## C. LANGUAGES config (`primitives.test.jsx`)
+- C1. `LANGUAGES` has exactly 4 entries with codes `en`, `zh-TW`, `ja`, `es` and a `country` + `label` each.
+
+## D. LangToggle flag picker (`primitives.test.jsx`, replaces old toggle test)
+- D1. Trigger (`data-testid="lang-toggle"`) is collapsed: the menu items are not shown initially.
+- D2. Clicking the trigger reveals all 4 language labels (English / 繁體中文 / 日本語 / Español).
+- D3. Selecting 日本語 closes the menu and switches context lang to `ja` (assert via a probe / localStorage `simfolio_language === 'ja'`).
+- D4. Outside click closes the menu without changing language.
+
+## E. TermUnderline desktop i18n (`glossary.test.jsx`)
+- E1. `lang='ja'` → desktop hover shows the Japanese definition.
+- E2. `lang='es'` → desktop hover shows the Spanish definition.
+
+## F. TermUnderline mobile dynamic buttons (`glossary.test.jsx` / `primitives.test.jsx`)
+- F1. `lang='en'` (default), innerWidth<768: tapping shows ONLY the US/English button — no second flag tab.
+- F2. `lang='ja'`, mobile: shows US (English) + JP (日本語) buttons; the Japanese definition is present.
+- F3. `lang='zh-TW'`, mobile: shows US + TW buttons (back-compat).
+
+## G. StockRow sizing (`components.test.jsx`)
+- G1. The ticker chip element carries the enlarged classes (`h-[46px]`, `w-[46px]`).
+- G2. StockRow still renders ticker/name/right values and fires onClick (existing behavior preserved).
+
+## Coverage focus
+- `StockRow.jsx`, `Primitives.jsx` (FlagIcon/LANGUAGES/LangToggle/TermUnderline), `glossary.json` (data-driven), `LanguageContext` (already covered by context.test).

@@ -46,6 +46,12 @@ describe('StockRow / HoldingRow', () => {
     fireEvent.click(screen.getByText('Apple Inc.'))
     expect(onClick).toHaveBeenCalled()
   })
+  it('StockRow ticker chip uses the enlarged symbol box', () => {
+    wrap(<StockRow ticker="AAPL" name="Apple Inc." />)
+    const chip = screen.getByText('AAPL')
+    expect(chip).toHaveClass('h-[46px]')
+    expect(chip).toHaveClass('w-[46px]')
+  })
   it('HoldingRow formats shares and percent', () => {
     const { container } = wrap(<HoldingRow ticker="NVDA" name="NVIDIA" qty={5} value={1000} pct={12.3} pos={true} />)
     // "shares" is now a <TermUnderline> trigger, splitting "5 shares" across

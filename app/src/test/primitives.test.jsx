@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { renderWithProviders } from './renderWithProviders'
 import {
   StatusBar, Logo, Mark, SimPill, CTA, GhostCTA, Field, SocialBtn, Divider,
-  LangToggle, ThemeToggle, FlagIcon, Eyebrow, TermUnderline, StatusPill, HeroAvatar,
+  LangToggle, ThemeToggle, FlagIcon, LANGUAGES, Eyebrow, TermUnderline, StatusPill, HeroAvatar,
   GuideAvatar, ProgressDots, GoalCard, MktStatus, ReceiptRow,
 } from '../components/Primitives'
 import { TopNav, BottomNav, PageHeader, BackHeader } from '../components/Nav'
@@ -85,29 +85,40 @@ describe('Primitives', () => {
     fireEvent.mouseEnter(screen.getByText('mystery-term'))
   })
 
-  it('TermUnderline opens a bottom sheet with US/TW flag tabs on mobile', () => {
+  it('mobile tooltip with default (English) shows only the US button', () => {
+    localStorage.clear()
     const original = window.innerWidth
     window.innerWidth = 375
     try {
       renderWithProviders(<TermUnderline>slippage</TermUnderline>)
       fireEvent.click(screen.getByText('slippage'))
       expect(screen.getByLabelText('English')).toBeInTheDocument()
-      expect(screen.getByLabelText('Traditional Chinese')).toBeInTheDocument()
+      // English preference → no second-language tab.
+      expect(screen.queryByLabelText('Traditional Chinese')).not.toBeInTheDocument()
+      expect(screen.queryByLabelText('Japanese')).not.toBeInTheDocument()
       expect(document.body.textContent).toMatch(/difference between/i)
     } finally {
       window.innerWidth = original
     }
   })
 
-  it('LangToggle and ThemeToggle toggle through context (icon buttons)', () => {
+  it('LangToggle opens a flag picker and switches language; ThemeToggle toggles theme', () => {
     localStorage.clear()
     const { container } = renderWithProviders(<><LangToggle/><ThemeToggle/></>)
 
-    // Language: single flag-icon button, starts at English (US flag), toggles to TW.
+    // Language: a flag-icon trigger that opens a list of the 4 supported flags.
     const lang = container.querySelector('[data-testid="lang-toggle"]')
-    expect(lang).toHaveAttribute('aria-label', 'Switch to Traditional Chinese')
+    expect(lang).toHaveAttribute('aria-label', 'Select language')
+    expect(screen.queryByText('日本語')).not.toBeInTheDocument()
     fireEvent.click(lang)
-    expect(lang).toHaveAttribute('aria-label', 'Switch to English')
+    expect(screen.getByText('English')).toBeInTheDocument()
+    expect(screen.getByText('繁體中文')).toBeInTheDocument()
+    expect(screen.getByText('日本語')).toBeInTheDocument()
+    expect(screen.getByText('Español')).toBeInTheDocument()
+    // Selecting Japanese persists the choice and closes the menu.
+    fireEvent.click(screen.getByText('日本語'))
+    expect(screen.queryByText('Español')).not.toBeInTheDocument()
+    expect(localStorage.getItem('simfolio_language')).toBe('ja')
 
     // Theme: single Sun/Moon icon button, toggles light ↔ dark + sets data-theme.
     const theme = container.querySelector('[data-testid="theme-toggle"]')
@@ -119,10 +130,18 @@ describe('Primitives', () => {
     expect(document.documentElement.dataset.theme).toBe('light')
   })
 
-  it('FlagIcon renders US and TW flag svgs', () => {
-    const { container } = render(<><FlagIcon country="US"/><FlagIcon country="TW"/></>)
+  it('FlagIcon renders US, TW, JP and ES flag svgs', () => {
+    const { container } = render(<><FlagIcon country="US"/><FlagIcon country="TW"/><FlagIcon country="JP"/><FlagIcon country="ES"/></>)
     const svgs = container.querySelectorAll('svg')
-    expect(svgs.length).toBe(2)
+    expect(svgs.length).toBe(4)
+  })
+
+  it('LANGUAGES lists the 4 supported tooltip languages', () => {
+    expect(LANGUAGES.map(l => l.code)).toEqual(['en', 'zh-TW', 'ja', 'es'])
+    LANGUAGES.forEach(l => {
+      expect(typeof l.country).toBe('string')
+      expect(l.label.trim().length).toBeGreaterThan(0)
+    })
   })
 })
 

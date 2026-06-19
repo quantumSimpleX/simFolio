@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
-import { Logo, SimPill, CTA, GoalCard, ProgressDots, GuideAvatar, HeroAvatar, TermUnderline } from '../../components/Primitives';
-import BrandPanel from '../../components/BrandPanel';
+import { useState } from 'react';
+import { CTA, GoalCard, ProgressDots, HeroAvatar, TermUnderline } from '../../components/Primitives';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { matchHeroes, resolveSelectionHeroes, heroIdFromName, HERO_DATA } from '../../data/heroes';
 import { useHeroRanking } from '../../hooks/useHeroRanking';
 import { cn } from '../../lib/utils';
+import { ScreenShell, SageHeader, BackButton, fluid, useIsDesktop } from './shell';
+import { HeroSelect } from '../../components/HeroSelect';
 
 const NONE_GOAL = 'None of the above';
 
@@ -206,7 +207,17 @@ export default function Onboarding() {
     if (mentionId) {
       return <HeroIntro heroId={mentionId} onContinue={() => handleHeroChosen(mentionId)} saving={saving} onBack={() => setShowHeroes(false)}/>;
     }
-    return <HeroSelect heroIds={selectionHeroIds} loading={rankingLoading} onChoose={handleHeroChosen} saving={saving} onBack={() => setShowHeroes(false)}/>;
+    return (
+      <HeroSelect
+        heroIds={selectionHeroIds}
+        loading={rankingLoading}
+        onChoose={handleHeroChosen}
+        saving={saving}
+        onBack={() => setShowHeroes(false)}
+        loadingMessage="Let me make some calls to find a few experts who could help you…"
+        message="Maybe you can ask some of these experts to help you?"
+      />
+    );
   }
 
   if (showStock) {
@@ -214,73 +225,6 @@ export default function Onboarding() {
   }
 
   return <OnboardingShell step={step} total={QUESTIONS.length + 1} current={current} selected={selected} onSelect={handleSelect} onContinue={handleContinue} onBack={step > 0 ? handleBack : null}/>;
-}
-
-// Fluid type: scales linearly from `min`px at 480px viewport to `max`px at 1280px viewport
-function fluid(min, max) {
-  return `clamp(${min}px, calc(${min}px + ${max - min} * ((100vw - 480px) / 800)), ${max}px)`;
-}
-
-// Desktop: persistent brand panel on the left, content on the right.
-// Mobile: top nav bar with content below.
-function ScreenShell({ children }) {
-  const isDesktop = useIsDesktop();
-
-  if (isDesktop) {
-    return (
-      <div className="flex h-[100dvh] w-full overflow-hidden bg-paper">
-        <div className="w-[45%] min-w-[420px] max-w-[620px] flex-shrink-0">
-          <BrandPanel/>
-        </div>
-        <div className="flex flex-1 justify-center overflow-auto px-12 pb-12 pt-14">
-          <div className="flex h-fit w-full max-w-[640px] flex-col gap-7">
-            {children}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex min-h-[100dvh] w-full flex-col bg-paper">
-      <div className="flex flex-shrink-0 items-center justify-between border-b border-ink-100 bg-white px-6 py-3.5">
-        <Logo size={19}/>
-        <SimPill/>
-      </div>
-      <div className="flex flex-1 justify-center overflow-auto">
-        <div className="flex w-full max-w-[480px] flex-col gap-5 px-6 pb-8 pt-5">
-          {children}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function BackButton({ onBack }) {
-  return (
-    <div
-      onClick={onBack}
-      className="flex cursor-pointer items-center gap-1.5 self-start font-sans font-semibold text-ink-400"
-      style={{ fontSize: fluid(13, 15) }}
-    >
-      ← Back
-    </div>
-  );
-}
-
-function SageHeader({ avatarSize, isDesktop, children }) {
-  return (
-    <div className="flex items-start" style={{ gap: isDesktop ? 18 : 10 }}>
-      <GuideAvatar size={avatarSize}/>
-      <div className={cn('flex-1', isDesktop && 'pt-1')}>
-        <div
-          className="font-sans font-semibold uppercase tracking-[0.14em] text-ink-400"
-          style={{ fontSize: fluid(11, 13), marginBottom: isDesktop ? 8 : 6 }}
-        >Sage</div>
-        <div className="font-sans leading-normal text-ink-600" style={{ fontSize: fluid(15, 22) }}>{children}</div>
-      </div>
-    </div>
-  );
 }
 
 function OnboardingShell({ step, total, current, selected, onSelect, onContinue, onBack }) {
@@ -444,61 +388,6 @@ function HeroIntro({ heroId, onContinue, saving, onBack }) {
   );
 }
 
-function HeroSelect({ heroIds, loading, onChoose, saving, onBack }) {
-  const [picked, setPicked] = useState(null);
-  const isDesktop = useIsDesktop();
-  const avatarSize = isDesktop ? 48 : 34;
-
-  return (
-    <ScreenShell>
-      <BackButton onBack={onBack}/>
-
-      <SageHeader avatarSize={avatarSize} isDesktop={isDesktop}>
-        {loading ? 'Let me make some calls to find a few experts who could help you…' : 'Maybe you can ask some of these experts to help you?'}
-      </SageHeader>
-
-      {loading ? (
-        <div className="grid grid-cols-2 gap-2.5">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-[88px] animate-pulse rounded-card border-[1.5px] border-ink-100 bg-ink-50"/>
-          ))}
-        </div>
-      ) : (
-      <div className="grid grid-cols-2 gap-2.5">
-        {heroIds.map(id => {
-          const h = HERO_DATA[id];
-          const isPicked = picked === id;
-          return (
-            <div
-              key={id}
-              onClick={() => setPicked(id)}
-              className={cn(
-                'flex cursor-pointer items-center gap-3 rounded-card border-[1.5px] p-3',
-                isPicked ? 'border-ame-400 bg-ame-50' : 'border-ink-200 bg-white',
-              )}
-            >
-              <HeroAvatar id={id} initials={h.initials} color={h.color} size={isDesktop ? 64 : 52}/>
-              <div className="min-w-0 flex-1">
-                <div className="font-sans font-semibold text-ink-900" style={{ fontSize: fluid(15, 17) }}>{h.name}</div>
-                <div className="mt-0.5 font-sans leading-snug text-ink-400" style={{ fontSize: fluid(12, 14) }}>{h.style}</div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      )}
-
-      <CTA
-        label={picked ? `Ask ${HERO_DATA[picked].name}  →` : 'Pick an expert to continue'}
-        full
-        loading={saving}
-        disabled={!picked}
-        onClick={() => picked && onChoose(picked)}
-      />
-    </ScreenShell>
-  );
-}
-
 function StockInterest({ stocks, setStocks, onFinish, saving, onBack }) {
   const [input, setInput] = useState('');
   const isDesktop = useIsDesktop();
@@ -564,15 +453,4 @@ function StockInterest({ stocks, setStocks, onFinish, saving, onBack }) {
       </div>
     </ScreenShell>
   );
-}
-
-function useIsDesktop() {
-  const [wide, setWide] = useState(() => window.innerWidth >= 768);
-  useEffect(() => {
-    const mq = window.matchMedia('(min-width: 768px)');
-    const handler = e => setWide(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
-  return wide;
 }

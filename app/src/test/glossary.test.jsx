@@ -40,6 +40,26 @@ describe('A. Glossary data integrity', () => {
     expect(glossary[k]['zh-TW'].definition).not.toBe(glossary[k].en.definition)
   })
 
+  it.each(allKeys)('%s has ja and es objects', (k) => {
+    expect(glossary[k].ja).toBeTypeOf('object')
+    expect(glossary[k].es).toBeTypeOf('object')
+  })
+
+  it.each(allKeys)('%s ja + es title and definition are non-empty strings', (k) => {
+    for (const lang of ['ja', 'es']) {
+      const e = glossary[k][lang]
+      expect(typeof e.title).toBe('string')
+      expect(e.title.trim().length).toBeGreaterThan(0)
+      expect(typeof e.definition).toBe('string')
+      expect(e.definition.trim().length).toBeGreaterThan(0)
+    }
+  })
+
+  it.each(allKeys)('%s ja and es definitions differ from en (real translations)', (k) => {
+    expect(glossary[k].ja.definition).not.toBe(glossary[k].en.definition)
+    expect(glossary[k].es.definition).not.toBe(glossary[k].en.definition)
+  })
+
   it.each(NEW_KEYS)('new key %s exists', (k) => {
     expect(glossary[k]).toBeDefined()
   })
@@ -148,26 +168,84 @@ describe('D. TermUnderline desktop rendering', () => {
 // E. TermUnderline mobile + i18n
 // ---------------------------------------------------------------------------
 describe('E. TermUnderline mobile + i18n', () => {
-  it('mobile (innerWidth < 768): tapping opens a bottom sheet with US/TW flag tabs', () => {
+  const setMobile = () => { window.innerWidth = 375 }
+
+  it('mobile, English preference: only the US/English button is shown', () => {
     const original = window.innerWidth
-    window.innerWidth = 375
+    localStorage.clear()
+    setMobile()
+    try {
+      renderWithProviders(<TermUnderline>EPS</TermUnderline>)
+      fireEvent.click(screen.getByText('EPS'))
+      expect(screen.getByLabelText('English')).toBeInTheDocument()
+      expect(screen.queryByLabelText('Japanese')).not.toBeInTheDocument()
+      expect(screen.queryByLabelText('Traditional Chinese')).not.toBeInTheDocument()
+      expect(document.body.textContent).toContain(glossary.eps.en.definition)
+    } finally {
+      window.innerWidth = original
+      localStorage.clear()
+    }
+  })
+
+  it("mobile, Japanese preference: US + Japanese buttons, Japanese definition present", () => {
+    const original = window.innerWidth
+    localStorage.setItem('simfolio_language', 'ja')
+    setMobile()
+    try {
+      renderWithProviders(<TermUnderline>EPS</TermUnderline>)
+      fireEvent.click(screen.getByText('EPS'))
+      expect(screen.getByLabelText('English')).toBeInTheDocument()
+      expect(screen.getByLabelText('Japanese')).toBeInTheDocument()
+      expect(document.body.textContent).toContain(glossary.eps.ja.definition)
+    } finally {
+      window.innerWidth = original
+      localStorage.clear()
+    }
+  })
+
+  it("mobile, Traditional Chinese preference: US + TW buttons (back-compat)", () => {
+    const original = window.innerWidth
+    localStorage.setItem('simfolio_language', 'zh-TW')
+    setMobile()
     try {
       renderWithProviders(<TermUnderline>EPS</TermUnderline>)
       fireEvent.click(screen.getByText('EPS'))
       expect(screen.getByLabelText('English')).toBeInTheDocument()
       expect(screen.getByLabelText('Traditional Chinese')).toBeInTheDocument()
-      expect(document.body.textContent).toContain(glossary.eps.en.definition)
     } finally {
       window.innerWidth = original
+      localStorage.clear()
     }
   })
 
-  it("lang='zh-TW' shows the Chinese definition in the desktop tooltip", () => {
+  it("desktop lang='zh-TW' shows the Chinese definition", () => {
     localStorage.setItem('simfolio_language', 'zh-TW')
     try {
       renderWithProviders(<TermUnderline>EPS</TermUnderline>)
       fireEvent.mouseEnter(screen.getByText('EPS'))
       expect(document.body.textContent).toContain(glossary.eps['zh-TW'].definition)
+    } finally {
+      localStorage.clear()
+    }
+  })
+
+  it("desktop lang='ja' shows the Japanese definition", () => {
+    localStorage.setItem('simfolio_language', 'ja')
+    try {
+      renderWithProviders(<TermUnderline>EPS</TermUnderline>)
+      fireEvent.mouseEnter(screen.getByText('EPS'))
+      expect(document.body.textContent).toContain(glossary.eps.ja.definition)
+    } finally {
+      localStorage.clear()
+    }
+  })
+
+  it("desktop lang='es' shows the Spanish definition", () => {
+    localStorage.setItem('simfolio_language', 'es')
+    try {
+      renderWithProviders(<TermUnderline>EPS</TermUnderline>)
+      fireEvent.mouseEnter(screen.getByText('EPS'))
+      expect(document.body.textContent).toContain(glossary.eps.es.definition)
     } finally {
       localStorage.clear()
     }
