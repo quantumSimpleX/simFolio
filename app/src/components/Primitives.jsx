@@ -420,7 +420,7 @@ export function TermUnderline({ children, termKey }) {
       {open && (
         <span
           role="tooltip"
-          className="absolute bottom-full left-0 z-50 mb-1.5 block w-max max-w-[280px] rounded-card border border-ink-100 bg-white px-3.5 py-2.5 font-sans shadow-[0_4px_20px_rgba(0,0,0,0.12)]"
+          className="absolute bottom-full left-0 z-50 mb-1.5 block w-max max-w-[280px] rounded-card border border-ink-200 bg-white px-3.5 py-2.5 font-sans shadow-[0_4px_20px_rgba(0,0,0,0.12)] dark:border-ink-300"
         >
           <GlossaryEntry entry={entry} />
         </span>
