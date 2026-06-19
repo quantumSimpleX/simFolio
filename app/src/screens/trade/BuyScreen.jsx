@@ -40,9 +40,11 @@ export default function BuyScreen() {
   const canExec = marketOpen || assetType === 'CRYPTO'
 
   const price = stock?.price ?? 0
-  const total = (qty * price).toFixed(2)
+  // Limit orders cost at the target price (the max you'd pay), not the live price.
+  const effectivePrice = orderType === 'LIMIT' && limitPrice ? parseFloat(limitPrice) : price
+  const total = (qty * effectivePrice).toFixed(2)
   const fee = TRANSACTION_FEE
-  const grandTotal = (qty * price + fee).toFixed(2)
+  const grandTotal = (qty * effectivePrice + fee).toFixed(2)
   const cashAfter = cashBalance != null ? (cashBalance - parseFloat(grandTotal)).toFixed(2) : null
   // Limit orders require both a target price and a time-in-force selection.
   const limitIncomplete = orderType === 'LIMIT' && (!limitPrice || !tif)
@@ -117,7 +119,7 @@ export default function BuyScreen() {
 
       <div className="rounded-card border border-ink-100 bg-white px-5">
         <div className="pb-1 pt-3"><Eyebrow>Order summary</Eyebrow></div>
-        <ReceiptRow label={`${qty} shares × $${price}`} value={`$${total}`}/>
+        <ReceiptRow label={`${qty} shares × $${effectivePrice}`} value={`$${total}`}/>
         <ReceiptRow label={<TermUnderline>Transaction fee</TermUnderline>} value={`$${fee.toFixed(2)}`}/>
         <ReceiptRow label={canExec ? 'Total' : 'Total (estimated)'} value={canExec ? `$${grandTotal}` : `~$${grandTotal}`} bold/>
       </div>

@@ -40,10 +40,12 @@ export default function SellScreen() {
   const { data: stock, isLoading } = useStockDetail(ticker)
   const { data: candles, isLoading: candlesLoading, isError: candlesError } = useCandles(ticker, chartRange)
 
-  const gross = (qty * price).toFixed(2)
-  const pnl   = qty * price - qty * costBasis
+  // Limit orders settle at the target price (the min you'd accept), not the live price.
+  const effectivePrice = orderType === 'LIMIT' && limitPrice ? parseFloat(limitPrice) : price
+  const gross = (qty * effectivePrice).toFixed(2)
+  const pnl   = qty * effectivePrice - qty * costBasis
   const pnlPositive = pnl >= 0
-  const netToCash = (qty * price - TRANSACTION_FEE).toFixed(2)
+  const netToCash = (qty * effectivePrice - TRANSACTION_FEE).toFixed(2)
   // Limit orders require both a target price and a time-in-force selection.
   const limitIncomplete = orderType === 'LIMIT' && (!limitPrice || !tif)
 
@@ -145,7 +147,7 @@ export default function SellScreen() {
 
       <div className="rounded-card border border-ink-100 bg-white px-4">
         <div className="pb-1 pt-2.5"><Eyebrow>Sale preview</Eyebrow></div>
-        <ReceiptRow label={`${qty} shares × $${price.toFixed(2)}`} value={`$${gross}`}/>
+        <ReceiptRow label={`${qty} shares × $${effectivePrice.toFixed(2)}`} value={`$${gross}`}/>
         <ReceiptRow label={<TermUnderline>Transaction fee</TermUnderline>} value={`−$${TRANSACTION_FEE.toFixed(2)}`}/>
         <ReceiptRow
           label={<TermUnderline>{pnlPositive ? 'Realised gain' : 'Realised loss'}</TermUnderline>}
