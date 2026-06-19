@@ -175,8 +175,18 @@ export function Divider({ label='or with email' }) {
   );
 }
 
+// The languages we support for educational tooltips. `code` matches glossary.json
+// keys and the stored `language_preference`; `country` selects the FlagIcon SVG.
+// eslint-disable-next-line react-refresh/only-export-components
+export const LANGUAGES = [
+  { code: 'en',    country: 'US', label: 'English',  name: 'English' },
+  { code: 'zh-TW', country: 'TW', label: '繁體中文', name: 'Traditional Chinese' },
+  { code: 'ja',    country: 'JP', label: '日本語',   name: 'Japanese' },
+  { code: 'es',    country: 'ES', label: 'Español',  name: 'Spanish' },
+];
+
 // Inline SVG flags (the design system forbids emoji, so no 🇺🇸/🇹🇼). Compact and
-// recognizable at nav size; `country` picks US (English) or TW (繁體中文).
+// recognizable at nav size; `country` picks US, TW, JP, or ES.
 export function FlagIcon({ country, size = 20 }) {
   const w = size, h = Math.round(size * 0.7);
   if (country === 'TW') {
@@ -187,6 +197,22 @@ export function FlagIcon({ country, size = 20 }) {
         <circle cx="7.5" cy="5" r="3.3" fill="#fff"/>
         <circle cx="7.5" cy="5" r="2.5" fill="#000095"/>
         <circle cx="7.5" cy="5" r="1.4" fill="#fff"/>
+      </svg>
+    );
+  }
+  if (country === 'JP') {
+    return (
+      <svg width={w} height={h} viewBox="0 0 30 20" className="block rounded-[2px]" aria-hidden="true">
+        <rect width="30" height="20" fill="#fff"/>
+        <circle cx="15" cy="10" r="6" fill="#BC002D"/>
+      </svg>
+    );
+  }
+  if (country === 'ES') {
+    return (
+      <svg width={w} height={h} viewBox="0 0 30 20" className="block rounded-[2px]" aria-hidden="true">
+        <rect width="30" height="20" fill="#C60B1E"/>
+        <rect y="5" width="30" height="10" fill="#FFC400"/>
       </svg>
     );
   }
@@ -206,22 +232,57 @@ export function FlagIcon({ country, size = 20 }) {
   );
 }
 
-// Single icon button: shows the flag of the current tooltip language; click toggles
-// English ↔ 繁體中文 (persisted to the user's profile by LanguageContext).
+// Flag picker: the trigger shows the current tooltip language's flag; clicking it
+// opens a list of the supported flags (US / TW / JP / ES). Selecting one updates
+// the language (persisted to the user's profile by LanguageContext) and closes.
 export function LangToggle() {
   const { lang, setLang } = useLang();
-  const isZh = lang === 'zh-TW';
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const current = LANGUAGES.find(l => l.code === lang) ?? LANGUAGES[0];
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [open]);
+
   return (
-    <button
-      type="button"
-      aria-label={isZh ? 'Switch to English' : 'Switch to Traditional Chinese'}
-      title="Tooltip language"
-      data-testid="lang-toggle"
-      onClick={() => setLang && setLang(isZh ? 'en' : 'zh-TW')}
-      className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-input border border-ink-100 bg-white"
-    >
-      <FlagIcon country={isZh ? 'TW' : 'US'} size={20}/>
-    </button>
+    <div ref={ref} className="relative flex-shrink-0">
+      <button
+        type="button"
+        aria-label="Select language"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        title="Tooltip language"
+        data-testid="lang-toggle"
+        onClick={() => setOpen(o => !o)}
+        className="flex h-7 w-7 items-center justify-center rounded-input border border-ink-100 bg-white"
+      >
+        <FlagIcon country={current.country} size={20}/>
+      </button>
+      {open && (
+        <div role="menu" className="absolute right-0 z-50 mt-1 min-w-[140px] overflow-hidden rounded-input border border-ink-100 bg-white py-1 shadow-[0_4px_20px_rgba(0,0,0,0.12)]">
+          {LANGUAGES.map(l => (
+            <button
+              key={l.code}
+              type="button"
+              role="menuitem"
+              aria-label={l.label}
+              onClick={() => { setLang && setLang(l.code); setOpen(false); }}
+              className={cn(
+                'flex w-full items-center gap-2.5 px-3 py-2 text-left font-sans text-[13px] hover:bg-ink-50',
+                l.code === current.code ? 'font-semibold text-ink-900' : 'font-normal text-ink-600',
+              )}
+            >
+              <FlagIcon country={l.country} size={18}/>
+              <span>{l.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -296,21 +357,30 @@ export function TermUnderline({ children, termKey }) {
     return <span className={TRIGGER_CLS}>{children}</span>;
   }
 
-  // Mobile: full-width bottom sheet with US / TW flag language tabs.
+  // Mobile: full-width bottom sheet. The user always gets the US/English explanation
+  // plus their preferred language, so they can compare the two — with the preferred
+  // language shown first (default tab). If their preference IS English, only the US
+  // button is shown.
   if (isMobile) {
+    const prefLang = lang !== 'en' && def[lang] ? lang : null;
+    const prefMeta = prefLang ? LANGUAGES.find(l => l.code === prefLang) : null;
     return (
       <Sheet>
         <SheetTrigger asChild>
           <span className={TRIGGER_CLS}>{children}</span>
         </SheetTrigger>
         <SheetContent side="bottom">
-          <Tabs defaultValue={lang === 'zh-TW' ? 'zh-TW' : 'en'} className="mt-4">
+          <Tabs defaultValue={prefLang ?? 'en'} className="mt-4">
             <TabsList>
               <TabsTrigger value="en" aria-label="English"><FlagIcon country="US" size={20}/></TabsTrigger>
-              <TabsTrigger value="zh-TW" aria-label="Traditional Chinese"><FlagIcon country="TW" size={20}/></TabsTrigger>
+              {prefMeta && (
+                <TabsTrigger value={prefLang} aria-label={prefMeta.name}><FlagIcon country={prefMeta.country} size={20}/></TabsTrigger>
+              )}
             </TabsList>
             <TabsContent value="en" className="mt-3"><GlossaryEntry entry={def.en} /></TabsContent>
-            <TabsContent value="zh-TW" className="mt-3"><GlossaryEntry entry={def['zh-TW'] || def.en} /></TabsContent>
+            {prefMeta && (
+              <TabsContent value={prefLang} className="mt-3"><GlossaryEntry entry={def[prefLang] || def.en} /></TabsContent>
+            )}
           </Tabs>
         </SheetContent>
       </Sheet>

@@ -609,3 +609,138 @@ it to the new label text. Suite now **407/407 pass (100%)**.
   - `screens/portfolio/PortfolioDesktop.jsx` — `Holdings`.
 - **Lint:** `npm run lint` shows only the pre-existing `HeroChatPanel.jsx:10` react-refresh error
   (out of scope, predates this feature). No new lint errors introduced.
+
+---
+---
+
+# Feature: Change a Hero ("Find a new mentor")  — 2026-06-19
+
+Branch: `feature/change-hero`
+
+## Goal
+
+Let a user swap the hero advising them. In the chat window:
+
+1. Remove the multi-hero tab row; show only **one tab** for the current hero.
+2. Add a **3-dot (⋮) menu** at the upper-right of the chat header. Its options currently
+   include **"Find a new mentor"**.
+3. "Find a new mentor" opens a screen that mirrors the **last onboarding hero-selection page**
+   (the one shown when the user picked no stocks): an **8-hero grid** that an LLM ranks from the
+   onboarding answers. Picking one **replaces** the current hero and returns to the chat.
+
+## Onboarding vs. find-a-mentor
+
+| | Onboarding hero grid | Find-a-mentor grid |
+|---|---|---|
+| Pool | 19 heroes; **Warren always pinned first** (Warren + 7 ranked) | **8 ranked freely from all 20** (Warren not pinned) |
+| Sage copy | "Let me make some calls…" / "Maybe you can ask some of these experts to help you?" | "Based on your investment goals, style, and experience, here are the investment legends best suited to you." |
+| CTA | "Ask {name} →" | "Make {name} my mentor →" |
+| On choose | completes onboarding (writes first selection) | swaps current selection, returns to chat |
+
+## Architecture decisions
+- **Single-hero model stays.** Council = one row in `hero_selections`; chat runs on `heroes[0]`.
+  "Change a hero" replaces that row. (Multi-hero councils are out of scope.)
+- **Resilient ranking.** The client resolver always returns a complete valid list, so the grid
+  never breaks if `rank-heroes` is slow/undeployed. The edge upgrade (8-of-20, include Warren) is
+  correctness-only; the fallback covers it regardless.
+
+## Tasks
+
+### 1. Refactor the 8-hero selection screen into a shared component
+- [ ] 1a. `app/src/screens/onboarding/shell.jsx` — move `fluid`, `useIsDesktop`, `ScreenShell`,
+  `SageHeader`, `BackButton` out of `Onboarding.jsx`; export them.
+- [ ] 1b. `app/src/components/HeroSelect.jsx` — reusable grid screen. Props
+  `{ heroIds, loading, onChoose, saving, onBack, message, loadingMessage, ctaPrefix='Ask' }`.
+- [ ] 1c. `Onboarding.jsx` — delete its private copies; import from the new modules; pass
+  onboarding copy + `ctaPrefix="Ask"`. Must behave identically (existing onboarding.flow test).
+
+### 2. Hero ranking — mentor mode (8 of 20, Warren in pool)
+- [ ] 2a. `data/heroes.js`: `candidateHeroes(includeWarren=false)` (→20 when true);
+  `resolveMentorHeroes({ llmIds, answers })` → 8 valid ids from all 20, deduped, no pin, fills
+  shortfall from `rankHeroesForSelection(answers, 20)`, tolerates garbage.
+- [ ] 2b. `hooks/useHeroRanking.js` — `{ includeWarren=false, count=7 }`; mentor mode sends
+  `candidateHeroes(true)` + `count:8` and resolves via `resolveMentorHeroes`.
+- [ ] 2c. Edge `rank-heroes/parse.ts` — `buildRankingPrompt(answers, candidates, count=7)` ("rank
+  the {count}"; drop the "do NOT include Warren" line when Warren is in candidates);
+  `parseRankedIds(raw, validIds, max=7)`.
+- [ ] 2d. Edge `rank-heroes/index.ts` — read `count` (clamp 1–20); thread into prompt + parse.
+
+### 3. Swap-hero + answers hooks
+- [ ] 3a. `hooks/useChangeHero.js` — delete user's `hero_selections`, insert `{user_id, hero_id}`,
+  invalidate `['hero-selections', user.id]`.
+- [ ] 3b. `hooks/useOnboardingAnswers.js` — `users.onboarding_answers` → localStorage fallback.
+
+### 4. 3-dot menu component
+- [ ] 4a. `components/DotMenu.jsx` — ⋮ trigger, absolutely-positioned menu of `{label,onSelect}`,
+  closes on item click + outside click. No emoji.
+
+### 5. Chat header changes
+- [ ] 5a. `HeroSidebar.jsx` — single current-hero tab + `DotMenu` ("Find a new mentor" →
+  `/find-mentor`); drop unused `activeTab`.
+- [ ] 5b. `AskTab.jsx` — add `DotMenu` to the "Your Council" header (upper right).
+
+### 6. Find-a-mentor screen + route
+- [ ] 6a. `screens/heroes/FindMentor.jsx` — load answers, rank mentor mode, render `<HeroSelect>`
+  with mentor copy + `ctaPrefix="Make"` (CTA "Make {name} my mentor →"); on choose
+  `useChangeHero().mutate` then navigate `/portfolio` (desktop) / `/ask` (mobile); back `navigate(-1)`.
+- [ ] 6b. `App.jsx` — add private `/find-mentor` route (responsive screen).
+
+## Out of scope
+- Multi-hero councils. Chat-history migration on swap (new hero starts its own `hero_id` thread).
+
+## Issues found during testing
+(Appended during the test/iterate loop.)
+
+### Run 1 — 2026-06-19
+- `vitest run` (full suite): **448/448 passed, 23/23 files** → 100% pass rate (target 95%). No
+  iteration needed.
+- Coverage (`vitest run --coverage`): **Lines 85.72%** overall (gate 80%, target 85% — met).
+  New files: DotMenu 100%, shell 100%, useChangeHero 100%, useOnboardingAnswers 100%,
+  heroes.js 94.5%, FindMentor 87.5% (only the desktop-navigate branch uncovered).
+- `npm run build`: clean (1992 modules, no errors).
+- No defects surfaced; no plan changes required.
+
+## Status: COMPLETE — all tasks implemented, tests green, build passing.
+
+---
+
+# Feature: Larger stock rows + Japanese/Spanish tooltips + flag picker
+
+_Added 2026-06-19._
+
+## Scope
+1. Enlarge the symbol box and font in the stock list under **Markets → Watchlist** and **Portfolio → Holdings**.
+2. Add **Japanese (ja)** and **Spanish (es)** to the educational tooltips (glossary), alongside existing en + zh-TW.
+3. The flag control in the **sign-up/welcome page** and the **top nav bar** becomes a **picker**: clicking it shows a list of supported flags (US, Taiwan, Japan, Spain); selecting one persists `language_preference` to the user profile in the DB.
+4. **Desktop tooltip** shows the user's chosen language.
+5. **Mobile tooltip** shows two flag buttons — US flag + the user's chosen-language flag — so the user can compare English and their language. Default tab = the user's preferred language. If the preferred language *is* English, show only the single US button.
+
+## Implementation tasks
+
+### T1 — Enlarge stock rows (`app/src/components/StockRow.jsx`)
+- Shared by `WatchRow` (Markets watchlist) and `HoldingRow` (Portfolio holdings) only — `SearchResultRow` and `PositionCard` are separate, so the search dropdown is untouched.
+- Ticker chip: `h-[38px] w-[38px] text-[11px]` → `h-[46px] w-[46px] text-[13px]`.
+- Name + right-top value: `text-base` → `text-lg`. Subtitle/right-bottom stay `text-base`.
+
+### T2 — JA + ES glossary (`app/src/data/glossary.json`)
+- For every key, add `ja` and `es` objects with `title` + `definition`, real translations (not copies of `en`).
+
+### T3 — Languages config + flags (`app/src/components/Primitives.jsx`)
+- Export `LANGUAGES = [{code,country,label}]` for en/US, zh-TW/TW, ja/JP, es/ES.
+- `FlagIcon` gains `JP` (white field, red disc) and `ES` (red/yellow/red bands) SVGs.
+
+### T4 — Flag picker (`LangToggle` in `Primitives.jsx`)
+- Convert the single toggle button into a dropdown: trigger shows the current flag; opening lists all 4 flags + native labels; selecting calls `setLang(code)` (LanguageContext persists to `users.language_preference`) and closes. Closes on outside click.
+- Used as-is by `NavToggles` (nav bar + welcome/sign-up/sign-in) and Profile preferences.
+
+### T5 — Mobile tooltip dynamic buttons (`TermUnderline` in `Primitives.jsx`)
+- Desktop unchanged (`def[lang] || def.en`).
+- Mobile: `prefLang = lang !== 'en' && def[lang] ? lang : null`. Tabs: always US/`en`; add a `prefLang` tab when present. `defaultValue = prefLang ?? 'en'`.
+
+### T6 — Tests
+- Update `primitives.test.jsx` (LangToggle dropdown; mobile tooltip default-en single button) and `glossary.test.jsx` (mobile tabs by lang; ja/es data integrity).
+- Add coverage for flags, dropdown selection, ja/es tooltip rendering, and row sizing per `unittest.md`.
+
+## Notes
+- `language_preference` column already exists; `LanguageContext.setLang` already persists. No migration needed.
+- `setLang` stays generic (accepts any code) — context test calls `setLang('zh-Hant')`.
