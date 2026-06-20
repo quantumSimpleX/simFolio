@@ -6,7 +6,9 @@ import { supabase } from '../../lib/supabase';
 import { matchHeroes, resolveSelectionHeroes, heroIdFromName, HERO_DATA } from '../../data/heroes';
 import { useHeroRanking } from '../../hooks/useHeroRanking';
 import { cn } from '../../lib/utils';
-import { ScreenShell, SageHeader, BackButton, fluid, useIsDesktop } from './shell';
+import { ScreenShell, SageHeader, BackButton } from './shell';
+import { fluid } from '../../lib/fluid';
+import { useIsDesktop } from '../../hooks/useIsDesktop';
 import { HeroSelect } from '../../components/HeroSelect';
 
 const NONE_GOAL = 'None of the above';

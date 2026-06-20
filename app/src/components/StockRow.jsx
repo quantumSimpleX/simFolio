@@ -1,4 +1,5 @@
 import { cn } from '../lib/utils';
+import TickerBadge from './common/TickerBadge';
 
 export function StockRow({
   ticker, name, subtitle,
@@ -18,10 +19,7 @@ export function StockRow({
         onClick ? 'cursor-pointer' : 'cursor-default',
       )}
     >
-      <div className={cn(
-        'flex h-[46px] w-[46px] flex-shrink-0 items-center justify-center rounded-input font-sans text-[15px] font-bold transition-colors',
-        highlighted ? 'bg-ame-100 text-ame-600' : 'bg-ink-50 text-ink-500',
-      )}>{ticker}</div>
+      <TickerBadge ticker={ticker} size="lg" highlighted={highlighted} />
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">

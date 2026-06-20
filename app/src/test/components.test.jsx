@@ -11,7 +11,7 @@ import { PositionCard } from '../components/PositionCard'
 import { PriceCard } from '../components/PriceCard'
 import { StockRow } from '../components/StockRow'
 import { HoldingRow } from '../components/HoldingRow'
-import { QuickPrompts, ChatComposer, ChatMessages, modelLabel } from '../components/HeroChatPanel'
+import { QuickPrompts, ChatComposer, ChatMessages } from '../components/HeroChatPanel'
 
 function wrap(ui) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -146,16 +146,5 @@ describe('HeroChatPanel pieces', () => {
   it('ChatMessages shows no model badge when none is known', () => {
     wrap(<ChatMessages heroId="warren" history={[{ role: 'assistant', content: 'Why?' }]} isPending={false} />)
     expect(screen.queryByText(/Llama|GPT-OSS|Gemma|Nemotron/)).not.toBeInTheDocument()
-  })
-  it('modelLabel abbreviates each vendor in the fallback chain', () => {
-    expect(modelLabel('google/gemma-4-31b-it:free')).toBe('Gemma')
-    expect(modelLabel('openai/gpt-oss-120b:free')).toBe('GPT-OSS')
-    expect(modelLabel('meta-llama/llama-3.3-70b-instruct:free')).toBe('Llama')
-    expect(modelLabel('nvidia/nemotron-3-ultra-550b-a55b:free')).toBe('Nemotron')
-  })
-  it('modelLabel falls back to the bare name and is empty for falsy input', () => {
-    expect(modelLabel('someorg/mystery-model-7b:free')).toBe('mystery-model-7b')
-    expect(modelLabel('')).toBe('')
-    expect(modelLabel(undefined)).toBe('')
   })
 })

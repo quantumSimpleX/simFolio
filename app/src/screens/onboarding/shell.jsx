@@ -1,26 +1,11 @@
 // Shared onboarding-flavoured layout primitives. Extracted from Onboarding.jsx so the hero
 // selection grid can be reused outside onboarding (e.g. the "Find a new mentor" flow) while
 // keeping the exact same look — brand panel on desktop, top bar on mobile, Sage header, etc.
-import { useState, useEffect } from 'react';
 import { Logo, SimPill, GuideAvatar } from '../../components/Primitives';
 import BrandPanel from '../../components/BrandPanel';
 import { cn } from '../../lib/utils';
-
-// Fluid type: scales linearly from `min`px at 480px viewport to `max`px at 1280px viewport
-export function fluid(min, max) {
-  return `clamp(${min}px, calc(${min}px + ${max - min} * ((100vw - 480px) / 800)), ${max}px)`;
-}
-
-export function useIsDesktop() {
-  const [wide, setWide] = useState(() => window.innerWidth >= 768);
-  useEffect(() => {
-    const mq = window.matchMedia('(min-width: 768px)');
-    const handler = e => setWide(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
-  return wide;
-}
+import { fluid } from '../../lib/fluid';
+import { useIsDesktop } from '../../hooks/useIsDesktop';
 
 // Desktop: persistent brand panel on the left, content on the right.
 // Mobile: top nav bar with content below.

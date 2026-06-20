@@ -2,18 +2,11 @@ import { useState } from 'react'
 import { StatusPill, TermUnderline } from './Primitives'
 import { Card } from './ui/card'
 import { cn } from '../lib/utils'
+import TickerBadge from './common/TickerBadge'
+import DetailRow from './common/DetailRow'
 
 function fmtDate(ts) {
   return new Date(ts).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit', hour12: true })
-}
-
-function DetailRow({ label, value, bold }) {
-  return (
-    <div className="flex items-center justify-between border-b border-ink-50 py-[7px]">
-      <div className="font-sans text-[13px] text-ink-400">{label}</div>
-      <div className={cn('font-sans text-[13px] text-ink-900', bold ? 'font-bold' : 'font-medium')}>{value}</div>
-    </div>
-  )
 }
 
 // A filled / cancelled order row; expands to show execution detail.
@@ -36,7 +29,7 @@ export default function FilledRow({ order, dimmed }) {
         onClick={canExpand ? () => setExpanded(e => !e) : undefined}
         className={cn('flex items-center gap-2.5', canExpand ? 'cursor-pointer' : 'cursor-default')}
       >
-        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-input bg-ink-50 font-sans text-[11px] font-bold text-ink-500">{order.ticker}</div>
+        <TickerBadge ticker={order.ticker} size="sm" />
         <div className="flex-1">
           <div className="mb-0.5 flex items-center gap-2">
             <div className="font-sans text-sm font-bold text-ink-900">

@@ -744,3 +744,61 @@ _Added 2026-06-19._
 ## Notes
 - `language_preference` column already exists; `LanguageContext.setLang` already persists. No migration needed.
 - `setLang` stays generic (accepts any code) — context test calls `setLang('zh-Hant')`.
+
+---
+
+# Feature: Modularity refactor — reusable components + lint cleanup
+_Added 2026-06-19._
+
+## Context
+`npm run lint` reports 3 `react-refresh/only-export-components` errors caused by helper/hook
+exports living alongside React components. Separately, an audit found several UI patterns
+duplicated 3+ times (ticker badges, stat cards, label/value detail rows). Goal: fix the lint
+errors AND extract genuinely-duplicated UI into reusable components, without over-abstracting
+(per CLAUDE.md: surgical, minimum code, match existing style). Existing well-extracted
+primitives (Eyebrow, HeroAvatar, StatusPill, DotMenu, EmptyState, HeroMessage, Fundamentals)
+are LEFT AS-IS.
+
+New shared component home: `app/src/components/common/`.
+
+## Workstream A — Lint cleanup + helper/hook extraction (Dev Agent A)
+Disjoint file set: `HeroChatPanel.jsx`, `onboarding/shell.jsx`, `HeroSelect.jsx`,
+`onboarding/Onboarding.jsx`, `heroes/FindMentor.jsx`, new lib/hook files, `components.test.jsx`.
+
+- [x] **A1** Create `app/src/lib/modelLabel.js`; move `modelLabel()` out of `HeroChatPanel.jsx` (currently line 10). Re-import it in `HeroChatPanel.jsx`. Update the import in `app/src/test/components.test.jsx:14`.
+- [x] **A2** Create `app/src/lib/fluid.js`; move `fluid()` out of `onboarding/shell.jsx` (line 10). Update importers: `shell.jsx`, `components/HeroSelect.jsx:5`, `onboarding/Onboarding.jsx:9`.
+- [x] **A3** Create `app/src/hooks/useIsDesktop.js`; move `useIsDesktop()` out of `shell.jsx` (line 14). Update importers: `shell.jsx`, `components/HeroSelect.jsx:5`, `screens/heroes/FindMentor.jsx:8`, `onboarding/Onboarding.jsx:9`.
+- [x] **A4** Confirm `shell.jsx`, `HeroChatPanel.jsx` now export ONLY components. Run `npx vitest run src/test/components.test.jsx src/test/findMentor.test.jsx src/test/onboarding.flow.test.jsx` — all green.
+
+## Workstream B — Reusable component extraction (Dev Agent B)
+Disjoint file set: new `common/` files, `StockRow.jsx`, `SearchResultRow.jsx`, `OrderCard.jsx`,
+`FilledRow.jsx`, `screens/markets/StockDetail.jsx`. Keep every component's rendered output
+pixel-identical — this is a pure refactor.
+
+- [x] **B1** Create `app/src/components/common/TickerBadge.jsx`: `<TickerBadge ticker size highlighted />`. Sizes `lg`=46px/text-[15px], `md`=38px/text-[11px] (default), `sm`=36px/text-[11px]. `highlighted` → `bg-ame-100 text-ame-600`, else `bg-ink-50 text-ink-500`. Base classes: `flex flex-shrink-0 items-center justify-center rounded-input font-sans font-bold`.
+- [x] **B2** Refactor to use `TickerBadge`: `StockRow.jsx` (lines ~21-24, lg + highlighted), `SearchResultRow.jsx` (line 9, md), `OrderCard.jsx` (line 15, md), `FilledRow.jsx` (line 39, sm). Preserve exact sizes/classes per the audit.
+- [x] **B3** Create `app/src/components/common/StatCard.jsx`: `<StatCard label value valueColor mobile />` → `rounded-card border border-ink-100 bg-white px-4 py-3` with `text-xs text-ink-400` label and bold value (`text-[17px]` mobile / `text-xl` desktop), `valueColor` class applied to value. `label` accepts ReactNode (callers pass `<TermUnderline>`).
+- [x] **B4** Refactor `StockDetail.jsx` fundamentals card (lines ~88-92) and key-stats card (lines ~111-115) to use `StatCard`.
+- [x] **B5** Create `app/src/components/common/DetailRow.jsx`: `<DetailRow label value bold />` → `flex items-center justify-between border-b border-ink-50 py-[7px]`, label `text-[13px] text-ink-400`, value `text-[13px] text-ink-900` (`font-bold` if bold else `font-medium`). Export the existing internal `DetailRow` shape from `FilledRow.jsx` (lines 10-16).
+- [x] **B6** Refactor `FilledRow.jsx` to import `DetailRow` from `common/` and delete its internal copy.
+- [x] **B7** Run `npx vitest run src/test/components.test.jsx src/test/misc.test.jsx src/test/orders.test.jsx src/test/screens.smoke.test.jsx` — all green (rendered output unchanged).
+
+## Workstream C — Tests for new + previously-untested components (QA, after A+B)
+See `unittest.md` section "Modularity refactor" for the full case list.
+
+- [x] **C1** Add `app/src/test/common.test.jsx` covering TickerBadge, StatCard, DetailRow (all variants).
+- [x] **C2** Add targeted tests for previously-untested custom components: `EmptyState`, `FilledRow`, `HeroSidebar`, `Badges`, `AuthLayout` (smoke + key props).
+- [x] **C3** Add a test for `modelLabel` (now in `lib/`), `fluid` (now in `lib/`), and `useIsDesktop` (renderHook + matchMedia).
+- [x] **C4** Run `npm run test:coverage`; overall line coverage ≥ 85%. If the supabaseMock alias cap blocks it, document which files are uncoverable and target 85% on coverable code.
+- [x] **C5** If 85% is reached, bump `vite.config.js` coverage threshold `lines: 80` → `85`.
+
+## Definition of done
+- [x] `npm run lint` → 0 errors.
+- [x] `npm run build` → clean.
+- [x] `npm run test` → 621/621 pass (100%).
+- [x] Coverage = 85.57% lines (gate raised to 85 in vite.config.js).
+
+## Issues found during QA
+_(QA agent appends discovered issues below as new checkboxes; dev iterates until clear.)_
+
+- [x] **QA result (2026-06-19):** 647/647 tests pass; lines 85.57%. New common/ + lib/ files at 100%. No source bugs found. Note: `HeroSidebar.jsx` at 65% (populated-council/handleSend branches need full mock seeding — not required for the 85% gate).

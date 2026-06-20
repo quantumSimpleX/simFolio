@@ -1,4 +1,5 @@
 import { TermUnderline, StatusPill } from './Primitives'
+import TickerBadge from './common/TickerBadge'
 import { Card } from './ui/card'
 import { Button } from './ui/button'
 
@@ -12,7 +13,7 @@ export default function OrderCard({ order, onCancel }) {
   return (
     <Card className="flex flex-col gap-3 px-[18px] py-3.5">
       <div className="flex items-center gap-2.5">
-        <div className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-input bg-ink-50 font-sans text-[11px] font-bold text-ink-500">{order.ticker}</div>
+        <TickerBadge ticker={order.ticker} size="md" />
         <div className="flex-1">
           <div className="mb-0.5 flex items-center gap-2">
             <div className="font-sans text-[15px] font-bold text-ink-900">{order.side === 'BUY' ? 'Buy' : 'Sell'} {order.requested_qty} {order.ticker}</div>

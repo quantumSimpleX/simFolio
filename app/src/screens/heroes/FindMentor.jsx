@@ -5,7 +5,7 @@ import { useHeroRanking } from '../../hooks/useHeroRanking';
 import { useChangeHero } from '../../hooks/useChangeHero';
 import { heroIdFromName } from '../../data/heroes';
 import { QUESTION_LABELS } from '../onboarding/questionLabels';
-import { useIsDesktop } from '../onboarding/shell';
+import { useIsDesktop } from '../../hooks/useIsDesktop';
 
 // Saved onboarding answers shown above the grid, so the user sees the inputs behind the
 // recommendations. Uses the same labels + value formatting as the profile page.

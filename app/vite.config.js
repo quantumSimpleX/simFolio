@@ -35,7 +35,7 @@ export default defineConfig({
       provider: 'v8',
       include: ['src/**/*.{js,jsx}', 'supabase/functions/_shared/**/*.ts'],
       exclude: ['src/main.jsx', 'src/test/**', 'src/assets/**', 'src/lib/supabase.js'],
-      thresholds: { lines: 80 },
+      thresholds: { lines: 85 },
     },
   },
 })

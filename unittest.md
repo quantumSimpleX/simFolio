@@ -276,3 +276,51 @@ _Added 2026-06-19. Target ≥85% line coverage on touched files._
 
 ## Coverage focus
 - `StockRow.jsx`, `Primitives.jsx` (FlagIcon/LANGUAGES/LangToggle/TermUnderline), `glossary.json` (data-driven), `LanguageContext` (already covered by context.test).
+
+---
+
+# Test plan: Modularity refactor (reusable components + lint cleanup)
+_Added 2026-06-19. Target: overall line coverage ≥ 85%. New pure components should reach ~100%._
+
+Conventions reused: `render` + `MemoryRouter`/`QueryClientProvider` wrap from `components.test.jsx`;
+`renderHook` + `makeWrapper` from `hooks.test.jsx`; `renderWithProviders` for screen-level.
+
+## M. TickerBadge (`common.test.jsx`)
+- M1. Renders the ticker text passed in (`<TickerBadge ticker="AAPL"/>` shows "AAPL").
+- M2. `size="lg"` → element has `h-[46px] w-[46px]`; `size="md"` (default) → `h-[38px] w-[38px]`; `size="sm"` → `h-9 w-9` (36px).
+- M3. `highlighted` → classes include `bg-ame-100 text-ame-600`; default → `bg-ink-50 text-ink-500`.
+- M4. Always has `rounded-input font-bold`.
+
+## N. StatCard (`common.test.jsx`)
+- N1. Renders `label` and `value` content (ReactNode label supported, e.g. a `<TermUnderline>` term).
+- N2. `valueColor="text-aqua-600"` applies that class to the value element.
+- N3. `mobile` toggles value font `text-[17px]` (mobile) vs `text-xl` (desktop).
+- N4. Card wrapper has `rounded-card border border-ink-100 bg-white`.
+
+## O. DetailRow (`common.test.jsx`)
+- O1. Renders `label` and `value`.
+- O2. `bold` → value has `font-bold`; without → `font-medium`.
+- O3. Row wrapper has `border-b border-ink-50`.
+
+## P. Refactor parity (existing suites must stay green)
+- P1. `components.test.jsx` StockRow/HoldingRow/OrderCard/SearchResultRow assertions unchanged and passing (ticker still rendered after TickerBadge swap).
+- P2. `misc.test.jsx` / `orders.test.jsx` filled + queued order rendering unchanged (DetailRow swap).
+- P3. `screens.smoke.test.jsx` StockDetail renders fundamentals/key-stats (StatCard swap) without error.
+
+## Q. Previously-untested custom components
+- Q1. `EmptyState`: renders `label`; renders `sub` only when provided.
+- Q2. `FilledRow`: given a filled order, shows ticker + side + qty; expands to show execution `DetailRow`s on click.
+- Q3. `HeroSidebar`: renders selected heroes / watchlist context without crashing (seed via providers).
+- Q4. `Badges`: renders earned vs locked badge states.
+- Q5. `AuthLayout`: renders children inside the auth chrome.
+
+## R. Extracted helpers/hook
+- R1. `modelLabel` (now `lib/modelLabel.js`): `'openai/gpt-oss-120b:free'` → `'GPT-OSS'`; known ids (gemma/gemini/nemotron) map correctly; empty/null → `''`.
+- R2. `fluid` (now `lib/fluid.js`): returns a `clamp(...)` string interpolating min/max.
+- R3. `useIsDesktop` (now `hooks/useIsDesktop.js`): `renderHook` with `matchMedia` mocked ≥768 → `true`; <768 → `false`; updates on `change` event.
+
+## Coverage gate
+- S1. `npm run test:coverage` overall lines ≥ 85%.
+- S2. New files in `components/common/` and extracted `lib/` helpers each ≥ 90% lines.
+- S3. Document any file the supabaseMock test-alias makes structurally uncoverable (known cap ~84.6% pre-refactor; new pure components should lift the ceiling).
+

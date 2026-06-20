@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { cn } from '../lib/utils';
 import { CTA, HeroAvatar } from './Primitives';
 import { HERO_DATA } from '../data/heroes';
-import { ScreenShell, SageHeader, BackButton, fluid, useIsDesktop } from '../screens/onboarding/shell';
+import { ScreenShell, SageHeader, BackButton } from '../screens/onboarding/shell';
+import { fluid } from '../lib/fluid';
+import { useIsDesktop } from '../hooks/useIsDesktop';
 
 // Reusable 8-hero selection screen. Used both at the end of onboarding (Warren pinned, "Ask {name}")
 // and by the "Find a new mentor" flow (8 of 20, "Make {name} my mentor"). Copy + CTA wording are

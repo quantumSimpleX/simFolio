@@ -12,6 +12,7 @@ import { useStockDetail, useCandles } from '../../hooks/useStockDetail'
 import { isMarketOpen } from '../../hooks/useQuotes'
 import { usePortfolio } from '../../hooks/usePortfolio'
 import { useWatchlist } from '../../hooks/useWatchlist'
+import StatCard from '../../components/common/StatCard'
 
 function fmtMktCap(v) {
   if (!v) return '—'
@@ -86,10 +87,7 @@ export default function StockDetail() {
       <div className="mb-3"><Eyebrow>Fundamentals</Eyebrow></div>
       <div className={cn('grid gap-3', mobile ? 'grid-cols-2' : 'grid-cols-5')}>
         {fundamentals.map(([label, value, color]) => (
-          <div key={label} className="rounded-card border border-ink-100 bg-white px-4 py-3">
-            <div className="mb-1 font-sans text-xs text-ink-400"><TermUnderline>{label}</TermUnderline></div>
-            <div className={cn('font-sans font-bold', mobile ? 'text-[17px]' : 'text-xl', color)}>{value}</div>
-          </div>
+          <StatCard key={label} label={<TermUnderline>{label}</TermUnderline>} value={value} valueColor={color} mobile={mobile} />
         ))}
       </div>
     </div>
@@ -109,10 +107,7 @@ export default function StockDetail() {
       <div className="mb-3"><Eyebrow>Key stats</Eyebrow></div>
       <div className={cn('grid gap-3', mobile ? 'grid-cols-2' : 'grid-cols-4')}>
         {stats.map(([label, value]) => (
-          <div key={label} className="rounded-card border border-ink-100 bg-white px-4 py-3">
-            <div className="mb-1 font-sans text-xs text-ink-400"><TermUnderline>{label}</TermUnderline></div>
-            <div className={cn('font-sans font-bold text-ink-900', mobile ? 'text-[17px]' : 'text-xl')}>{value}</div>
-          </div>
+          <StatCard key={label} label={<TermUnderline>{label}</TermUnderline>} value={value} mobile={mobile} />
         ))}
       </div>
     </div>
