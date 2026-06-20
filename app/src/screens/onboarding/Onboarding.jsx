@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { CTA, GoalCard, ProgressDots, HeroAvatar, TermUnderline } from '../../components/Primitives';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useOnboardingAnswers } from '../../hooks/useOnboardingAnswers';
 import { supabase } from '../../lib/supabase';
 import { matchHeroes, resolveSelectionHeroes, heroIdFromName, HERO_DATA } from '../../data/heroes';
 import { useHeroRanking } from '../../hooks/useHeroRanking';
@@ -72,6 +73,10 @@ const QUESTIONS = buildQuestions();
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const { state: navState } = useLocation();
+  // Set by the "My preferences changed" menu. A redo prefills from saved answers and
+  // refreshes preferences/mentor without resetting the user's existing balance.
+  const isRedo = !!navState?.redo;
   const { user } = useAuth();
   const isDesktop = useIsDesktop();
   const [step, setStep] = useState(0);
@@ -81,8 +86,24 @@ export default function Onboarding() {
   const [showHeroes, setShowHeroes] = useState(false);
   const [stocks, setStocks] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [seeded, setSeeded] = useState(false);
 
-  const current = QUESTIONS[step];
+  const { answers: savedAnswers } = useOnboardingAnswers();
+  // On a redo the starting-capital question is skipped — their existing balance is kept,
+  // so re-asking "how much to invest" would be meaningless.
+  const questions = isRedo ? QUESTIONS.filter(q => q.key !== 'capital') : QUESTIONS;
+  const current = questions[step];
+
+  // Prefill once when redoing onboarding, as soon as the saved answers have loaded.
+  // Adjusting state during render (rather than in an effect) is React's recommended
+  // pattern here and avoids an extra commit. Seeds the first step's selection, the
+  // full answer map, and any previously entered stocks.
+  if (isRedo && !seeded && savedAnswers && Object.keys(savedAnswers).length > 0) {
+    setSeeded(true);
+    setAnswers(savedAnswers);
+    setSelected(restoreSelected(questions[0], savedAnswers[questions[0].key]));
+    if (Array.isArray(savedAnswers.stocks)) setStocks(savedAnswers.stocks);
+  }
 
   // Hero selection grid: when the user named an investor we recognise, pin that hero right after
   // Warren (no LLM call); otherwise rank the pool via the LLM. The hook always resolves to a
@@ -98,9 +119,11 @@ export default function Onboarding() {
   function advance(value) {
     const newAnswers = { ...answers, [current.key]: value };
     setAnswers(newAnswers);
-    if (step < QUESTIONS.length - 1) {
-      setStep(s => s + 1);
-      setSelected(null);
+    if (step < questions.length - 1) {
+      const next = step + 1;
+      setStep(next);
+      // Restore any prefilled answer for the next step (null for first-time users).
+      setSelected(restoreSelected(questions[next], newAnswers[questions[next].key]));
     } else {
       setShowStock(true);
     }
@@ -125,7 +148,7 @@ export default function Onboarding() {
     if (step === 0) return;
     const prev = step - 1;
     setStep(prev);
-    setSelected(restoreSelected(QUESTIONS[prev], answers[QUESTIONS[prev].key]));
+    setSelected(restoreSelected(questions[prev], answers[questions[prev].key]));
   }
 
   function handleSelect(choice) {
@@ -188,11 +211,15 @@ export default function Onboarding() {
       try {
         await supabase.from('users').update({ onboarding_answers: fullAnswers }).eq('user_id', user.id);
       } catch { /* column may not exist yet; localStorage copy still works */ }
-      await supabase.from('user_balances').upsert({
-        user_id: user.id,
-        cash_balance: capital,
-        starting_capital: capital,
-      });
+      // Only seed the balance on first onboarding. A redo updates preferences/mentor
+      // without resetting the user's existing cash or wiping their portfolio.
+      if (!isRedo) {
+        await supabase.from('user_balances').upsert({
+          user_id: user.id,
+          cash_balance: capital,
+          starting_capital: capital,
+        });
+      }
       await supabase.from('hero_selections').upsert(
         heroIds.slice(0, 1).map(id => ({ user_id: user.id, hero_id: id }))
       );
@@ -223,10 +250,10 @@ export default function Onboarding() {
   }
 
   if (showStock) {
-    return <StockInterest stocks={stocks} setStocks={setStocks} onFinish={handleFinish} saving={saving} onBack={handleBack}/>;
+    return <StockInterest stocks={stocks} setStocks={setStocks} onFinish={handleFinish} saving={saving} onBack={handleBack} total={questions.length + 1}/>;
   }
 
-  return <OnboardingShell step={step} total={QUESTIONS.length + 1} current={current} selected={selected} onSelect={handleSelect} onContinue={handleContinue} onBack={step > 0 ? handleBack : null}/>;
+  return <OnboardingShell step={step} total={questions.length + 1} current={current} selected={selected} onSelect={handleSelect} onContinue={handleContinue} onBack={step > 0 ? handleBack : null}/>;
 }
 
 function OnboardingShell({ step, total, current, selected, onSelect, onContinue, onBack }) {
@@ -390,7 +417,7 @@ function HeroIntro({ heroId, onContinue, saving, onBack }) {
   );
 }
 
-function StockInterest({ stocks, setStocks, onFinish, saving, onBack }) {
+function StockInterest({ stocks, setStocks, onFinish, saving, onBack, total }) {
   const [input, setInput] = useState('');
   const isDesktop = useIsDesktop();
   const avatarSize = isDesktop ? 48 : 34;
@@ -407,7 +434,7 @@ function StockInterest({ stocks, setStocks, onFinish, saving, onBack }) {
   return (
     <ScreenShell>
       {onBack && <BackButton onBack={onBack}/>}
-      <ProgressDots step={QUESTIONS.length + 1} total={QUESTIONS.length + 1}/>
+      <ProgressDots step={total} total={total}/>
 
       <SageHeader avatarSize={avatarSize} isDesktop={isDesktop}>
         Any stocks, ETFs, or crypto you're curious about? Type a ticker or company name.

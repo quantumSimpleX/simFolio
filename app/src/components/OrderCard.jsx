@@ -11,12 +11,12 @@ function fmtDate(ts) {
 export default function OrderCard({ order, onCancel }) {
   const isLimit = order.type === 'LIMIT'
   return (
-    <Card className="flex flex-col gap-3 px-[18px] py-3.5">
+    <Card className="flex flex-col gap-3 px-4 py-3">
       <div className="flex items-center gap-2.5">
-        <TickerBadge ticker={order.ticker} size="md" />
+        <TickerBadge ticker={order.ticker} size="lg" />
         <div className="flex-1">
           <div className="mb-0.5 flex items-center gap-2">
-            <div className="font-sans text-[15px] font-bold text-ink-900">{order.side === 'BUY' ? 'Buy' : 'Sell'} {order.requested_qty} {order.ticker}</div>
+            <div className="font-sans text-sm font-bold text-ink-900">{order.side === 'BUY' ? 'Buy' : 'Sell'} {order.requested_qty} {order.ticker}</div>
             <StatusPill status={order.status?.toLowerCase()}/>
           </div>
           <div className="font-sans text-xs text-ink-400">

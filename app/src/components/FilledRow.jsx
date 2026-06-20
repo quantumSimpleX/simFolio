@@ -29,7 +29,7 @@ export default function FilledRow({ order, dimmed }) {
         onClick={canExpand ? () => setExpanded(e => !e) : undefined}
         className={cn('flex items-center gap-2.5', canExpand ? 'cursor-pointer' : 'cursor-default')}
       >
-        <TickerBadge ticker={order.ticker} size="sm" />
+        <TickerBadge ticker={order.ticker} size="lg" />
         <div className="flex-1">
           <div className="mb-0.5 flex items-center gap-2">
             <div className="font-sans text-sm font-bold text-ink-900">

@@ -51,8 +51,7 @@ export default function AskTab() {
           <div className="font-sans text-lg font-semibold text-ink-900">Your Council</div>
           <div className="font-sans text-sm text-ink-400">{councilNames || 'Sage'}</div>
         </div>
-        <div className="ml-auto flex items-center gap-1.5">
-          <div className="h-[7px] w-[7px] rounded-pill bg-aqua-400"/>
+        <div className="ml-auto flex items-center">
           <DotMenu items={[{ label: 'Find a new mentor', onSelect: () => navigate('/find-mentor') }]}/>
         </div>
       </div>

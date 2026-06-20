@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { cn } from '../lib/utils';
 
-// Small "⋮" overflow menu for the chat header. `items` is [{ label, onSelect }]. Opens on click,
-// closes on item select or any outside click. Menu is anchored to the trigger's right edge.
+// Overflow menu whose trigger is the Sage diamond (◇) — a recognizable, conspicuous handle for
+// mentor actions. `items` is [{ label, onSelect }]. Opens on click, closes on item select or any
+// outside click. Menu is anchored to the trigger's right edge.
 export function DotMenu({ items, className }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -20,8 +21,8 @@ export function DotMenu({ items, className }) {
         onClick={() => setOpen(o => !o)}
         role="button"
         aria-label="More options"
-        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-input text-xl leading-none text-ink-400 hover:bg-ink-50"
-      >⋮</div>
+        className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-[1.5px] border-aqua-400/40 bg-aqua-50 text-[22px] font-normal leading-none text-aqua-400 hover:bg-aqua-400/15"
+      >◇</div>
       {open && (
         <div className="absolute right-0 top-full z-20 mt-1 min-w-[180px] overflow-hidden rounded-card border border-ink-200 bg-white py-1 shadow-lg dark:border-ink-300">
           {items.map(item => (
