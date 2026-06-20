@@ -87,6 +87,7 @@ function parseQuote(ticker, q) {
     week52High: parseFloat(fw.high) || 0,
     // fundamentals come from /statistics, not /quote
     marketCap: 0, peRatio: 0, eps: 0, beta: 0, dividendYield: 0,
+    fetchedAt: Date.now(),
   }
 }
 

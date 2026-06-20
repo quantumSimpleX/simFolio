@@ -56,7 +56,7 @@ export function TopNav({ active='portfolio' }) {
         </div>
         <div className="flex-1"/>
         <NavToggles/>
-        <div onClick={() => navigate('/profile')} title="Profile" className="flex h-[30px] w-[30px] cursor-pointer items-center justify-center rounded-pill bg-ink-900 font-sans text-[13px] font-bold text-white">{initials}</div>
+        <button type="button" onClick={() => navigate('/profile')} aria-label="Profile" title="Profile" className="flex h-[30px] w-[30px] cursor-pointer items-center justify-center rounded-pill bg-ink-900 font-sans text-[13px] font-bold text-white focus-visible:ring-2 focus-visible:ring-ame-400 focus-visible:ring-offset-2">{initials}</button>
       </div>
     );
   }
@@ -84,7 +84,7 @@ export function TopNav({ active='portfolio' }) {
       <div className={cn('flex items-center', tablet ? 'gap-3' : 'gap-4')}>
         <NavToggles/>
         <div className="flex items-baseline gap-1.5 whitespace-nowrap font-sans text-ink-500"><span className="text-xs uppercase tracking-[0.12em]">Cash</span> <span className="text-xl font-bold text-ink-900">{cashDisplay}</span></div>
-        <div onClick={() => navigate('/profile')} title="Profile" className="flex h-[34px] w-[34px] cursor-pointer items-center justify-center rounded-pill bg-ink-900 font-sans text-sm font-bold text-white">{initials}</div>
+        <button type="button" onClick={() => navigate('/profile')} aria-label="Profile" title="Profile" className="flex h-[34px] w-[34px] cursor-pointer items-center justify-center rounded-pill bg-ink-900 font-sans text-sm font-bold text-white focus-visible:ring-2 focus-visible:ring-ame-400 focus-visible:ring-offset-2">{initials}</button>
       </div>
     </div>
   );

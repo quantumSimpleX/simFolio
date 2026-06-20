@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '../../lib/utils'
 import { Eyebrow, MktStatus, TermUnderline } from '../../components/Primitives'
@@ -16,17 +16,32 @@ import { INDEX_SYMBOLS } from '../../hooks/useMarketDataPreload'
 
 const INDEX_NAMES = { SPY: 'S&P 500', QQQ: 'NASDAQ', DIA: 'DOW' }
 
+const STALE_AFTER_MS = 60 * 60 * 1000 // 1h
+
+// A quote is "stale" when its cache row was fetched over an hour ago. Requires the
+// quote to carry a `fetchedAt` timestamp (ISO string or epoch ms); absent that, we
+// can't judge age and render no badge.
+function isStaleQuote(q) {
+  if (!q?.fetchedAt) return false
+  const t = typeof q.fetchedAt === 'number' ? q.fetchedAt : Date.parse(q.fetchedAt)
+  return Number.isFinite(t) && Date.now() - t > STALE_AFTER_MS
+}
+
 export default function Markets() {
   const navigate = useNavigate()
   const mobile = useIsMobile()
   const [search, setSearch] = useState('')
+  const searchInputRef = useRef(null)
   const { positions } = usePortfolio()
   const { watchlist, addToWatchlist, removeFromWatchlist, isWatching } = useWatchlist()
   const marketOpen = isMarketOpen()
 
   const ownedTickers = new Set(positions.map(p => p.ticker))
   const query = search.trim().toUpperCase()
-  const searchResults = useSymbolSearch(search.trim())
+  const rawSearchResults = useSymbolSearch(search.trim())
+  // Some providers return the same ticker twice (e.g. AAPD on an "AAPL" query) —
+  // keep only the first occurrence of each symbol so the dropdown has no dupes.
+  const searchResults = rawSearchResults.filter((r, i, arr) => arr.findIndex(x => x.symbol === r.symbol) === i)
   const showDropdown = query.length > 0
 
   // Indices + watchlist are intentional holdings → cached. Search results are
@@ -48,6 +63,7 @@ export default function Markets() {
         <div className={cn('flex h-11 items-center gap-2.5 rounded-input border bg-white px-3.5', search ? 'border-ame-400' : 'border-ink-200')}>
           <div className="font-sans text-lg text-ink-300">⌕</div>
           <input
+            ref={searchInputRef}
             value={search}
             onChange={e => setSearch(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && query) { const dest = searchResults[0]?.symbol ?? query; navigate(`/stock/${dest}`); setSearch('') } }}
@@ -102,8 +118,18 @@ export default function Markets() {
           return (
             <div key={sym} className="rounded-card border border-ink-100 bg-white px-4 py-3">
               <Eyebrow>{INDEX_NAMES[sym]}</Eyebrow>
-              <div className="mt-1 font-sans text-xl font-bold text-ink-900">
-                {q ? `$${q.price.toLocaleString('en-US', { maximumFractionDigits: 0 })}` : '—'}
+              <div className="mt-1 flex items-center gap-2">
+                <div className="font-sans text-xl font-bold text-ink-900">
+                  {q ? `$${q.price.toLocaleString('en-US', { maximumFractionDigits: 0 })}` : '—'}
+                </div>
+                {isStaleQuote(q) && (
+                  <span
+                    title="Data may be outdated"
+                    className="rounded-pill border border-gold/30 bg-goldBg px-2 py-0.5 font-sans text-[11px] font-semibold uppercase tracking-[0.08em] text-gold"
+                  >
+                    stale
+                  </span>
+                )}
               </div>
               <div className={cn('mt-0.5 font-sans text-[13px]', q?.pos ? 'text-aqua-600' : 'text-red')}>
                 {q ? `${q.pos ? '+' : ''}${q.pct?.toFixed(2)}%` : '—'}
@@ -116,9 +142,13 @@ export default function Markets() {
       {/* Watchlist — single column on mobile, two columns on wider screens */}
       <div className="mb-1"><Eyebrow><TermUnderline>Watchlist</TermUnderline></Eyebrow></div>
       {watchlist.length === 0 ? (
-        <div className="py-5 font-sans text-sm text-ink-400">
+        <button
+          type="button"
+          onClick={() => searchInputRef.current?.focus()}
+          className="py-5 text-left font-sans text-sm text-ink-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ame-400"
+        >
           Search above to add stocks to your watchlist.
-        </div>
+        </button>
       ) : (
         <div className={cn('grid gap-x-8', mobile ? 'grid-cols-1' : 'grid-cols-2')}>
           {watchlist.map(sym => (

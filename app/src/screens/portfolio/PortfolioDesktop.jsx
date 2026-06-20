@@ -61,6 +61,11 @@ export default function PortfolioDesktop() {
               onRangeChange={setActiveRange}
               overlayCandles={overlayCandles ?? null}
             />
+            {!loading && displayHoldings.length === 0 && (
+              <div className="pb-3 pt-1 text-center font-sans text-sm text-ink-300">
+                Make your first trade to see performance over time
+              </div>
+            )}
           </div>
 
           <div className="flex-1">

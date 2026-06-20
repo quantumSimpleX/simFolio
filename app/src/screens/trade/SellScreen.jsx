@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { cn } from '../../lib/utils'
+import { cn, shares } from '../../lib/utils'
 import { GhostCTA, Eyebrow, TermUnderline, ReceiptRow } from '../../components/Primitives'
 import { AppShell } from '../../components/AppShell'
 import { useIsMobile } from '../../hooks/useBreakpoint'
@@ -154,7 +154,7 @@ export default function SellScreen() {
 
       <div className="rounded-card border border-ink-100 bg-white px-4">
         <div className="pb-1 pt-2.5"><Eyebrow>Sale preview</Eyebrow></div>
-        <ReceiptRow label={`${qty} shares × $${effectivePrice.toFixed(2)}`} value={`$${gross}`}/>
+        <ReceiptRow label={`${shares(qty)} × $${effectivePrice.toFixed(2)}`} value={`$${gross}`}/>
         <ReceiptRow label={<TermUnderline>Transaction fee</TermUnderline>} value={`−$${TRANSACTION_FEE.toFixed(2)}`}/>
         <ReceiptRow
           label={<TermUnderline>{pnlPositive ? 'Realised gain' : 'Realised loss'}</TermUnderline>}
@@ -175,7 +175,7 @@ export default function SellScreen() {
           {isLoading ? '…' : [ticker, stock?.name, stock?.exchange].filter(Boolean).join(' · ')}
         </div>
         <div className="flex items-end gap-3.5">
-          <div className="whitespace-nowrap font-display text-5xl font-bold leading-none tracking-[-0.025em] text-ink-900">
+          <div className="whitespace-nowrap font-sans text-5xl font-bold leading-none tracking-[-0.025em] text-ink-900">
             {isLoading ? '…' : stock?.price ? `$${stock.price.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 })}` : '—'}
           </div>
           <div className={cn('whitespace-nowrap font-sans text-lg leading-tight', stock?.pos ? 'text-aqua-600' : 'text-red')}>

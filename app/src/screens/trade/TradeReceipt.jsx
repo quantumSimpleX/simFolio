@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import { cn } from '../../lib/utils'
+import { cn, shares } from '../../lib/utils'
+import { C } from '../../tokens'
 import { CTA, Eyebrow, TermUnderline, ReceiptRow } from '../../components/Primitives'
 import { AppShell } from '../../components/AppShell'
 import { usePortfolio } from '../../hooks/usePortfolio'
@@ -35,10 +36,18 @@ export default function TradeReceipt() {
     <AppShell active="portfolio">
       <div className="mx-auto flex max-w-[560px] flex-col gap-5">
         <div className="py-2 text-center">
-          <div className={cn('mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-pill border-2 font-sans text-[22px]', statusRing)}>
-            {isQueued ? '⏳' : '✓'}
+          <div className={cn('mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-pill border-2', statusRing)}>
+            {isQueued ? (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M5 22h14M5 2h14M17 22v-4.17a2 2 0 0 0-.59-1.42L12 12l-4.41 4.41A2 2 0 0 0 7 17.83V22M7 2v4.17a2 2 0 0 0 .59 1.42L12 12l4.41-4.41A2 2 0 0 0 17 6.17V2"/>
+              </svg>
+            ) : (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M20 6 9 17l-5-5"/>
+              </svg>
+            )}
           </div>
-          <div className="font-display text-[28px] font-bold tracking-[-0.02em] text-ink-900">
+          <div className="font-sans text-[28px] font-bold tracking-[-0.02em] text-ink-900">
             {isQueued ? 'Order queued' : isSell ? 'Sold' : 'Order filled'}
           </div>
           <div className="mt-1 font-sans text-sm text-ink-400">{ts}</div>
@@ -48,14 +57,14 @@ export default function TradeReceipt() {
           <div className="pb-1.5 pt-3"><Eyebrow>Transaction receipt</Eyebrow></div>
           {isSell ? (
             <>
-              <ReceiptRow label="Sold" value={`${qty} shares of ${ticker}`}/>
+              <ReceiptRow label="Sold" value={`${shares(qty)} of ${ticker}`}/>
               <ReceiptRow label={<TermUnderline>Executed at</TermUnderline>} value={`$${execPrice.toFixed(2)} / share`}/>
               <ReceiptRow label={<TermUnderline>Gross proceeds</TermUnderline>} value={`$${total}`}/>
               {pnl != null && (
                 <ReceiptRow
                   label={<TermUnderline>{pnlPositive ? 'Realised gain' : 'Realised loss'}</TermUnderline>}
                   value={`${pnlPositive?'+':'−'}$${Math.abs(pnl).toFixed(2)}`}
-                  valueColor={pnlPositive?'var(--aqua-600)':'var(--red)'}
+                  valueColor={pnlPositive ? C.aqua600 : C.red}
                 />
               )}
               <ReceiptRow label={<TermUnderline>Transaction fee</TermUnderline>} value={`−$${fee.toFixed(2)}`}/>
@@ -69,7 +78,7 @@ export default function TradeReceipt() {
             </>
           ) : (
             <>
-              <ReceiptRow label="Bought" value={`${qty} shares of ${ticker}`}/>
+              <ReceiptRow label="Bought" value={`${shares(qty)} of ${ticker}`}/>
               <ReceiptRow label={<TermUnderline>Executed at</TermUnderline>} value={`$${execPrice.toFixed(2)} / share`}/>
               <ReceiptRow label={<TermUnderline>Gross cost</TermUnderline>} value={`$${total}`}/>
               {hasSlippage && (

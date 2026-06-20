@@ -75,7 +75,8 @@ describe('onboarding flow', () => {
     fireEvent.click(screen.getByText('← Back'))
     // goal question returns with the prior pick still checked
     expect(await screen.findByText(goalTitle)).toBeInTheDocument()
-    expect(document.body.textContent).toContain('✓')
+    // selected goal chip is now a checked checkbox (SVG tick, no '✓' glyph)
+    expect(screen.getAllByRole('checkbox', { checked: true }).length).toBeGreaterThan(0)
   })
 
   it('walks all questions to the stock screen, then I-have-no-idea → expert selection', async () => {
@@ -109,8 +110,8 @@ describe('onboarding flow', () => {
 
     // no stocks → single-hero intro for the named investor
     fireEvent.click(screen.getByText(/I have no idea/))
-    expect(await screen.findByText(/Look who we got here/i)).toBeInTheDocument()
-    expect(screen.getByText(/Warren Buffett is here to help you/i)).toBeInTheDocument()
+    expect(await screen.findByText(/feels like a natural fit/i)).toBeInTheDocument()
+    expect(screen.getByText(/Warren Buffett feels like a natural fit/i)).toBeInTheDocument()
     // The card shows the hero's detail, not a grid to choose from
     expect(screen.getByText(/Investment style/i)).toBeInTheDocument()
     expect(screen.getByText(/Known for/i)).toBeInTheDocument()

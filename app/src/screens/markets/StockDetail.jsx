@@ -44,7 +44,12 @@ export default function StockDetail() {
 
   const position = positions.find(p => p.ticker === ticker)
   const watching = isWatching(ticker)
-  const toggleWatch = () => (watching ? removeFromWatchlist(ticker) : addToWatchlist(ticker))
+  const [watchToast, setWatchToast] = useState(null)
+  const toggleWatch = () => {
+    if (watching) { removeFromWatchlist(ticker); setWatchToast('Removed from watchlist') }
+    else { addToWatchlist(ticker); setWatchToast('Added to watchlist') }
+    setTimeout(() => setWatchToast(null), 2200)
+  }
 
   // Value colors match the watchlist fundamentals on the Markets page.
   const fundamentals = s ? [
@@ -151,6 +156,9 @@ export default function StockDetail() {
           <MktStatus open={marketOpen} />
           <CTA label={`Buy ${ticker}`} full onClick={() => navigate(`/buy/${ticker}`)} />
           <WatchlistButton watching={watching} onClick={toggleWatch} full />
+          {watchToast && (
+            <div role="status" aria-live="polite" className="text-center font-sans text-[13px] text-ame-600">{watchToast}</div>
+          )}
           {position && <SellButton ticker={ticker} navigate={navigate} full />}
           {position && <PositionCard position={position} />}
         </div>

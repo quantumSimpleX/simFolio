@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useId } from 'react';
 import { C, SANS, DISPLAY } from '../tokens';
 import { useLang } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import glossary from '../data/glossary.json';
+import { HERO_DATA } from '../data/heroes';
 import { cn } from '../lib/utils';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -118,7 +119,7 @@ export function CTA({ label, full=false, ghost=false, danger=false, disabled=fal
       onClick={!disabled && !loading ? onClick : undefined}
       // shrink-0: never let a tall flex column (e.g. the 8-hero grid) compress the
       // CTA below its 48px height — it must match the onboarding Continue buttons.
-      className={cn('shrink-0', full && 'w-full')}
+      className={cn('shrink-0 focus-visible:ring-2 focus-visible:ring-ame-400 focus-visible:ring-offset-2', full && 'w-full')}
       style={style}
     >
       {label}
@@ -356,6 +357,7 @@ export function TermUnderline({ children, termKey }) {
   const ref = useRef(null);
   const { lang } = useLang();
   const isMobile = useIsMobile();
+  const tooltipId = useId();
 
   const key = termKey || TERM_MAP[String(children).toLowerCase()] || TERM_MAP[String(children).toLowerCase().replace(/[^a-z0-9 ]/g,'')];
   const def = key ? glossary[key] : null;
@@ -408,21 +410,36 @@ export function TermUnderline({ children, termKey }) {
   // popper here because the app applies `body { zoom }` (see index.css), which throws
   // off floating-ui's coordinate math and lands the tooltip away from the cursor.
   // An absolutely-positioned child lives in the same zoomed space, so it sits on the term.
-  const entry = def[lang] || def.en;
+  // Mirror the mobile sheet: EN plus the preferred language (if non-English and present).
+  const prefLang = lang !== 'en' && def[lang] ? lang : null;
+  const prefMeta = prefLang ? LANGUAGES.find(l => l.code === prefLang) : null;
   return (
     <span
       ref={ref}
       className={cn(TRIGGER_CLS, 'relative inline-block')}
+      aria-describedby={open ? tooltipId : undefined}
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
       {children}
       {open && (
         <span
+          id={tooltipId}
           role="tooltip"
-          className="absolute bottom-full left-0 z-50 mb-1.5 block w-max max-w-[280px] rounded-card border border-ink-200 bg-white px-3.5 py-2.5 font-sans shadow-[0_4px_20px_rgba(0,0,0,0.12)] dark:border-ink-300"
+          className="absolute bottom-full left-0 z-50 mb-1.5 block w-max min-w-[220px] max-w-[280px] rounded-card border border-ink-200 bg-white px-3.5 py-2.5 font-sans shadow-[0_4px_20px_rgba(0,0,0,0.12)] dark:border-ink-300"
         >
-          <GlossaryEntry entry={entry} />
+          <Tabs defaultValue={prefLang ?? 'en'}>
+            <TabsList>
+              <TabsTrigger value="en" aria-label="English"><FlagIcon country="US" size={18}/></TabsTrigger>
+              {prefMeta && (
+                <TabsTrigger value={prefLang} aria-label={prefMeta.name}><FlagIcon country={prefMeta.country} size={18}/></TabsTrigger>
+              )}
+            </TabsList>
+            <TabsContent value="en" className="mt-2"><GlossaryEntry entry={def.en} /></TabsContent>
+            {prefMeta && (
+              <TabsContent value={prefLang} className="mt-2"><GlossaryEntry entry={def[prefLang] || def.en} /></TabsContent>
+            )}
+          </Tabs>
         </span>
       )}
     </span>
@@ -456,7 +473,7 @@ export function HeroAvatar({ id, initials, color, size=36 }) {
       style={{ width:size, height:size, background:`${color}12`, border:`1.5px solid ${color}35` }}
     >
       {hasPhoto && (
-        <AvatarImage src={`/heroes/${id}.jpg`} alt={initials} className="object-cover" />
+        <AvatarImage src={`/heroes/${id}.jpg`} alt={HERO_DATA[id]?.name || initials} className="object-cover" />
       )}
       <AvatarFallback style={{ background:'transparent', color, fontSize:size*0.36 }}>
         {initials}

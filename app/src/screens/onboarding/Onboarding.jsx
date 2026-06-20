@@ -7,7 +7,7 @@ import { supabase } from '../../lib/supabase';
 import { matchHeroes, resolveSelectionHeroes, heroIdFromName, HERO_DATA } from '../../data/heroes';
 import { useHeroRanking } from '../../hooks/useHeroRanking';
 import { cn } from '../../lib/utils';
-import { ScreenShell, SageHeader, BackButton } from './shell';
+import { ScreenShell, SageHeader, BackButton, OnboardingProgress } from './shell';
 import { fluid } from '../../lib/fluid';
 import { useIsDesktop } from '../../hooks/useIsDesktop';
 import { HeroSelect } from '../../components/HeroSelect';
@@ -266,6 +266,7 @@ function OnboardingShell({ step, total, current, selected, onSelect, onContinue,
   return (
     <ScreenShell>
       {onBack && <BackButton onBack={onBack}/>}
+      <OnboardingProgress step={step + 1} total={total}/>
       <ProgressDots step={step + 1} total={total}/>
 
       <SageHeader avatarSize={avatarSize} isDesktop={isDesktop}>{current.q}</SageHeader>
@@ -293,13 +294,25 @@ function OnboardingShell({ step, total, current, selected, onSelect, onContinue,
         ) : current.type === 'multi' ? (
           <MultiGoalPicker choices={current.choices} value={selected} onChange={onSelect}/>
         ) : (
-          <div className={isGridChoice ? 'grid grid-cols-2 gap-2.5' : 'flex flex-col gap-2'}>
+          // Single-select: real radio-group semantics for keyboard arrow-key nav and
+          // screen readers. The native radios are visually hidden; GoalCard supplies the
+          // styling and the label wrapper makes the whole card the radio's hit target.
+          <fieldset className={cn('border-none p-0', isGridChoice ? 'grid grid-cols-2 gap-2.5' : 'flex flex-col gap-2')}>
+            <legend className="sr-only">{current.q}</legend>
             {current.choices.map((choice, i) => (
-              <div key={choice} className={isGridChoice && current.choices.length % 2 !== 0 && i === current.choices.length - 1 ? 'col-span-2' : undefined}>
-                <GoalCard label={choice} selected={selected === choice} onClick={() => onSelect(choice)}/>
-              </div>
+              <label key={choice} className={cn('block cursor-pointer rounded-card focus-within:ring-2 focus-within:ring-ame-400', isGridChoice && current.choices.length % 2 !== 0 && i === current.choices.length - 1 && 'col-span-2')}>
+                <input
+                  type="radio"
+                  name={current.key}
+                  value={choice}
+                  checked={selected === choice}
+                  onChange={() => onSelect(choice)}
+                  className="sr-only"
+                />
+                <GoalCard label={choice} selected={selected === choice}/>
+              </label>
             ))}
-          </div>
+          </fieldset>
         )}
       </div>
 
@@ -337,23 +350,34 @@ function MultiGoalPicker({ choices, value, onChange }) {
         const checked = picks.includes(title);
         const disabled = (isNone && picks.length > 0 && !noneSelected) || (!isNone && noneSelected);
         return (
-          <div
+          <button
             key={title}
+            type="button"
+            role="checkbox"
+            aria-checked={checked}
+            aria-label={title}
+            disabled={disabled}
             // Ignore clicks that originate inside a portalled tooltip (mobile bottom
             // sheet) — React bubbles portal events through the component tree, but those
             // targets live outside this card's DOM, so the goal must not toggle.
             onClick={e => { if (e.currentTarget.contains(e.target)) toggle(title); }}
             className={cn(
-              'rounded-card border-[1.5px] px-4 py-1.5',
+              'w-full rounded-card border-[1.5px] px-4 py-1.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ame-400',
               checked ? 'border-ame-400 bg-ame-50' : 'border-ink-200 bg-white',
               disabled ? 'pointer-events-none cursor-default opacity-40' : 'cursor-pointer',
             )}
           >
             <div className="flex items-center gap-2.5">
               <div className={cn(
-                'flex h-[18px] w-[18px] flex-shrink-0 items-center justify-center rounded-input border-[1.5px] font-sans text-xs font-bold text-white',
+                'flex h-[18px] w-[18px] flex-shrink-0 items-center justify-center rounded-input border-[1.5px]',
                 checked ? 'border-ame-400 bg-ame-400' : 'border-ink-200 bg-white',
-              )}>{checked ? '✓' : ''}</div>
+              )}>
+                {checked && (
+                  <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                    <path d="M2.5 6.5L5 9L9.5 3.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
+              </div>
               <div className="font-sans leading-snug text-ink-900" style={{ fontSize: fluid(15, 18) }}>
                 <span className="font-semibold">
                   {termKey ? <TermUnderline termKey={termKey}>{title}</TermUnderline> : title}
@@ -361,7 +385,7 @@ function MultiGoalPicker({ choices, value, onChange }) {
                 {desc && <span className="font-normal text-ink-400">: {desc}</span>}
               </div>
             </div>
-          </div>
+          </button>
         );
       })}
 
@@ -392,7 +416,7 @@ function HeroIntro({ heroId, onContinue, saving, onBack }) {
       <BackButton onBack={onBack}/>
 
       <SageHeader avatarSize={avatarSize} isDesktop={isDesktop}>
-        Look who we got here? {h.name} is here to help you.
+        Given your answers, {h.name} feels like a natural fit — what do you think?
       </SageHeader>
 
       <div className="flex flex-col gap-4 rounded-card border-[1.5px] border-ame-400 bg-ame-50 p-5">
@@ -434,6 +458,7 @@ function StockInterest({ stocks, setStocks, onFinish, saving, onBack, total }) {
   return (
     <ScreenShell>
       {onBack && <BackButton onBack={onBack}/>}
+      <OnboardingProgress step={total} total={total}/>
       <ProgressDots step={total} total={total}/>
 
       <SageHeader avatarSize={avatarSize} isDesktop={isDesktop}>

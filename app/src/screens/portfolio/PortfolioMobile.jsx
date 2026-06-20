@@ -61,6 +61,11 @@ export default function PortfolioMobile() {
           onRangeChange={setActiveRange}
           overlayCandles={overlayCandles ?? null}
         />
+        {!loading && displayHoldings.length === 0 && (
+          <div className="pb-2 pt-1 text-center font-sans text-[13px] text-ink-300">
+            Make your first trade to see performance over time
+          </div>
+        )}
       </div>
 
       <div className="flex-shrink-0 px-2.5 pt-4">

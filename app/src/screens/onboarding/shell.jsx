@@ -29,7 +29,7 @@ export function ScreenShell({ children }) {
 
   return (
     <div className="flex min-h-[100dvh] w-full flex-col bg-paper">
-      <div className="flex flex-shrink-0 items-center justify-between border-b border-ink-100 bg-white px-6 py-3.5">
+      <div className="flex flex-shrink-0 items-center justify-between border-b border-ink-100 bg-paper px-6 py-3.5">
         <Logo size={19}/>
         <SimPill/>
       </div>
@@ -48,12 +48,37 @@ export function ScreenShell({ children }) {
 
 export function BackButton({ onBack }) {
   return (
-    <div
+    <button
+      type="button"
+      aria-label="Back"
       onClick={onBack}
-      className="flex cursor-pointer items-center gap-1.5 self-start font-sans font-semibold text-ink-400"
+      className="flex cursor-pointer items-center gap-1.5 self-start rounded-input font-sans font-semibold text-ink-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ame-400"
       style={{ fontSize: fluid(13, 15) }}
     >
       ← Back
+    </button>
+  );
+}
+
+// Segmented progress bar for the onboarding flow. Sits alongside the textual
+// "step of total" counter (ProgressDots) and gives spatial feedback, especially
+// on mobile where the brand panel is hidden. Completed segments fill ame-400.
+export function OnboardingProgress({ step, total }) {
+  return (
+    <div
+      role="progressbar"
+      aria-valuenow={step}
+      aria-valuemin={1}
+      aria-valuemax={total}
+      aria-label={`Step ${step} of ${total}`}
+      className="flex gap-1"
+    >
+      {Array.from({ length: total }, (_, i) => (
+        <div
+          key={i}
+          className={cn('h-1 flex-1 rounded-pill', i < step ? 'bg-ame-400' : 'bg-ink-100')}
+        />
+      ))}
     </div>
   );
 }
@@ -67,7 +92,7 @@ export function SageHeader({ avatarSize, isDesktop, children }) {
           className="font-sans font-semibold uppercase tracking-[0.14em] text-ink-400"
           style={{ fontSize: fluid(11, 13), marginBottom: isDesktop ? 8 : 6 }}
         >Sage</div>
-        <div className="font-sans leading-normal text-ink-600" style={{ fontSize: fluid(15, 22) }}>{children}</div>
+        <div className="font-sans italic leading-normal text-ink-600" style={{ fontSize: fluid(15, 22) }}>{children}</div>
       </div>
     </div>
   );

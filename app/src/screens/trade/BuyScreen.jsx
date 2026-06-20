@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { cn } from '../../lib/utils'
+import { cn, shares } from '../../lib/utils'
 import { CTA, Eyebrow, TermUnderline, ReceiptRow } from '../../components/Primitives'
 import { AppShell } from '../../components/AppShell'
 import { PriceCard } from '../../components/PriceCard'
@@ -126,7 +126,7 @@ export default function BuyScreen() {
 
       <div className="rounded-card border border-ink-100 bg-white px-5">
         <div className="pb-1 pt-3"><Eyebrow>Order summary</Eyebrow></div>
-        <ReceiptRow label={`${qty} shares × $${effectivePrice}`} value={`$${total}`}/>
+        <ReceiptRow label={`${shares(qty)} × $${effectivePrice}`} value={`$${total}`}/>
         <ReceiptRow label={<TermUnderline>Transaction fee</TermUnderline>} value={`$${fee.toFixed(2)}`}/>
         <ReceiptRow label={canExec ? 'Total' : 'Total (estimated)'} value={canExec ? `$${grandTotal}` : `~$${grandTotal}`} bold/>
       </div>
@@ -179,7 +179,7 @@ export default function BuyScreen() {
         <div className="flex w-[480px] flex-shrink-0 flex-col gap-6">
           <div>
             <div onClick={() => navigate(-1)} className="mb-2 cursor-pointer font-sans text-[13px] text-ame-400">← Back</div>
-            <div className="font-display text-[32px] font-bold leading-none tracking-[-0.02em] text-ink-900">Buy {ticker}</div>
+            <div className="font-sans text-[32px] font-bold leading-none tracking-[-0.02em] text-ink-900">Buy {ticker}</div>
           </div>
           {priceCard}
           {orderForm}
@@ -192,7 +192,7 @@ export default function BuyScreen() {
               {isLoading ? '…' : [ticker, stock?.name, stock?.exchange].filter(Boolean).join(' · ')}
             </div>
             <div className="flex items-end gap-3.5">
-              <div className="whitespace-nowrap font-display text-5xl font-bold leading-none tracking-[-0.025em] text-ink-900">
+              <div className="whitespace-nowrap font-sans text-5xl font-bold leading-none tracking-[-0.025em] text-ink-900">
                 {isLoading ? '…' : stock?.price ? `$${stock.price.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 })}` : '—'}
               </div>
               <div className={cn('whitespace-nowrap font-sans text-lg leading-tight', stock?.pos ? 'text-aqua-600' : 'text-red')}>
@@ -204,7 +204,7 @@ export default function BuyScreen() {
           <div className="rounded-card border border-ink-100 bg-white px-2 pb-2 pt-5">
             <ChartPanel height={300} candles={candles} isLoading={candlesLoading} isError={candlesError} range={chartRange} onRangeChange={setChartRange}/>
           </div>
-          <SageMsg text={`You're buying ${qty} shares — a solid start. If you're unsure about the quantity, you can always buy more later.`}/>
+          <SageMsg text={`You're buying ${shares(qty)} — a solid start. If you're unsure about the quantity, you can always buy more later.`}/>
         </div>
       </div>
     </AppShell>
@@ -256,7 +256,7 @@ export function QtyInputBlock({ qty, setQty, price, accent = 'ame', max = null }
       : 'border-ame-400 [box-shadow:0_0_0_3px_color-mix(in_srgb,var(--ame-400)_10%,transparent)]',
   )
   const labelClass = cn('flex-shrink-0 font-sans text-[11px] font-semibold uppercase tracking-[0.14em]', accent === 'red' ? 'text-red' : 'text-ame-400')
-  const inputClass = 'no-spinner w-full min-w-0 border-none bg-transparent text-right font-display text-[24px] font-bold tracking-[-0.02em] text-ink-900 outline-none'
+  const inputClass = 'no-spinner w-full min-w-0 border-none bg-transparent text-right font-sans text-[24px] font-bold tracking-[-0.02em] text-ink-900 outline-none'
 
   return (
     <div className="flex gap-2.5">

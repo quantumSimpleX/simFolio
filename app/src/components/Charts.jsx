@@ -42,8 +42,10 @@ export function MiniChart({ height=280, candles=[], isLoading=false, isError=fal
   const longRange = range === '1Y' || range === 'All'
   const fmtDate  = t => {
     const d = new Date(t * 1000)
-    const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0')
-    return longRange ? `${y}/${m}/${day}` : `${d.getMonth()+1}/${d.getDate()}`
+    // Long ranges show month/year ("Jun '21") — friendlier for a US audience than YYYY/MM/DD.
+    return longRange
+      ? d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }).replace(/(\d{2})$/, "'$1")
+      : `${d.getMonth()+1}/${d.getDate()}`
   }
   const fmtPrice = v => `$${v.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 })}`
   // 3 significant digits keeps the y gutter narrow

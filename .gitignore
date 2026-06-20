@@ -36,3 +36,9 @@ Thumbs.db
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# transient tool output
+.playwright-mcp/
+ux-audit/
+.claude/
+app/.claude/

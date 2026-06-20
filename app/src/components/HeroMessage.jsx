@@ -59,7 +59,7 @@ export function SageMsg({ text, compact=false }) {
       <GuideAvatar size={compact ? 28 : 36}/>
       <div className="flex-1">
         <div className="mb-1.5 font-sans text-[13px] font-semibold uppercase tracking-[0.14em] text-ink-400">Sage</div>
-        <div className={cn('font-sans leading-relaxed text-ink-600', compact ? 'text-[15px]' : 'text-lg')}>{text}</div>
+        <div className={cn('font-sans italic leading-relaxed text-ink-600', compact ? 'text-[15px]' : 'text-lg')}>{text}</div>
       </div>
     </div>
   );

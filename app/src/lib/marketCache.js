@@ -25,6 +25,7 @@ function rowToQuote(row) {
     eps:           row.eps           ? parseFloat(row.eps)       : 0,
     beta:          row.beta          ? parseFloat(row.beta)      : 0,
     dividendYield: row.dividend_yield ? parseFloat(row.dividend_yield) : 0,
+    fetchedAt:     row.fetched_at ?? null,
   }
 }
 
