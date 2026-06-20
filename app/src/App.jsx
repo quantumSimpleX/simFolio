@@ -4,6 +4,7 @@ import { C } from './tokens'
 import { useAuth } from './context/AuthContext'
 import { useMarketDataPreload } from './hooks/useMarketDataPreload'
 import { useQueuedExecution } from './hooks/useQueuedExecution'
+import { AchievementEngine } from './hooks/useAchievementEngine'
 
 import WelcomeMobile   from './screens/auth/WelcomeMobile'
 import WelcomeDesktop  from './screens/auth/WelcomeDesktop'
@@ -70,6 +71,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Wrapper>
+        <AchievementEngine/>
         <Routes>
           {/* Public */}
           <Route path="/"          element={isMobile ? <WelcomeMobile/> : <WelcomeDesktop/>}/>

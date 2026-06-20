@@ -6,6 +6,7 @@ import { ProgressRing } from '../../components/Charts'
 import { Dialog, DialogPortal, DialogOverlay } from '../../components/ui/dialog'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { Button } from '../../components/ui/button'
+import { useAchievements } from '../../hooks/useAchievements'
 
 const MOMENT_TYPES = {
   badge: {
@@ -49,9 +50,26 @@ const MOMENT_TYPES = {
 export default function BadgeEarned() {
   const navigate = useNavigate()
   const { state } = useLocation()
-  const type = state?.type || 'badge'
-  const m = MOMENT_TYPES[type] || MOMENT_TYPES.badge
+  const { badges, earnedCount } = useAchievements()
+  // tier carries the moment kind; legacy callers passed `type`.
+  const tier = state?.tier || state?.type || 'badge'
+  const badge = state?.badge || null
   const [open, setOpen] = useState(true)
+
+  // Index drives which glyph shows; -1 falls back to glyph 0.
+  const badgeIndex = badge ? badges.findIndex(b => b.id === badge.id) : 0
+
+  let m = MOMENT_TYPES[tier] || MOMENT_TYPES.badge
+  if (tier === 'badge' && badge) {
+    const towardMedal = earnedCount % 10 === 0 ? 10 : earnedCount % 10
+    m = {
+      ...MOMENT_TYPES.badge,
+      title: badge.name,
+      desc: badge.desc,
+      progressVal: towardMedal,
+      progressLabel: `${towardMedal} of 10 toward your first medal`,
+    }
+  }
 
   function dismiss() {
     setOpen(false)
@@ -69,9 +87,9 @@ export default function BadgeEarned() {
           <div className="mx-auto box-border flex w-full max-w-[480px] flex-1 flex-col items-center justify-center gap-6 p-10">
             {/* Glyph */}
             <div className="flex items-center justify-center">
-              {type === 'badge'  && <BadgeGlyphForIndex index={0} size={96} earned/>}
-              {type === 'medal'  && <MedalGlyph size={88} earned/>}
-              {type === 'trophy' && <TrophyGlyph size={100} earned/>}
+              {tier === 'badge'  && <BadgeGlyphForIndex index={badgeIndex < 0 ? 0 : badgeIndex} size={96} earned/>}
+              {tier === 'medal'  && <MedalGlyph size={88} earned/>}
+              {tier === 'trophy' && <TrophyGlyph size={100} earned/>}
             </div>
 
             {/* Text */}

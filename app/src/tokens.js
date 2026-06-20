@@ -65,6 +65,7 @@ export const BADGES = [
   { id:'researcher',    name:'Researcher',          desc:'View 10 different stock detail pages',        earned:false },
   { id:'contrarian',    name:'Contrarian',          desc:'Buy when a stock is down 10%+ on the day',   earned:false },
   { id:'etf',           name:'ETF Explorer',        desc:'Add an ETF to your portfolio',               earned:false },
+  { id:'first_crypto',  name:'Crypto Curious',      desc:'Add crypto to your portfolio',               earned:false },
   { id:'limit',         name:'Limit Setter',        desc:'Place your first limit order',               earned:false },
   { id:'reflection',    name:'Reflective',          desc:'Write a reflection note after a sell',       earned:false },
   { id:'council',       name:'Council Builder',     desc:'Unlock your second hero advisor',            earned:false },
