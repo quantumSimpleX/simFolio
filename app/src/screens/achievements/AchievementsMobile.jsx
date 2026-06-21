@@ -18,21 +18,30 @@ export default function AchievementsMobile() {
   return (
     <AppShell active="achievements" maxWidth={860}>
       <PageHeader title="Achievements"/>
+      <h1 className="sr-only">Achievements</h1>
 
       <div className="flex flex-col gap-5">
         {/* Progress summary */}
         <Card className="flex items-center gap-5 px-5 py-[18px]">
           <div className="flex-1">
-            <div className="font-display text-[28px] font-bold leading-none tracking-[-0.02em] text-ink-900">
+            <div className="font-sans text-[28px] font-bold leading-none tracking-[-0.02em] text-ink-900">
               {isLoading ? '…' : `${earnedCount} badge${earnedCount !== 1 ? 's' : ''}`}
             </div>
-            <div className="mt-1 font-sans text-[13px] text-ink-400">
+            <div className="mt-1 font-sans text-[13px] text-ink-500">
               {toNextMedal === 10 && medalCount === 0 ? '10 badges → first medal' : `${toNextMedal} more → next medal`}
             </div>
-            <div className="mt-2.5 h-[5px] rounded-pill bg-ink-100">
+            <div
+              className="mt-2.5 h-[5px] rounded-pill bg-ink-100"
+              role="progressbar"
+              aria-valuenow={earnedCount % 10}
+              aria-valuemin={0}
+              aria-valuemax={10}
+              aria-label="Badges toward next medal"
+            >
               <div className="h-full rounded-pill bg-ame-400" style={{ width: `${((earnedCount % 10) / 10) * 100}%` }}/>
             </div>
-            <div className="mt-1 font-sans text-[11px] text-ink-400">{earnedCount % 10} of 10 badges toward next medal</div>
+            <div className="mt-1 font-sans text-[11px] text-ink-500">{earnedCount % 10} of 10 badges toward next medal</div>
+            <div className="mt-2 font-sans text-[11px] leading-snug text-ink-500">10 badges earn a medal · 10 medals earn a trophy · 10 trophies make a Master of Trading.</div>
           </div>
           <div className="flex flex-col items-center gap-2.5">
             <div className="flex items-end gap-2">
@@ -55,15 +64,26 @@ export default function AchievementsMobile() {
             {badges.map((b, i) => (
               <Card
                 key={b.id}
+                role="button"
+                tabIndex={b.earned ? 0 : -1}
+                aria-disabled={!b.earned}
+                data-state={b.earned ? 'earned' : 'locked'}
+                aria-label={b.earned ? `${b.name} badge — earned` : `${b.name} badge — locked: ${b.desc}`}
                 onClick={() => b.earned && navigate('/badge-earned', { state: { badge: b } })}
+                onKeyDown={(e) => {
+                  if (b.earned && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault()
+                    navigate('/badge-earned', { state: { badge: b } })
+                  }
+                }}
                 className={cn(
-                  'flex flex-col items-center gap-1.5 px-2.5 py-3.5',
-                  b.earned ? 'cursor-pointer border-ink-100 opacity-100' : 'cursor-default border-ink-50 opacity-50',
+                  'flex flex-col items-center gap-1.5 px-2.5 py-3.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ame-400',
+                  b.earned ? 'cursor-pointer border-ink-100' : 'cursor-default border-ink-50',
                 )}
               >
                 <BadgeGlyphForIndex index={i} size={36} earned={b.earned}/>
-                <div className={cn('text-center font-sans text-xs font-semibold leading-tight', b.earned ? 'text-ink-900' : 'text-ink-400')}>{b.name}</div>
-                {!b.earned && <div className="text-center font-sans text-[10px] leading-snug text-ink-300">{b.desc}</div>}
+                <div className={cn('text-center font-sans text-xs font-semibold leading-tight', b.earned ? 'text-ink-900' : 'text-ink-700')}>{b.name}</div>
+                {!b.earned && <div className="text-center font-sans text-[10px] leading-snug text-ink-500">{b.desc}</div>}
               </Card>
             ))}
           </div>

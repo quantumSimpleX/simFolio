@@ -1,10 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { useTrack } from '../gamification/useGamification'
 
 export function usePlaceOrder() {
   const { session } = useAuth()
   const qc = useQueryClient()
+  const track = useTrack()
 
   return useMutation({
     mutationFn: async (orderParams) => {
@@ -31,6 +33,13 @@ export function usePlaceOrder() {
       qc.invalidateQueries({ queryKey: ['orders'] })
       qc.invalidateQueries({ queryKey: ['achievements'] })
       qc.invalidateQueries({ queryKey: ['quotes', variables.ticker] })
+      // Gamification: the contrarian/momentum badges key off the day's % move at
+      // fill time. Callers pass `dayChange` (the live quote pct) in variables.
+      track('trade.placed', {
+        type: variables.type,
+        side: variables.side,
+        dayChange: variables.dayChange ?? 0,
+      })
     },
   })
 }

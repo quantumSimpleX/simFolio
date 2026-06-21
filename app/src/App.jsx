@@ -4,7 +4,7 @@ import { C } from './tokens'
 import { useAuth } from './context/AuthContext'
 import { useMarketDataPreload } from './hooks/useMarketDataPreload'
 import { useQueuedExecution } from './hooks/useQueuedExecution'
-import { AchievementEngine } from './hooks/useAchievementEngine'
+import { GamificationProvider } from './gamification/useGamification'
 
 import WelcomeMobile   from './screens/auth/WelcomeMobile'
 import WelcomeDesktop  from './screens/auth/WelcomeDesktop'
@@ -70,8 +70,8 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <GamificationProvider>
       <Wrapper>
-        <AchievementEngine/>
         <Routes>
           {/* Public */}
           <Route path="/"          element={isMobile ? <WelcomeMobile/> : <WelcomeDesktop/>}/>
@@ -99,6 +99,7 @@ export default function App() {
           <Route path="/profile"      element={<PrivateRoute><Profile/></PrivateRoute>}/>
         </Routes>
       </Wrapper>
+      </GamificationProvider>
     </BrowserRouter>
   )
 }

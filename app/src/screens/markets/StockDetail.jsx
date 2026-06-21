@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { cn } from '../../lib/utils'
 import { CTA, Eyebrow, TermUnderline, MktStatus } from '../../components/Primitives'
 import { AppShell } from '../../components/AppShell'
@@ -12,6 +12,7 @@ import { useStockDetail, useCandles } from '../../hooks/useStockDetail'
 import { isMarketOpen } from '../../hooks/useQuotes'
 import { usePortfolio } from '../../hooks/usePortfolio'
 import { useWatchlist } from '../../hooks/useWatchlist'
+import { useTrack } from '../../gamification/useGamification'
 import StatCard from '../../components/common/StatCard'
 
 function fmtMktCap(v) {
@@ -41,6 +42,12 @@ export default function StockDetail() {
   const { positions } = usePortfolio()
   const marketOpen = isMarketOpen()
   const { isWatching, addToWatchlist, removeFromWatchlist } = useWatchlist()
+  const track = useTrack()
+
+  // Researcher badge: count distinct stock detail pages viewed (by ticker).
+  useEffect(() => {
+    if (ticker) track('stock.viewed', { ticker })
+  }, [ticker, track])
 
   const position = positions.find(p => p.ticker === ticker)
   const watching = isWatching(ticker)

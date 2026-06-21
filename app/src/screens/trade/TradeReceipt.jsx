@@ -4,10 +4,12 @@ import { C } from '../../tokens'
 import { CTA, Eyebrow, TermUnderline, ReceiptRow } from '../../components/Primitives'
 import { AppShell } from '../../components/AppShell'
 import { usePortfolio } from '../../hooks/usePortfolio'
+import { useTrack } from '../../gamification/useGamification'
 import { TRANSACTION_FEE } from '../../lib/fees'
 
 export default function TradeReceipt() {
   const navigate = useNavigate()
+  const track = useTrack()
   const { state } = useLocation()
   const { cashBalance } = usePortfolio()
 
@@ -119,7 +121,7 @@ export default function TradeReceipt() {
             <div>
               <div className="mb-[3px] font-sans text-xs font-semibold text-ame-600">Warren on this trade</div>
               <div className="font-sans text-[13px] italic leading-normal text-ink-600">"A loss can be the right decision. What changed your mind? Understanding your own reasoning is more valuable than the money."</div>
-              <div onClick={() => navigate('/ask')} className="mt-1.5 cursor-pointer font-sans text-xs text-ame-400">Add a reflection note →</div>
+              <div onClick={() => { track('sell.reflected', { ticker }); navigate('/ask') }} className="mt-1.5 cursor-pointer font-sans text-xs text-ame-400">Add a reflection note →</div>
             </div>
           </div>
         )}

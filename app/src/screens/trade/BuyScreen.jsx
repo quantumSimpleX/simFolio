@@ -57,6 +57,7 @@ export default function BuyScreen() {
       type: orderType,
       requested_qty: qty,
       execution_price: price,
+      dayChange: stock?.pct ?? 0,
       ...(orderType === 'LIMIT' && limitPrice ? { limit_price: parseFloat(limitPrice), time_in_force: tif } : {}),
     }
     placeOrder(params, {

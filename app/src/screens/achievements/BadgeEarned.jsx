@@ -7,6 +7,7 @@ import { Dialog, DialogPortal, DialogOverlay } from '../../components/ui/dialog'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { Button } from '../../components/ui/button'
 import { useAchievements } from '../../hooks/useAchievements'
+import { useReveal } from '../../gamification/useGamification'
 
 const MOMENT_TYPES = {
   badge: {
@@ -51,9 +52,13 @@ export default function BadgeEarned() {
   const navigate = useNavigate()
   const { state } = useLocation()
   const { badges, earnedCount } = useAchievements()
-  // tier carries the moment kind; legacy callers passed `type`.
-  const tier = state?.tier || state?.type || 'badge'
-  const badge = state?.badge || null
+  const { currentId, queue, advance } = useReveal()
+  // The reveal queue is the primary source: show the badge at the head of the
+  // queue. Router state is a fallback for legacy/direct callers and the no-state
+  // smoke test. `tier` carries the moment kind; legacy callers passed `type`.
+  const queuedBadge = currentId ? badges.find((b) => b.id === currentId) : null
+  const tier = queuedBadge ? 'badge' : (state?.tier || state?.type || 'badge')
+  const badge = queuedBadge || state?.badge || null
   const [open, setOpen] = useState(true)
 
   // Index drives which glyph shows; -1 falls back to glyph 0.
@@ -72,6 +77,13 @@ export default function BadgeEarned() {
   }
 
   function dismiss() {
+    // Draining the queue: advance to the next unlock and keep the moment open.
+    // Only leave once nothing remains to reveal.
+    if (currentId) {
+      advance()
+      const remaining = queue.length - 1
+      if (remaining > 0) return
+    }
     setOpen(false)
     navigate('/portfolio')
   }
@@ -95,12 +107,19 @@ export default function BadgeEarned() {
             {/* Text */}
             <div className="text-center">
               <div className="mb-2.5 font-sans text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: m.eyebrowColor }}>{m.eyebrow}</div>
-              <DialogPrimitive.Title className="font-display text-4xl font-bold leading-none tracking-[-0.02em] text-white">{m.title}</DialogPrimitive.Title>
+              <DialogPrimitive.Title className="font-sans text-4xl font-bold leading-none tracking-[-0.02em] text-white">{m.title}</DialogPrimitive.Title>
               <div className="mt-2 font-sans text-[15px] leading-normal text-ink-400">{m.desc}</div>
             </div>
 
             {/* Progress card */}
-            <div className="flex w-full items-center gap-4 rounded-card border border-white/[0.08] bg-white/[0.05] px-5 py-4">
+            <div
+              className="flex w-full items-center gap-4 rounded-card border border-white/[0.08] bg-white/[0.05] px-5 py-4"
+              role="progressbar"
+              aria-valuenow={m.progressVal}
+              aria-valuemin={0}
+              aria-valuemax={10}
+              aria-label={m.progressLabel}
+            >
               <ProgressRing value={m.progressVal} total={10} size={52} color={m.progressColor}/>
               <div>
                 <div className="mb-[3px] font-sans text-[15px] font-semibold text-white">{m.progressLabel}</div>

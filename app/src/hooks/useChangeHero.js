@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { useTrack } from '../gamification/useGamification'
 
 // Replace the user's advising hero. The council is a single row today, so we clear the existing
 // selection(s) and insert the chosen one, then refresh the hero-selections query — which re-points
@@ -8,6 +9,7 @@ import { useAuth } from '../context/AuthContext'
 export function useChangeHero() {
   const { user } = useAuth()
   const qc = useQueryClient()
+  const track = useTrack()
 
   return useMutation({
     mutationFn: async (heroId) => {
@@ -24,6 +26,9 @@ export function useChangeHero() {
 
       return heroId
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['hero-selections', user?.id] }),
+    onSuccess: (heroId) => {
+      qc.invalidateQueries({ queryKey: ['hero-selections', user?.id] })
+      track('hero.unlocked', { heroId })
+    },
   })
 }
