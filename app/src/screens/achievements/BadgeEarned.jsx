@@ -130,9 +130,9 @@ export default function BadgeEarned() {
 
             {/* Hero quote */}
             <div className="flex w-full items-start gap-2.5 rounded-card bg-white/[0.04] px-4 py-3">
-              <HeroAvatar id="warren" initials="WB" color="var(--ame-400)" size={28}/>
+              <HeroAvatar id="warren" initials="WB" color="var(--ame-400)" size={44}/>
               <div>
-                <blockquote className="font-sans text-[13px] italic leading-normal text-ink-400">{m.heroeQuote}</blockquote>
+                <blockquote className="font-sans text-[15px] italic leading-normal text-ink-400">{m.heroeQuote}</blockquote>
                 <cite className="mt-1 block font-sans text-[11px] font-semibold not-italic text-ame-400/70">Warren Buffett</cite>
               </div>
             </div>

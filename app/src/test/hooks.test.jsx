@@ -269,7 +269,7 @@ describe('usePlaceOrder', () => {
 })
 
 describe('useHeroRanking', () => {
-  beforeEach(() => supabase.functions.invoke.mockClear())
+  beforeEach(() => { supabase.functions.invoke.mockClear(); localStorage.clear() })
 
   it('returns Warren + the LLM-ranked 7 on success', async () => {
     const ranked = ['burry', 'simons', 'griffin', 'tepper', 'icahn', 'ackman', 'loeb']

@@ -9,6 +9,7 @@ import { usePlaceOrder } from '../../hooks/usePlaceOrder'
 import { useStockDetail, useCandles } from '../../hooks/useStockDetail'
 import { ChartPanel, RangeButtons } from '../../components/Charts'
 import { TRANSACTION_FEE } from '../../lib/fees'
+import { SageMsg } from '../../components/HeroMessage'
 import { OrderTypeCard, TifToggle, QtyInputBlock } from './BuyScreen'
 
 function detectAssetType(ticker) {
@@ -132,14 +133,16 @@ export default function SellScreen() {
           <OrderTypeCard label="Limit order" desc="Only fill if price reaches your target" active={orderType==='LIMIT'} onClick={() => setOrderType('LIMIT')}/>
         </div>
         {orderType === 'LIMIT' && (
+          <>
+          <div className="mt-2.5">
+            <SageMsg compact text="A limit order only fills when the price reaches your target. Set a minimum sell price and choose how long the order stays active (TIF)."/>
+          </div>
           <div className="mt-2.5 grid grid-cols-2 items-center gap-2.5">
             <input
               type="number"
               value={limitPrice}
               onChange={e => setLimitPrice(e.target.value)}
               onFocus={e => {
-                // First focus on an empty field pre-fills the live price and selects it,
-                // so the user can tweak from a sensible default instead of an empty box.
                 const el = e.target
                 if (!limitPrice && price) { setLimitPrice(price.toFixed(2)); requestAnimationFrame(() => el.select()) }
                 else el.select()
@@ -149,6 +152,7 @@ export default function SellScreen() {
             />
             <TifToggle tif={tif} setTif={setTif}/>
           </div>
+          </>
         )}
       </div>
 

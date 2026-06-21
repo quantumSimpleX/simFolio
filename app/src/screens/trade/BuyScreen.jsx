@@ -105,6 +105,10 @@ export default function BuyScreen() {
           <OrderTypeCard label="Limit order" desc="Only fill if price reaches your target" active={orderType==='LIMIT'} onClick={() => setOrderType('LIMIT')}/>
         </div>
         {orderType === 'LIMIT' && (
+          <>
+          <div className="mt-2.5">
+            <SageMsg compact text="A limit order only fills when the price reaches your target. You'll need to set a target price and choose how long the order stays active (TIF)."/>
+          </div>
           <div className="mt-2.5 grid grid-cols-2 items-center gap-2.5">
             <input
               type="number"
@@ -123,6 +127,7 @@ export default function BuyScreen() {
             />
             <TifToggle tif={tif} setTif={setTif}/>
           </div>
+          </>
         )}
       </div>
 

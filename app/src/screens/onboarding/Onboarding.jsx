@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CTA, GoalCard, ProgressDots, HeroAvatar, TermUnderline } from '../../components/Primitives';
+import { CTA, GoalCard, HeroAvatar, TermUnderline } from '../../components/Primitives';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useOnboardingAnswers } from '../../hooks/useOnboardingAnswers';
@@ -267,7 +267,6 @@ function OnboardingShell({ step, total, current, selected, onSelect, onContinue,
     <ScreenShell>
       {onBack && <BackButton onBack={onBack}/>}
       <OnboardingProgress step={step + 1} total={total}/>
-      <ProgressDots step={step + 1} total={total}/>
 
       <SageHeader avatarSize={avatarSize} isDesktop={isDesktop}>{current.q}</SageHeader>
 
@@ -460,7 +459,6 @@ function StockInterest({ stocks, setStocks, onFinish, saving, onBack, total }) {
     <ScreenShell>
       {onBack && <BackButton onBack={onBack}/>}
       <OnboardingProgress step={total} total={total}/>
-      <ProgressDots step={total} total={total}/>
 
       <SageHeader avatarSize={avatarSize} isDesktop={isDesktop}>
         Any stocks, ETFs, or crypto you're curious about? Type a ticker or company name.
