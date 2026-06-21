@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { C } from './tokens'
 import { useAuth } from './context/AuthContext'
@@ -52,6 +52,29 @@ function Wrapper({ children }) {
   )
 }
 
+// Sets a meaningful per-route document title (WCAG 2.4.2) instead of the static "app".
+const ROUTE_TITLES = {
+  '': 'Welcome', welcome: 'Welcome', 'sign-up': 'Sign Up', 'sign-in': 'Sign In',
+  returning: 'Welcome Back', onboarding: 'Get Started', portfolio: 'Portfolio',
+  ask: 'Ask', 'find-mentor': 'Find a Mentor', receipt: 'Trade Receipt',
+  'hero-handoff': 'Your Council', markets: 'Markets', orders: 'Orders',
+  achievements: 'Achievements', 'badge-earned': 'Badge Earned', profile: 'Profile',
+}
+
+function PageTitle() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    const [head, param] = pathname.split('/').filter(Boolean)
+    let label
+    if (head === 'buy') label = `Buy ${param?.toUpperCase() ?? ''}`.trim()
+    else if (head === 'sell') label = `Sell ${param?.toUpperCase() ?? ''}`.trim()
+    else if (head === 'stock') label = param?.toUpperCase() ?? 'Stock'
+    else label = ROUTE_TITLES[head ?? ''] ?? null
+    document.title = label ? `simFolio — ${label}` : 'simFolio'
+  }, [pathname])
+  return null
+}
+
 // TODO: restore auth check — temporarily open for UI testing
 function PrivateRoute({ children }) {
   return children
@@ -71,6 +94,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <GamificationProvider>
+      <PageTitle/>
       <Wrapper>
         <Routes>
           {/* Public */}

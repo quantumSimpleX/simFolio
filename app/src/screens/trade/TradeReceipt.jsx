@@ -122,8 +122,8 @@ export default function TradeReceipt() {
           <div className="flex items-start gap-2.5 rounded-card border border-ame-100 bg-ame-50 px-4 py-3">
             <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-pill border-[1.5px] border-ame-400/35 bg-ame-400/10 font-sans text-[10px] font-bold text-ame-400">WB</div>
             <div>
-              <div className="mb-[3px] font-sans text-xs font-semibold text-ame-600">Warren on this trade</div>
-              <div className="font-sans text-[13px] italic leading-normal text-ink-600">"A loss can be the right decision. What changed your mind? Understanding your own reasoning is more valuable than the money."</div>
+              <cite className="mb-[3px] block font-sans text-xs font-semibold not-italic text-ame-600">Warren on this trade</cite>
+              <blockquote className="font-sans text-[13px] italic leading-normal text-ink-600">"A loss can be the right decision. What changed your mind? Understanding your own reasoning is more valuable than the money."</blockquote>
               <div onClick={() => { track('sell.reflected', { ticker }); navigate('/ask') }} className="mt-1.5 cursor-pointer font-sans text-xs text-ame-400">Add a reflection note →</div>
             </div>
           </div>

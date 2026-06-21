@@ -62,7 +62,7 @@
 - [x] **U4** Badges.jsx glyphs: `role="img"`+`aria-label` when labelled, else `aria-hidden` (UXR-4).
 - [x] **U5** `role="progressbar"`+aria values on achievements tier bar and BadgeEarned progress card (UXR-5).
 - [x] **U6** Semantic `<h1>` on /achievements; Radix Dialog Title provides the heading on /badge-earned (UXR-6).
-- [~] **U7** Verified ProgressRing renders (component present). CTA kept white-on-ink — deliberate high-contrast choice for the dark reveal, not a DS violation; documented (UXR-7 partial).
+- [x] **U7** ProgressRing renders (component present). CTA changed from white-on-ink to ame-400 fill + ink-900 text (~4.6:1, passes AA) per UXR-7's recommended dark-surface treatment.
 - [x] **U8** AchievementsMobile tier-progression explainer line added (UXR-8).
 - [x] **U9** `gamification.a11y.test.jsx` (6 tests) for roles/names/state/font; full suite 904 green.
 

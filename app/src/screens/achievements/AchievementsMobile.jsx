@@ -46,11 +46,11 @@ export default function AchievementsMobile() {
             <div className="flex items-end gap-2">
               <div className="text-center">
                 <MedalGlyph size={36} earned={medalCount > 0}/>
-                <div className="mt-1 font-sans text-[10px] text-ink-400">{medalCount} medal{medalCount !== 1 ? 's' : ''}</div>
+                <div className="mt-1 font-sans text-[11px] text-ink-400">{medalCount} medal{medalCount !== 1 ? 's' : ''}</div>
               </div>
               <div className="text-center">
                 <TrophyGlyph size={44} earned={trophyCount > 0}/>
-                <div className="mt-1 font-sans text-[10px] text-ink-400">{trophyCount} trophies</div>
+                <div className="mt-1 font-sans text-[11px] text-ink-400">{trophyCount} trophies</div>
               </div>
             </div>
           </div>

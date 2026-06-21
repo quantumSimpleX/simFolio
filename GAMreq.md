@@ -245,3 +245,10 @@ this loop to keep changes surgical: app-wide missing `<nav>` landmark & semantic
 inputs on `/markets` search and `/buy` fields; `/receipt` numbers not in Source Code Pro; generic
 `<title>"app"`; wordmark MOMCAKE carve-out (add explicit DS exception); onboarding goal-button
 height variance; `<blockquote>/<cite>` for hero quotes; 10px medal/trophy labels below 11px min.
+
+**Resolved 2026-06-21** (commit follows the GAMux-audit fix pass): all of the above are now
+addressed — `<nav>` landmark + keyboard-accessible nav buttons; `<h1>`/`<h2>` headings app-wide;
+`aria-label` on markets search and buy/sell inputs; receipt values in Source Code Pro; per-route
+`document.title`; wordmark MOMCAKE exception documented in `CLAUDE.md`; onboarding goal buttons given
+a `min-h-[64px]` floor; hero quotes wrapped in `<blockquote>`/`<cite>`; medal/trophy labels bumped to
+11px.
