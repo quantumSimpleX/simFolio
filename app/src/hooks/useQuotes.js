@@ -160,7 +160,7 @@ export function useQuotes(symbols, { persist = true } = {}) {
     queryKey: persist ? ['quotes', symbols?.join(',')] : ['quotes-display', symbols?.join(',')],
     queryFn: () => fetchQuotes(symbols, queryClient, { persist }),
     enabled: !!symbols?.length,
-    refetchInterval: open && persist ? 5 * 60_000 : false,
+    refetchInterval: persist ? (open ? 5 * 60_000 : 60 * 60_000) : false,
     staleTime: open ? 5 * 60_000 : 60 * 60_000,
   })
 }

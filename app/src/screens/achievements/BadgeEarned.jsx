@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { C } from '../../tokens'
+import { HeroAvatar } from '../../components/Primitives'
 import { BadgeGlyphForIndex, MedalGlyph, TrophyGlyph } from '../../components/Badges'
 import { ProgressRing } from '../../components/Charts'
 import { Dialog, DialogPortal, DialogOverlay } from '../../components/ui/dialog'
@@ -85,7 +86,7 @@ export default function BadgeEarned() {
       if (remaining > 0) return
     }
     setOpen(false)
-    navigate('/portfolio')
+    navigate(-1)
   }
 
   return (
@@ -129,7 +130,7 @@ export default function BadgeEarned() {
 
             {/* Hero quote */}
             <div className="flex w-full items-start gap-2.5 rounded-card bg-white/[0.04] px-4 py-3">
-              <div aria-label="Warren Buffett" role="img" className="flex h-[28px] w-[28px] flex-shrink-0 items-center justify-center rounded-pill border-[1.5px] border-ame-400/50 bg-ame-400/20 font-sans text-[11px] font-bold text-ame-400">WB</div>
+              <HeroAvatar id="warren" initials="WB" color="var(--ame-400)" size={28}/>
               <div>
                 <blockquote className="font-sans text-[13px] italic leading-normal text-ink-400">{m.heroeQuote}</blockquote>
                 <cite className="mt-1 block font-sans text-[11px] font-semibold not-italic text-ame-400/70">Warren Buffett</cite>

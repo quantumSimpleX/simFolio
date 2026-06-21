@@ -55,13 +55,13 @@ describe('BadgeEarned (IT-B8)', () => {
     expect(navigateSpy).not.toHaveBeenCalled() // still draining
   })
 
-  it('last item: dismissing the final badge navigates to /portfolio', () => {
+  it('last item: dismissing the final badge navigates back', () => {
     const advance = vi.fn()
     mockReveal = { currentId: 'a', queue: ['a'], advance }
     renderAt()
     screen.getByRole('button', { name: /Continue/ }).click()
     expect(advance).toHaveBeenCalledTimes(1)
-    expect(navigateSpy).toHaveBeenCalledWith('/portfolio')
+    expect(navigateSpy).toHaveBeenCalledWith(-1)
   })
 
   it('medal tier still renders from router state', () => {

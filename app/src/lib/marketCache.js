@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 
-const CACHE_MAX_AGE_MS = 5 * 60 * 60 * 1000 // 5 hours
+const CACHE_MAX_AGE_MS = 60 * 60 * 1000 // 1 hour
 
 function rowToQuote(row) {
   return {

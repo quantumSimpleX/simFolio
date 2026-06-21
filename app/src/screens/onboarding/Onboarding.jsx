@@ -307,6 +307,7 @@ function OnboardingShell({ step, total, current, selected, onSelect, onContinue,
                   value={choice}
                   checked={selected === choice}
                   onChange={() => onSelect(choice)}
+                  onClick={() => { if (selected === choice) onSelect(choice); }}
                   className="sr-only"
                 />
                 <GoalCard label={choice} selected={selected === choice}/>
