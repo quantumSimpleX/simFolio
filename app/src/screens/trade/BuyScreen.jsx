@@ -106,9 +106,6 @@ export default function BuyScreen() {
         </div>
         {orderType === 'LIMIT' && (
           <>
-          <div className="mt-2.5">
-            <SageMsg compact text="A limit order only fills when the price reaches your target. You'll need to set a target price and choose how long the order stays active (TIF)."/>
-          </div>
           <div className="mt-2.5 grid grid-cols-2 items-center gap-2.5">
             <input
               type="number"
@@ -126,6 +123,9 @@ export default function BuyScreen() {
               className="no-spinner box-border h-11 w-full rounded-input border border-ame-400 bg-white px-3.5 font-sans text-sm text-ink-900 outline-none"
             />
             <TifToggle tif={tif} setTif={setTif}/>
+          </div>
+          <div className="mt-2.5">
+            <SageMsg compact text="Enter your target price on the left and a time in force on the right — both are required."/>
           </div>
           </>
         )}
