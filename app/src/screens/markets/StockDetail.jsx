@@ -77,9 +77,9 @@ export default function StockDetail() {
   const priceBlock = (
     <div>
       <div onClick={() => navigate('/markets')} className="mb-2.5 cursor-pointer font-sans text-[13px] text-ame-400">← Markets</div>
-      <div className="mb-1 font-sans text-sm text-ink-400">
+      <h1 className="mb-1 font-sans text-sm text-ink-400">
         {isLoading ? '…' : [ticker, s?.name, s?.exchange].filter(Boolean).join(' · ')}
-      </div>
+      </h1>
       <div className={cn('flex items-end', mobile ? 'gap-2' : 'gap-3.5')}>
         <div className={cn('whitespace-nowrap font-display font-bold leading-none tracking-[-0.025em] text-ink-900', mobile ? 'text-[34px]' : 'text-5xl')}>
           {isLoading ? '…' : s?.price ? `$${s.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—'}

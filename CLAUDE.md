@@ -92,7 +92,7 @@ Reference `designSys/colors_and_type.css` and `designSys/base.css` for all desig
 | `gold` | `#B5860A` | Warnings, queued order state |
 
 **Typography:**
-- Display: MOMCAKE Bold — one number per screen only (portfolio value, stock price)
+- Display: MOMCAKE Bold — one number per screen only (portfolio value, stock price). **Allowed exception:** the "simFolio" nav wordmark also uses MOMCAKE and is excluded from the one-per-screen count (it is a brand mark, not a stat).
 - UI sans: Barlow Condensed — all labels, body, buttons (load from Google Fonts)
 - Mono: Source Code Pro — timestamps, IDs, trade receipts
 

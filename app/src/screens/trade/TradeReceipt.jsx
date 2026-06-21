@@ -49,10 +49,10 @@ export default function TradeReceipt() {
               </svg>
             )}
           </div>
-          <div className="font-sans text-[28px] font-bold tracking-[-0.02em] text-ink-900">
+          <h1 className="font-sans text-[28px] font-bold tracking-[-0.02em] text-ink-900">
             {isQueued ? 'Order queued' : isSell ? 'Sold' : 'Order filled'}
-          </div>
-          <div className="mt-1 font-sans text-sm text-ink-400">{ts}</div>
+          </h1>
+          <div className="mt-1 font-mono text-sm text-ink-400">{ts}</div>
         </div>
 
         <div className="rounded-card border border-ink-100 bg-white px-5 pb-3 pt-1">
@@ -60,17 +60,18 @@ export default function TradeReceipt() {
           {isSell ? (
             <>
               <ReceiptRow label="Sold" value={`${shares(qty)} of ${ticker}`}/>
-              <ReceiptRow label={<TermUnderline>Executed at</TermUnderline>} value={`$${execPrice.toFixed(2)} / share`}/>
-              <ReceiptRow label={<TermUnderline>Gross proceeds</TermUnderline>} value={`$${total}`}/>
+              <ReceiptRow label={<TermUnderline>Executed at</TermUnderline>} value={`$${execPrice.toFixed(2)} / share`} mono/>
+              <ReceiptRow label={<TermUnderline>Gross proceeds</TermUnderline>} value={`$${total}`} mono/>
               {pnl != null && (
                 <ReceiptRow
                   label={<TermUnderline>{pnlPositive ? 'Realised gain' : 'Realised loss'}</TermUnderline>}
                   value={`${pnlPositive?'+':'−'}$${Math.abs(pnl).toFixed(2)}`}
                   valueColor={pnlPositive ? C.aqua600 : C.red}
+                  mono
                 />
               )}
-              <ReceiptRow label={<TermUnderline>Transaction fee</TermUnderline>} value={`−$${fee.toFixed(2)}`}/>
-              <ReceiptRow label={<TermUnderline>Net to cash</TermUnderline>} value={`$${net}`} bold/>
+              <ReceiptRow label={<TermUnderline>Transaction fee</TermUnderline>} value={`−$${fee.toFixed(2)}`} mono/>
+              <ReceiptRow label={<TermUnderline>Net to cash</TermUnderline>} value={`$${net}`} bold mono/>
             </>
           ) : isQueued ? (
             <>
@@ -81,13 +82,14 @@ export default function TradeReceipt() {
           ) : (
             <>
               <ReceiptRow label="Bought" value={`${shares(qty)} of ${ticker}`}/>
-              <ReceiptRow label={<TermUnderline>Executed at</TermUnderline>} value={`$${execPrice.toFixed(2)} / share`}/>
-              <ReceiptRow label={<TermUnderline>Gross cost</TermUnderline>} value={`$${total}`}/>
+              <ReceiptRow label={<TermUnderline>Executed at</TermUnderline>} value={`$${execPrice.toFixed(2)} / share`} mono/>
+              <ReceiptRow label={<TermUnderline>Gross cost</TermUnderline>} value={`$${total}`} mono/>
               {hasSlippage && (
                 <ReceiptRow
                   label={<TermUnderline>Slippage</TermUnderline>}
                   value={`−$${slippageAmt.toFixed(2)} vs. order price`}
                   valueColor="var(--gold)"
+                  mono
                 />
               )}
               {result.spread_component > 0 && (
@@ -95,10 +97,11 @@ export default function TradeReceipt() {
                   label={<TermUnderline>Bid-ask spread</TermUnderline>}
                   value={`$${(result.spread_component * qty).toFixed(2)} (${result.spread_bps ?? '—'} bps)`}
                   valueColor="var(--gold)"
+                  mono
                 />
               )}
-              <ReceiptRow label={<TermUnderline>Transaction fee</TermUnderline>} value={`$${fee.toFixed(2)}`}/>
-              <ReceiptRow label={<TermUnderline>Net deducted</TermUnderline>} value={`$${net}`} bold/>
+              <ReceiptRow label={<TermUnderline>Transaction fee</TermUnderline>} value={`$${fee.toFixed(2)}`} mono/>
+              <ReceiptRow label={<TermUnderline>Net deducted</TermUnderline>} value={`$${net}`} bold mono/>
             </>
           )}
         </div>
@@ -129,7 +132,7 @@ export default function TradeReceipt() {
         {cashBalance != null && (
           <div className="flex justify-between px-1">
             <div className="font-sans text-sm text-ink-500">Cash remaining</div>
-            <div className="font-sans text-sm font-bold text-ink-900">${cashBalance.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 })}</div>
+            <div className="font-mono text-sm font-bold text-ink-900">${cashBalance.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 })}</div>
           </div>
         )}
 

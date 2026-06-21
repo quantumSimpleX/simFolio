@@ -89,7 +89,7 @@ export default function SellScreen() {
     <div className="flex w-full flex-col gap-[18px]">
       <div className="flex items-center gap-3.5">
         <div onClick={() => navigate(-1)} className="cursor-pointer font-sans text-sm text-ame-400">← Back</div>
-        <div className="flex-1 text-center font-sans text-[17px] font-bold text-ink-900">Sell {ticker}</div>
+        <h1 className="flex-1 text-center font-sans text-[17px] font-bold text-ink-900">Sell {ticker}</h1>
         <div className="w-10"/>
       </div>
 

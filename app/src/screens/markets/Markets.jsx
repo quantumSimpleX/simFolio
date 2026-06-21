@@ -68,6 +68,8 @@ export default function Markets() {
             onChange={e => setSearch(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && query) { const dest = searchResults[0]?.symbol ?? query; navigate(`/stock/${dest}`); setSearch('') } }}
             placeholder="Search ticker or company name…"
+            aria-label="Search ticker or company name"
+            type="search"
             className="min-w-0 flex-1 border-none bg-transparent font-sans text-[15px] text-ink-900 outline-none"
           />
           {search && <div onClick={() => setSearch('')} className="cursor-pointer font-sans text-lg text-ink-300">×</div>}

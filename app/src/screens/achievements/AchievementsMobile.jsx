@@ -18,7 +18,6 @@ export default function AchievementsMobile() {
   return (
     <AppShell active="achievements" maxWidth={860}>
       <PageHeader title="Achievements"/>
-      <h1 className="sr-only">Achievements</h1>
 
       <div className="flex flex-col gap-5">
         {/* Progress summary */}
@@ -59,7 +58,7 @@ export default function AchievementsMobile() {
 
         {/* Badge grid */}
         <div>
-          <div className="mb-3"><Eyebrow>Badges · {earnedCount} earned of {badges.length}</Eyebrow></div>
+          <div className="mb-3"><Eyebrow as="h2">Badges · {earnedCount} earned of {badges.length}</Eyebrow></div>
           <div className={cn('grid gap-2.5', mobile ? 'grid-cols-3' : 'grid-cols-5')}>
             {badges.map((b, i) => (
               <Card
@@ -92,7 +91,7 @@ export default function AchievementsMobile() {
         {/* Medal progress */}
         {medalCount > 0 && (
           <div>
-            <div className="mb-3"><Eyebrow>Medals · {medalCount} earned</Eyebrow></div>
+            <div className="mb-3"><Eyebrow as="h2">Medals · {medalCount} earned</Eyebrow></div>
             <div className="flex gap-2.5">
               {Array.from({ length: medalCount }, (_, i) => (
                 <Card key={i} className="flex max-w-[140px] flex-1 flex-col items-center gap-1.5 p-3.5">

@@ -129,13 +129,13 @@ export default function BadgeEarned() {
 
             {/* Hero quote */}
             <div className="flex w-full items-start gap-2.5 rounded-card bg-white/[0.04] px-4 py-3">
-              <div className="flex h-[26px] w-[26px] flex-shrink-0 items-center justify-center rounded-pill border-[1.5px] border-ame-400/50 bg-ame-400/20 font-sans text-[9px] font-bold text-ame-400">WB</div>
-              <div className="font-sans text-[13px] italic leading-normal text-ink-400">{m.heroeQuote}</div>
+              <div aria-label="Warren Buffett" role="img" className="flex h-[28px] w-[28px] flex-shrink-0 items-center justify-center rounded-pill border-[1.5px] border-ame-400/50 bg-ame-400/20 font-sans text-[11px] font-bold text-ame-400">WB</div>
+              <blockquote className="font-sans text-[13px] italic leading-normal text-ink-400">{m.heroeQuote}</blockquote>
             </div>
           </div>
 
           <div className="mx-auto box-border w-full max-w-[480px] flex-shrink-0 px-6 pb-9">
-            <Button size="cta" onClick={dismiss} className="w-full bg-white font-bold text-ink-900 hover:bg-white hover:opacity-90">{m.ctaLabel}</Button>
+            <Button size="cta" onClick={dismiss} className="w-full bg-ame-400 font-bold text-ink-900 hover:bg-ame-400 hover:opacity-90">{m.ctaLabel}</Button>
           </div>
         </DialogPrimitive.Content>
       </DialogPortal>

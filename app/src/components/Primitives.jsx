@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useId } from 'react';
-import { C, SANS, DISPLAY } from '../tokens';
+import { C, SANS, DISPLAY, MONO } from '../tokens';
 import { useLang } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import glossary from '../data/glossary.json';
@@ -333,11 +333,11 @@ export function ThemeToggle() {
   );
 }
 
-export function Eyebrow({ children, style={} }) {
+export function Eyebrow({ children, style={}, as:Tag='div' }) {
   return (
-    <div style={{ fontFamily:SANS, fontSize:11, fontWeight:600, color:C.ink400, letterSpacing:'0.14em', textTransform:'uppercase', ...style }}>
+    <Tag style={{ fontFamily:SANS, fontSize:11, fontWeight:600, color:C.ink400, letterSpacing:'0.14em', textTransform:'uppercase', margin:0, ...style }}>
       {children}
-    </div>
+    </Tag>
   );
 }
 
@@ -521,13 +521,13 @@ export function MktStatus({ open=true }) {
   );
 }
 
-export function ReceiptRow({ label, value, valueColor, bold, dotted }) {
+export function ReceiptRow({ label, value, valueColor, bold, dotted, mono }) {
   return (
     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 0', borderBottom:`1px solid ${C.ink100}` }}>
       <div style={{ fontFamily:SANS, fontSize:14, color:C.ink500 }}>
         {dotted ? <TermUnderline>{label}</TermUnderline> : label}
       </div>
-      <div style={{ fontFamily:SANS, fontSize:14, fontWeight:bold?700:500, color:valueColor||C.ink900 }}>{value}</div>
+      <div style={{ fontFamily:mono?MONO:SANS, fontSize:14, fontWeight:bold?700:500, color:valueColor||C.ink900 }}>{value}</div>
     </div>
   );
 }
