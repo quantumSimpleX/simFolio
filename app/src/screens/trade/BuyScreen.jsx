@@ -57,6 +57,7 @@ export default function BuyScreen() {
       type: orderType,
       requested_qty: qty,
       execution_price: price,
+      dayChange: stock?.pct ?? 0,
       ...(orderType === 'LIMIT' && limitPrice ? { limit_price: parseFloat(limitPrice), time_in_force: tif } : {}),
     }
     placeOrder(params, {
@@ -109,6 +110,7 @@ export default function BuyScreen() {
               type="number"
               value={limitPrice}
               onChange={e => setLimitPrice(e.target.value)}
+              aria-label="Limit price"
               onFocus={e => {
                 // First focus on an empty field pre-fills the live price and selects it,
                 // so the user can tweak from a sensible default instead of an empty box.
@@ -162,7 +164,7 @@ export default function BuyScreen() {
         <div className="flex flex-col gap-[18px]">
           <div className="flex items-center gap-3.5">
             <div onClick={() => navigate(-1)} className="cursor-pointer font-sans text-sm text-ame-400">← Back</div>
-            <div className="flex-1 text-center font-sans text-[17px] font-bold text-ink-900">Buy {ticker}</div>
+            <h1 className="flex-1 text-center font-sans text-[17px] font-bold text-ink-900">Buy {ticker}</h1>
             <div className="w-10"/>
           </div>
           {priceCard}
@@ -179,7 +181,7 @@ export default function BuyScreen() {
         <div className="flex w-[480px] flex-shrink-0 flex-col gap-6">
           <div>
             <div onClick={() => navigate(-1)} className="mb-2 cursor-pointer font-sans text-[13px] text-ame-400">← Back</div>
-            <div className="font-sans text-[32px] font-bold leading-none tracking-[-0.02em] text-ink-900">Buy {ticker}</div>
+            <h1 className="font-sans text-[32px] font-bold leading-none tracking-[-0.02em] text-ink-900">Buy {ticker}</h1>
           </div>
           {priceCard}
           {orderForm}
@@ -268,6 +270,7 @@ export function QtyInputBlock({ qty, setQty, price, accent = 'ame', max = null }
           step="0.01"
           max={max ?? undefined}
           value={qty}
+          aria-label="Shares"
           onFocus={e => e.target.select()}
           onChange={onSharesChange}
           onBlur={e => { if (!e.target.value || parseFloat(e.target.value) <= 0) setQty(1) }}
@@ -281,6 +284,7 @@ export function QtyInputBlock({ qty, setQty, price, accent = 'ame', max = null }
           min="0"
           step="0.01"
           value={amountValue}
+          aria-label="Amount in dollars"
           placeholder="0.00"
           onFocus={e => { setAmountDraft(amountValue); e.target.select() }}
           onBlur={() => setAmountDraft(null)}

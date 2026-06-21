@@ -36,6 +36,7 @@ export default function PortfolioDesktop() {
 
   return (
     <AppShell active="portfolio" maxWidth={1280}>
+      <h1 className="sr-only">Portfolio</h1>
       <div className="flex items-start gap-8">
         {/* Left: portfolio data */}
         <div className="flex min-w-0 flex-1 flex-col gap-6">

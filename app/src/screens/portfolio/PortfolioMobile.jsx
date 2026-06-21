@@ -37,6 +37,7 @@ export default function PortfolioMobile() {
   return (
     <div className="flex h-[100dvh] w-full flex-col overflow-hidden bg-paper">
       <TopNav active="portfolio"/>
+      <h1 className="sr-only">Portfolio</h1>
       <div className="flex-shrink-0 px-2.5 pt-2">
         <div className="flex items-end gap-3">
           <div className="font-display text-[38px] font-bold leading-none tracking-[-0.02em] text-ink-900">

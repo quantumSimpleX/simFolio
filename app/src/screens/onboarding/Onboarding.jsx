@@ -362,7 +362,7 @@ function MultiGoalPicker({ choices, value, onChange }) {
             // targets live outside this card's DOM, so the goal must not toggle.
             onClick={e => { if (e.currentTarget.contains(e.target)) toggle(title); }}
             className={cn(
-              'w-full rounded-card border-[1.5px] px-4 py-1.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ame-400',
+              'flex min-h-[80px] w-full items-center rounded-card border-[1.5px] px-4 py-1.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ame-400',
               checked ? 'border-ame-400 bg-ame-50' : 'border-ink-200 bg-white',
               disabled ? 'pointer-events-none cursor-default opacity-40' : 'cursor-pointer',
             )}

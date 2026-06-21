@@ -1,6 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { useTrack } from '../gamification/useGamification'
+
+// Lightweight macro/market-conditions topic detector for the `macro` badge.
+// A keyword hit is enough — the engine just needs the boolean.
+const MACRO_TERMS = [
+  'macro', 'inflation', 'interest rate', 'rates', 'fed', 'recession',
+  'gdp', 'economy', 'market conditions', 'unemployment', 'tariff', 'bond yield',
+]
+function isMacro(message) {
+  const m = (message || '').toLowerCase()
+  return MACRO_TERMS.some((t) => m.includes(t))
+}
 
 export function useHeroHistory(heroId) {
   const { user } = useAuth()
@@ -39,6 +51,7 @@ export function useHeroChat(heroId, portfolioContext) {
   const { session } = useAuth()
   const qc = useQueryClient()
   const { user } = useAuth()
+  const track = useTrack()
   const key = ['hero-history', user?.id, heroId]
 
   return useMutation({
@@ -55,6 +68,7 @@ export function useHeroChat(heroId, portfolioContext) {
     // Show the user's message immediately (like any chat app); the "Calling …"
     // indicator then renders below it while the reply is pending.
     onMutate: async (message) => {
+      track('chat.sent', { macro: isMacro(message) })
       await qc.cancelQueries({ queryKey: key })
       const previous = qc.getQueryData(key)
       qc.setQueryData(key, old => [
