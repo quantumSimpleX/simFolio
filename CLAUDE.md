@@ -35,7 +35,22 @@ npx vitest run src/test/execution.test.js   # run a single test file
 - **Vite 8** as bundler
 - **TanStack React Query v5** — all server state; query keys are `['portfolio']`, `['orders']`, `['quotes', ticker]`, `['hero-history', userId, heroId]`, `['conversation-history', userId]`
 - **Supabase** — Postgres DB + Auth + Edge Functions (Deno/TypeScript)
-- **Vitest + Testing Library** — 11 test files in `app/src/test/`
+- **Vitest + Testing Library** — 40+ test files in `app/src/test/`
+
+## App Source Layout (`app/src/`)
+
+```
+screens/       — route-level views, one dir per feature (achievements, auth, heroes, markets, onboarding, orders, portfolio, profile, trade)
+components/    — shared UI (AppShell, HeroSidebar, HeroChatPanel, Badges, Charts, common/, ui/, …)
+hooks/         — data/UX hooks (usePortfolio, useOrders, usePlaceOrder, useHeroChat, useBreakpoint, …)
+context/       — AuthContext, LanguageContext, ThemeContext
+lib/           — framework-agnostic helpers (supabase.js, marketCache.js, fees.js, onboarding.js, …)
+gamekit/       — pure, domain-agnostic gamification engine (events → metrics → conditions → awards). Must not import anything outside app/src/gamekit/.
+gamification/  — simFolio-specific wiring over gamekit: defs.js (badges/medals/trophies), the Store/Provider ports, useGamification.jsx
+data/          — static content: glossary.json, heroes.js, mentor.md
+```
+
+**gamekit vs gamification**: `gamekit` is a hexagonal-architecture pure engine — no Supabase/React imports — so it stays unit-testable in isolation. `gamification` supplies the concrete ports (`createMetricStore(supabase)`, `createStateProvider({...})`, `createAchievementStore(supabase)`) and the app-specific badge/medal/trophy config that gamekit's engine runs against.
 
 ## Supabase Edge Functions
 
