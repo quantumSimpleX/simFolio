@@ -2,6 +2,11 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { BADGES } from '../tokens'
+import { computeProgression } from '../gamification/defs'
+
+// Legacy rows carry 'council' until migration 005 renames them to 'mentor'.
+// Alias on read so derived progression is correct before the migration lands.
+const aliasType = (t) => (t === 'council' ? 'mentor' : t)
 
 export function useAchievements() {
   const { user } = useAuth()
@@ -19,17 +24,17 @@ export function useAchievements() {
     enabled: !!user,
   })
 
-  const earnedIds = new Set((earned ?? []).map(a => a.achievement_type))
+  const rows = earned ?? []
+  const earnedIds = new Set(rows.map(a => aliasType(a.achievement_type)))
 
   const badges = BADGES.map(b => ({
     ...b,
     earned: earnedIds.has(b.id),
-    unlocked_at: (earned ?? []).find(a => a.achievement_type === b.id)?.unlocked_at ?? null,
+    unlocked_at: rows.find(a => aliasType(a.achievement_type) === b.id)?.unlocked_at ?? null,
   }))
 
   const earnedCount = badges.filter(b => b.earned).length
-  const medalCount  = Math.floor(earnedCount / 10)
-  const trophyCount = Math.floor(medalCount / 10)
+  const { medals, trophies, medalCount, trophyCount } = computeProgression(earnedIds)
 
-  return { badges, earnedCount, medalCount, trophyCount, isLoading }
+  return { badges, medals, trophies, earnedCount, medalCount, trophyCount, isLoading }
 }

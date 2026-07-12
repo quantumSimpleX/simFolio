@@ -3,6 +3,7 @@
 import { describe, it, expect } from 'vitest'
 import { screen, waitFor } from '@testing-library/react'
 import { renderWithProviders } from './renderWithProviders'
+import { __setTableData } from './supabaseMock'
 
 import App from '../App'
 import Onboarding from '../screens/onboarding/Onboarding'
@@ -68,6 +69,29 @@ describe('screen smoke tests', () => {
     expect(document.body.textContent).not.toContain('Am I diversified?')
   })
 
+  it('AskTab header uses single-active-mentor copy, not council', () => {
+    // No heroes seeded -> mentor name falls back to Sage; header shows the
+    // single-mentor subtitle and drops the old "Your Council" framing.
+    renderWithProviders(<AskTab/>)
+    expect(document.body.textContent).toContain('Your mentor · watching your portfolio')
+    expect(document.body.textContent).not.toContain('Your Council')
+  })
+
+  it('AskTab shows cross-hero conversation history with a joins divider', async () => {
+    // Council chat reads useConversationHistory() (cross-hero), so replies from
+    // more than one hero share one timeline; T-18's rendering adds a "joins"
+    // divider when the authoring hero changes.
+    __setTableData('hero_selections', [{ hero_id: 'warren' }])
+    __setTableData('hero_conversations', [
+      { role: 'assistant', content: 'What is its earnings power?', created_at: '2026-01-01T00:00:00Z', hero_id: 'warren' },
+      { role: 'assistant', content: 'Is this disruptive innovation?', created_at: '2026-01-02T00:00:00Z', hero_id: 'cathie' },
+    ])
+    renderWithProviders(<AskTab/>)
+    await waitFor(() => expect(document.body.textContent).toContain('What is its earnings power?'))
+    expect(document.body.textContent).toContain('Is this disruptive innovation?')
+    expect(document.body.textContent).toContain('Cathie Wood joins')
+  })
+
   it('Markets renders', async () => {
     renderWithProviders(<Markets/>)
     await waitFor(() => expect(document.body.textContent).toContain('Markets'))
@@ -115,12 +139,26 @@ describe('screen smoke tests', () => {
     await waitFor(() => expect(document.body.textContent).toContain('No pending orders'))
   })
 
-  it('AchievementsMobile renders', () => {
+  it('AchievementsMobile renders the medal shelf and thematic badge groups', () => {
     renderWithProviders(<AchievementsMobile/>)
+    // Thematic medal group headings drive the grouped badge grid.
+    expect(document.body.textContent).toContain('Trader Medal')
+    expect(document.body.textContent).toContain('Master of Trading')
   })
 
   it('BadgeEarned renders', () => {
     renderWithProviders(<BadgeEarned/>)
+  })
+
+  it('Profile renders the medal-shelf summary, not the old ladder copy', () => {
+    renderWithProviders(<Profile/>)
+    // Medal-shelf summary copy + shelf items (no achievements seeded → 0 of 7).
+    expect(document.body.textContent).toContain('medals earned')
+    expect(document.body.textContent).toContain('Trader Medal')
+    expect(document.body.textContent).toContain('Master of Trading')
+    // Old 10/10/10 ladder copy is gone.
+    expect(document.body.textContent).not.toContain('first medal')
+    expect(document.body.textContent).not.toContain('next medal')
   })
 
   it('Profile shows saved onboarding answers from localStorage', async () => {
@@ -137,5 +175,14 @@ describe('screen smoke tests', () => {
   it('App routes / to the welcome screen', async () => {
     renderWithProviders(<App/>, { withRouter: false })
     await waitFor(() => expect(document.body.textContent).toMatch(/Create your account/i))
+  })
+
+  it('sets a single-mentor page title on /hero-handoff, not the old council copy', async () => {
+    // document.title is a WCAG 2.4.2 page-title feature, screen-reader/tab only.
+    // App owns its BrowserRouter, so drive the route via window history.
+    window.history.pushState({}, '', '/hero-handoff')
+    renderWithProviders(<App/>, { withRouter: false })
+    await waitFor(() => expect(document.title).toBe('simFolio — Meet Your Mentor'))
+    expect(document.title).not.toContain('Council')
   })
 })

@@ -4,7 +4,7 @@
 // Coverage target: >90% lines on src/gamification/defs.js
 
 import { describe, it, expect } from 'vitest'
-import { METRICS, ACHIEVEMENTS } from '../gamification/defs'
+import { METRICS, ACHIEVEMENTS, MEDALS, TROPHIES, computeProgression } from '../gamification/defs'
 import { BADGES } from '../tokens'
 
 // Valid gauge source names (from stateProvider.read())
@@ -14,6 +14,7 @@ const GAUGE_SOURCES = new Set([
   'etfDistinct',
   'cryptoHeld',
   'councilSize',
+  'heldThroughDrop',
   'positionOpen',
 ])
 
@@ -85,7 +86,7 @@ describe('defs — ACHIEVEMENTS', () => {
     const expectedIds = [
       'first_trade', 'limit', 'diversified', 'etf', 'etf2', 'first_crypto',
       'researcher', 'contrarian', 'momentum', 'patient', 'long_term',
-      'steady', 'reflection', 'council', 'macro',
+      'steady', 'reflection', 'mentor', 'macro',
     ]
     const actualIds = new Set(ACHIEVEMENTS.map((a) => a.id))
     for (const id of expectedIds) {
@@ -180,5 +181,179 @@ describe('defs — name/description from BADGES tokens', () => {
         `achievement id "${a.id}" has no corresponding BADGES token`,
       ).toBe(true)
     }
+  })
+})
+
+describe('defs — mentor badge (was council)', () => {
+  it('has a "mentor" achievement and no "council" achievement', () => {
+    const ids = new Set(ACHIEVEMENTS.map((a) => a.id))
+    expect(ids.has('mentor')).toBe(true)
+    expect(ids.has('council')).toBe(false)
+  })
+
+  it('"mentor" is a config-only >= 1 condition on the mentorChosen metric', () => {
+    const mentor = ACHIEVEMENTS.find((a) => a.id === 'mentor')
+    expect(mentor.condition).toEqual({ metric: 'mentorChosen', op: '>=', value: 1 })
+  })
+
+  it('mentorChosen is a count metric matching the hero.unlocked event', () => {
+    const m = METRICS.find((x) => x.id === 'mentorChosen')
+    expect(m).toBeDefined()
+    expect(m.kind).toBe('count')
+    expect(m.match).toEqual({ type: 'hero.unlocked' })
+  })
+})
+
+describe('defs — steady gauge metric (was event count)', () => {
+  it('heldThroughDrop is now a gauge metric, not an event count', () => {
+    const m = METRICS.find((x) => x.id === 'heldThroughDrop')
+    expect(m).toBeDefined()
+    expect(m.kind).toBe('gauge')
+    expect(m.source).toBe('heldThroughDrop')
+    expect(m.match).toBeUndefined()
+  })
+
+  it('no metric matches the removed position.heldThroughDrop event', () => {
+    const evented = METRICS.filter((m) => m.match?.type === 'position.heldThroughDrop')
+    expect(evented).toHaveLength(0)
+  })
+
+  it('"steady" condition still references the heldThroughDrop metric', () => {
+    const steady = ACHIEVEMENTS.find((a) => a.id === 'steady')
+    expect(steady.condition).toEqual({ metric: 'heldThroughDrop', op: '>=', value: 1 })
+  })
+})
+
+describe('defs — MEDALS / TROPHIES invariants (§2.3)', () => {
+  const BADGE_IDS = new Set(ACHIEVEMENTS.map((a) => a.id))
+  const MEDAL_IDS = new Set(MEDALS.map((m) => m.id))
+  const TROPHY_IDS = new Set(TROPHIES.map((t) => t.id))
+
+  it('every badge id in every medal exists in ACHIEVEMENTS', () => {
+    for (const medal of MEDALS) {
+      for (const id of medal.badges) {
+        expect(BADGE_IDS.has(id), `medal "${medal.id}" references unknown badge "${id}"`).toBe(true)
+      }
+    }
+  })
+
+  it('every medal id in every trophy exists in MEDALS', () => {
+    for (const trophy of TROPHIES) {
+      for (const id of trophy.medals) {
+        expect(MEDAL_IDS.has(id), `trophy "${trophy.id}" references unknown medal "${id}"`).toBe(true)
+      }
+    }
+  })
+
+  it('every medal threshold is 1 <= threshold <= badge set size', () => {
+    for (const medal of MEDALS) {
+      expect(medal.threshold).toBeGreaterThanOrEqual(1)
+      expect(medal.threshold).toBeLessThanOrEqual(medal.badges.length)
+    }
+  })
+
+  it('every trophy threshold is 1 <= threshold <= medal set size', () => {
+    for (const trophy of TROPHIES) {
+      expect(trophy.threshold).toBeGreaterThanOrEqual(1)
+      expect(trophy.threshold).toBeLessThanOrEqual(trophy.medals.length)
+    }
+  })
+
+  it('medal and trophy ids are unique', () => {
+    expect(MEDAL_IDS.size).toBe(MEDALS.length)
+    expect(TROPHY_IDS.size).toBe(TROPHIES.length)
+  })
+
+  it('medal/trophy ids are disjoint from badge ids and from each other', () => {
+    for (const id of MEDAL_IDS) expect(BADGE_IDS.has(id)).toBe(false)
+    for (const id of TROPHY_IDS) {
+      expect(BADGE_IDS.has(id)).toBe(false)
+      expect(MEDAL_IDS.has(id)).toBe(false)
+    }
+  })
+})
+
+describe('defs — computeProgression', () => {
+  const nameToBadgeIds = (medalId) => MEDALS.find((m) => m.id === medalId).badges
+
+  it('empty set: nothing earned, all progress 0', () => {
+    const { medals, trophies, medalCount, trophyCount } = computeProgression(new Set())
+    expect(medalCount).toBe(0)
+    expect(trophyCount).toBe(0)
+    for (const m of medals) {
+      expect(m.earned).toBe(false)
+      expect(m.earnedCount).toBe(0)
+      expect(m.progress).toBe(0)
+    }
+    for (const t of trophies) expect(t.earned).toBe(false)
+  })
+
+  it('thematic medal partial: below threshold is not earned, progress is fractional', () => {
+    const traderBadges = nameToBadgeIds('medal_trader') // threshold 4
+    const { medals } = computeProgression(new Set(traderBadges.slice(0, 2)))
+    const trader = medals.find((m) => m.id === 'medal_trader')
+    expect(trader.earnedCount).toBe(2)
+    expect(trader.earned).toBe(false)
+    expect(trader.progress).toBeCloseTo(0.5)
+  })
+
+  it('thematic medal complete: full set earns the medal at progress 1', () => {
+    const traderBadges = nameToBadgeIds('medal_trader')
+    const { medals, medalCount } = computeProgression(new Set(traderBadges))
+    const trader = medals.find((m) => m.id === 'medal_trader')
+    expect(trader.earned).toBe(true)
+    expect(trader.earnedCount).toBe(4)
+    expect(trader.progress).toBe(1)
+    expect(medalCount).toBeGreaterThanOrEqual(1)
+  })
+
+  it('milestone medals at 5 / 10 / 15 earned badges', () => {
+    const all = ACHIEVEMENTS.map((a) => a.id)
+
+    const at5 = computeProgression(new Set(all.slice(0, 5)))
+    expect(at5.medals.find((m) => m.id === 'medal_explorer_1').earned).toBe(true)
+    expect(at5.medals.find((m) => m.id === 'medal_explorer_2').earned).toBe(false)
+    expect(at5.medals.find((m) => m.id === 'medal_explorer_3').earned).toBe(false)
+
+    const at10 = computeProgression(new Set(all.slice(0, 10)))
+    expect(at10.medals.find((m) => m.id === 'medal_explorer_2').earned).toBe(true)
+    expect(at10.medals.find((m) => m.id === 'medal_explorer_3').earned).toBe(false)
+
+    const at15 = computeProgression(new Set(all))
+    expect(at15.medals.find((m) => m.id === 'medal_explorer_3').earned).toBe(true)
+  })
+
+  it('milestone progress clamps to 1 when earned exceeds threshold', () => {
+    const all = ACHIEVEMENTS.map((a) => a.id) // 15 badges
+    const { medals } = computeProgression(new Set(all))
+    const explorer1 = medals.find((m) => m.id === 'medal_explorer_1') // threshold 5
+    expect(explorer1.earnedCount).toBe(15)
+    expect(explorer1.progress).toBe(1)
+  })
+
+  it('a single badge counts toward both its thematic medal and the milestone medals', () => {
+    const { medals } = computeProgression(new Set(['first_trade']))
+    expect(medals.find((m) => m.id === 'medal_trader').earnedCount).toBe(1)
+    expect(medals.find((m) => m.id === 'medal_explorer_1').earnedCount).toBe(1)
+  })
+
+  it('trophy is earned only when all medals are earned', () => {
+    const all = ACHIEVEMENTS.map((a) => a.id)
+
+    // 14 of 15 badges: every thematic set except student is complete, and no explorer_3.
+    const almost = computeProgression(new Set(all.slice(0, 14)))
+    expect(almost.trophies[0].earned).toBe(false)
+    expect(almost.trophyCount).toBe(0)
+
+    const complete = computeProgression(new Set(all))
+    expect(complete.medalCount).toBe(MEDALS.length)
+    expect(complete.trophies[0].earned).toBe(true)
+    expect(complete.trophyCount).toBe(1)
+  })
+
+  it('accepts an array as well as a Set', () => {
+    const traderBadges = nameToBadgeIds('medal_trader')
+    const { medals } = computeProgression(traderBadges)
+    expect(medals.find((m) => m.id === 'medal_trader').earned).toBe(true)
   })
 })

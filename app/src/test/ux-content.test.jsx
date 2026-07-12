@@ -37,6 +37,7 @@ vi.mock('../hooks/usePortfolio', () => ({
 
 import BuyScreen from '../screens/trade/BuyScreen'
 import SellScreen from '../screens/trade/SellScreen'
+import Profile from '../screens/profile/Profile'
 
 const flat = s => s.replace(/\s+/g, ' ')
 
@@ -92,5 +93,18 @@ describe('Suite 2 — content / copy', () => {
     expect(labels.some(l => /^[A-Z][a-z]{2} '\d{2}$/.test(l))).toBe(true)
     // No ISO YYYY/MM/DD style labels.
     expect(labels.every(l => !/\d{4}\/\d{2}\/\d{2}/.test(l))).toBe(true)
+  })
+
+  // T2.6 — Profile achievements card uses the medal-shelf summary, not the old
+  // 10/10/10 ladder copy (Gam2req §3 Phase 3).
+  it('T2.6 Profile achievements card uses medal-shelf copy, not the 10/10/10 ladder', () => {
+    const { container } = renderWithProviders(<Profile />)
+    const txt = flat(container.textContent)
+    // New declarative medal-shelf summary.
+    expect(txt).toContain('medals earned')
+    // Old ladder copy must be gone.
+    expect(txt).not.toContain('badges → first medal')
+    expect(txt).not.toContain('more → next medal')
+    expect(txt).not.toContain('10 badges → first medal')
   })
 })

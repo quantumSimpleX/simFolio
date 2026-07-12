@@ -82,7 +82,7 @@ export default function SellScreen() {
       <div onClick={!isPending && !limitIncomplete ? handleSell : undefined} className={cn('flex h-12 items-center justify-center rounded-input bg-red font-sans text-[15px] font-semibold text-white', isPending || limitIncomplete ? 'cursor-default opacity-60' : 'cursor-pointer')}>
         {isPending ? 'Selling…' : orderType === 'LIMIT' ? `Place limit sell for ${qty} ${ticker}  →` : `Sell ${qty} ${ticker}  →`}
       </div>
-      <GhostCTA label="Ask your council first" onClick={() => navigate('/ask')}/>
+      <GhostCTA label="Ask your mentor first" onClick={() => navigate('/ask')}/>
     </div>
   )
 

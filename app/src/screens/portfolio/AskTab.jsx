@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { BottomNav, TopNav } from '../../components/Nav';
 import { DotMenu } from '../../components/DotMenu';
 import { ChatComposer, ChatMessages } from '../../components/HeroChatPanel';
-import { useHeroChat, useHeroHistory } from '../../hooks/useHeroChat';
+import { useHeroChat, useConversationHistory } from '../../hooks/useHeroChat';
 import { useHeroSelections } from '../../hooks/useHeroSelections';
 import { usePortfolio } from '../../hooks/usePortfolio';
 import { useWatchlist } from '../../hooks/useWatchlist';
@@ -17,14 +17,15 @@ export default function AskTab() {
   const { watchlist } = useWatchlist();
   const [input, setInput] = useState('');
 
-  // Use first hero in council for chat (council shares one window)
   const primaryHero = heroes[0];
   const heroId = primaryHero?.id ?? 'sage';
 
   const portfolioContext = buildHeroContext(positions, cashBalance, watchlist);
   const assetTickers = [...positions.map(p => p.ticker), ...watchlist];
 
-  const { data: history, isLoading: historyLoading } = useHeroHistory(heroId);
+  // Cross-hero timeline: chat shows the unified conversation across all heroes,
+  // while outgoing messages (below) still target the active mentor (heroes[0]).
+  const { data: history, isLoading: historyLoading } = useConversationHistory();
   const { mutate: sendMessage, isPending, data: lastReply } = useHeroChat(heroId, portfolioContext);
 
   function handleSend(text) {
@@ -34,22 +35,20 @@ export default function AskTab() {
     sendMessage(msg);
   }
 
-  const councilNames = heroes.map(h => h.name).join(' · ');
+  const mentorName = primaryHero?.name ?? 'Sage';
 
   return (
     <div className="flex h-[100dvh] w-full flex-col overflow-hidden bg-paper">
       <TopNav active="portfolio"/>
       <div className="flex flex-shrink-0 items-center gap-2.5 px-3 py-2">
         <div className="flex">
-          {heroes.slice(0,3).map((h, i) => (
-            <div key={h.id} style={{ marginLeft:i>0?-8:0 }}>
-              <HeroAvatar id={h.id} initials={h.initials} color={h.color} size={34}/>
-            </div>
-          ))}
+          {primaryHero && (
+            <HeroAvatar id={primaryHero.id} initials={primaryHero.initials} color={primaryHero.color} size={34}/>
+          )}
         </div>
         <div>
-          <div className="font-sans text-lg font-semibold text-ink-900">Your Council</div>
-          <div className="font-sans text-sm text-ink-400">{councilNames || 'Sage'}</div>
+          <div className="font-sans text-lg font-semibold text-ink-900">{mentorName}</div>
+          <div className="font-sans text-sm text-ink-400">Your mentor · watching your portfolio</div>
         </div>
         <div className="ml-auto flex items-center">
           <DotMenu items={[{ label: 'Find a new mentor', onSelect: () => navigate('/find-mentor') }]}/>
@@ -63,7 +62,7 @@ export default function AskTab() {
         isPending={isPending}
         lastModel={lastReply?.model}
         historyLoading={historyLoading}
-        emptyText="Ask your council anything about your portfolio or investing."
+        emptyText="Ask your mentor anything about your portfolio or investing."
         assetTickers={assetTickers}
       />
 

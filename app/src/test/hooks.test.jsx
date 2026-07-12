@@ -136,7 +136,7 @@ describe('useOrders / useCancelOrder', () => {
 })
 
 describe('useAchievements', () => {
-  it('marks earned badges and derives medal/trophy counts', async () => {
+  it('marks earned badges and exposes derived progression (no medal yet)', async () => {
     __setTableData('achievements', [
       { achievement_type: 'first_trade', unlocked_at: '2026-01-01T00:00:00Z' },
     ])
@@ -144,11 +144,45 @@ describe('useAchievements', () => {
     await waitFor(() => expect(result.current.earnedCount).toBe(1))
     expect(result.current.medalCount).toBe(0)
     expect(result.current.trophyCount).toBe(0)
+    // derived arrays are present and computed from earned badges
+    expect(Array.isArray(result.current.medals)).toBe(true)
+    expect(Array.isArray(result.current.trophies)).toBe(true)
+    const trader = result.current.medals.find(m => m.id === 'medal_trader')
+    expect(trader.earned).toBe(false)
+    expect(trader.earnedCount).toBe(1) // first_trade counts toward it
     const first = result.current.badges.find(b => b.id === 'first_trade')
     expect(first.earned).toBe(true)
     expect(first.unlocked_at).toBe('2026-01-01T00:00:00Z')
     // an unearned badge stays false
     expect(result.current.badges.find(b => !b.earned).earned).toBe(false)
+  })
+
+  it('awards a thematic medal once its full badge set is earned', async () => {
+    // The Trader Medal requires the full set (threshold 4).
+    __setTableData('achievements', [
+      { achievement_type: 'first_trade', unlocked_at: '2026-01-01T00:00:00Z' },
+      { achievement_type: 'limit', unlocked_at: '2026-01-02T00:00:00Z' },
+      { achievement_type: 'contrarian', unlocked_at: '2026-01-03T00:00:00Z' },
+      { achievement_type: 'momentum', unlocked_at: '2026-01-04T00:00:00Z' },
+    ])
+    const { result } = renderHook(() => useAchievements(), { wrapper: makeWrapper() })
+    await waitFor(() => expect(result.current.earnedCount).toBe(4))
+    expect(result.current.medalCount).toBe(1)
+    expect(result.current.trophyCount).toBe(0) // not every medal earned
+    const trader = result.current.medals.find(m => m.id === 'medal_trader')
+    expect(trader.earned).toBe(true)
+    expect(trader.progress).toBe(1)
+  })
+
+  it('treats a legacy "council" row as the "mentor" badge (pre-migration alias)', async () => {
+    __setTableData('achievements', [
+      { achievement_type: 'council', unlocked_at: '2026-01-05T00:00:00Z' },
+    ])
+    const { result } = renderHook(() => useAchievements(), { wrapper: makeWrapper() })
+    await waitFor(() => expect(result.current.earnedCount).toBe(1))
+    const mentor = result.current.badges.find(b => b.id === 'mentor')
+    expect(mentor.earned).toBe(true)
+    expect(mentor.unlocked_at).toBe('2026-01-05T00:00:00Z')
   })
 })
 

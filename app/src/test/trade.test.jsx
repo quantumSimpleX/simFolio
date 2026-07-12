@@ -23,6 +23,9 @@ describe('SellScreen with a position', () => {
     // tied shares/amount inputs — set shares to all 10 owned (first spinbutton)
     fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '10' } })
     expect(document.body.textContent).toContain('Sell 10 AAPL')
+    // Inline hero prompt uses single-mentor copy, not the old "council" framing.
+    expect(document.body.textContent).toContain('Ask your mentor first')
+    expect(document.body.textContent).not.toContain('council')
   })
 
   it('limit sell exposes price input and DAY/GTC toggle, and places the order', async () => {

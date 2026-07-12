@@ -8,11 +8,11 @@ import { usePortfolio } from '../hooks/usePortfolio';
 import { useHeroSelections } from '../hooks/useHeroSelections';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { buildHeroContext } from '../lib/heroContext';
-import { useHeroChat, useHeroHistory } from '../hooks/useHeroChat';
+import { useHeroChat, useConversationHistory } from '../hooks/useHeroChat';
 
 // Self-contained hero chat card for the desktop/tablet right rail. Pulls its own
-// portfolio + council context, so any page can drop it in. The council shares one
-// chat window (chat runs against the first hero).
+// portfolio + mentor context, so any page can drop it in. Chat runs against the
+// user's single active mentor (heroes[0]).
 export function HeroSidebar({ className }) {
   const navigate = useNavigate();
   const { positions, cashBalance } = usePortfolio();
@@ -25,7 +25,9 @@ export function HeroSidebar({ className }) {
   const portfolioContext = buildHeroContext(positions, cashBalance, watchlist);
   const assetTickers = [...positions.map(p => p.ticker), ...watchlist];
 
-  const { data: history } = useHeroHistory(heroId);
+  // Cross-hero timeline: chat shows the unified conversation across all heroes,
+  // while outgoing messages (below) still target the active mentor (heroes[0]).
+  const { data: history } = useConversationHistory();
   const { mutate: sendMessage, isPending, data: lastReply } = useHeroChat(heroId, portfolioContext);
 
   const [input, setInput] = useState('');
@@ -37,7 +39,7 @@ export function HeroSidebar({ className }) {
     sendMessage(msg);
   }
 
-  const councilNames = heroes.map(h => h.name).join(' · ');
+  const mentorName = primaryHero?.name ?? 'Sage';
 
   return (
     <div className={cn('sticky top-7 flex w-[380px] flex-shrink-0 flex-col overflow-hidden rounded-card border border-ink-100 bg-white [height:calc(100dvh/var(--zoom)-132px)]', className)}>
@@ -46,16 +48,12 @@ export function HeroSidebar({ className }) {
         <DotMenu items={[{ label: 'Find a new mentor', onSelect: () => navigate('/find-mentor') }]}/>
       </div>
       <div className="flex items-center gap-2.5 border-b border-ink-100 px-3 py-2">
-        <div className="flex">
-          {heroes.slice(0,3).map((h,i) => (
-            <div key={h.id} style={{ marginLeft:i>0?-8:0 }}>
-              <HeroAvatar id={h.id} initials={h.initials} color={h.color} size={30}/>
-            </div>
-          ))}
-        </div>
+        {primaryHero && (
+          <HeroAvatar id={primaryHero.id} initials={primaryHero.initials} color={primaryHero.color} size={30}/>
+        )}
         <div>
-          <div className="font-sans text-[17px] font-semibold text-ink-900">{councilNames || 'Sage'}</div>
-          <div className="font-sans text-sm text-ink-400">{heroes.length} of 3 council slots · watching your portfolio</div>
+          <div className="font-sans text-[17px] font-semibold text-ink-900">{mentorName}</div>
+          <div className="font-sans text-sm text-ink-400">Your mentor · watching your portfolio</div>
         </div>
       </div>
       <ChatMessages

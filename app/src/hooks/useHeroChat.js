@@ -47,12 +47,47 @@ export function useHeroHistory(heroId) {
   })
 }
 
+// Cross-hero variant of useHeroHistory: same query shape but without the
+// `.eq('hero_id')` filter and with `hero_id` selected, so the UI can render a
+// single unified chat timeline across all heroes. Pagination is a follow-up.
+export function useConversationHistory() {
+  const { user } = useAuth()
+
+  return useQuery({
+    queryKey: ['conversation-history', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('hero_conversations')
+        .select('role, content, created_at, model, hero_id')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true })
+        .limit(100)
+      // Retry without `model` if the column hasn't been added yet, so chat
+      // history keeps working before the migration is applied.
+      if (error?.message?.includes('model')) {
+        const retry = await supabase
+          .from('hero_conversations')
+          .select('role, content, created_at, hero_id')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: true })
+          .limit(100)
+        if (retry.error) throw retry.error
+        return retry.data ?? []
+      }
+      if (error) throw error
+      return data ?? []
+    },
+    enabled: !!user,
+  })
+}
+
 export function useHeroChat(heroId, portfolioContext) {
   const { session } = useAuth()
   const qc = useQueryClient()
   const { user } = useAuth()
   const track = useTrack()
   const key = ['hero-history', user?.id, heroId]
+  const convoKey = ['conversation-history', user?.id]
 
   return useMutation({
     mutationFn: async (message) => {
@@ -70,18 +105,31 @@ export function useHeroChat(heroId, portfolioContext) {
     onMutate: async (message) => {
       track('chat.sent', { macro: isMacro(message) })
       await qc.cancelQueries({ queryKey: key })
+      await qc.cancelQueries({ queryKey: convoKey })
       const previous = qc.getQueryData(key)
+      const previousConvo = qc.getQueryData(convoKey)
+      const now = new Date().toISOString()
       qc.setQueryData(key, old => [
         ...(old ?? []),
-        { role: 'user', content: message, created_at: new Date().toISOString() },
+        { role: 'user', content: message, created_at: now },
       ])
-      return { previous }
+      // Cross-hero timeline: tag the user's message with the current hero so
+      // the unified view can attribute it correctly.
+      qc.setQueryData(convoKey, old => [
+        ...(old ?? []),
+        { role: 'user', content: message, created_at: now, hero_id: heroId },
+      ])
+      return { previous, previousConvo }
     },
     onError: (_err, _message, ctx) => {
-      if (ctx) qc.setQueryData(key, ctx.previous)
+      if (ctx) {
+        qc.setQueryData(key, ctx.previous)
+        qc.setQueryData(convoKey, ctx.previousConvo)
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: key })
+      qc.invalidateQueries({ queryKey: convoKey })
     },
   })
 }

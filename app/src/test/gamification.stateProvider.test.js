@@ -7,6 +7,9 @@ import { createStateProvider } from '../gamification/stateProvider'
 // Helper: build a position row
 const pos = (ticker, asset_type, total_qty = 1) => ({ ticker, asset_type, total_qty })
 
+// Helper: position row carrying a dayChange pct (as joined from the quote cache)
+const posD = (ticker, total_qty, dayChange) => ({ ticker, asset_type: 'STOCK', total_qty, dayChange })
+
 function makeProvider(positions, councilSize = 0) {
   const getPositions   = vi.fn().mockResolvedValue(positions)
   const getCouncilSize = vi.fn().mockResolvedValue(councilSize)
@@ -23,6 +26,7 @@ describe('stateProvider — gauge derivations', () => {
       etfHeld: 0,
       etfDistinct: 0,
       cryptoHeld: 0,
+      heldThroughDrop: 0,
       councilSize: 0,
       positionOpen: 0,
     })
@@ -182,5 +186,59 @@ describe('stateProvider — gauge derivations', () => {
     expect(state.cryptoHeld).toBe(1)      // BTC
     expect(state.councilSize).toBe(2)
     expect(state.positionOpen).toBe(1)
+    expect(state.heldThroughDrop).toBe(0) // none carry dayChange here
+  })
+
+  describe('heldThroughDrop gauge', () => {
+    it('counts held positions down 5% or more on the day', async () => {
+      const positions = [
+        posD('AAPL', 5, -7),   // qty>0, <=-5 → counts
+        posD('MSFT', 2, -5),   // exactly -5 (boundary) → counts
+        posD('NVDA', 1, -12),  // deep drop → counts
+      ]
+      const { provider } = makeProvider(positions)
+      const state = await provider.read('user-1')
+      expect(state.heldThroughDrop).toBe(3)
+    })
+
+    it('excludes positions above the -5% threshold', async () => {
+      const positions = [
+        posD('AAPL', 5, -4.99), // just above threshold → excluded
+        posD('MSFT', 2, 0),     // flat → excluded
+        posD('NVDA', 1, 8),     // up → excluded
+        posD('TSLA', 3, -6),    // down → counts
+      ]
+      const { provider } = makeProvider(positions)
+      const state = await provider.read('user-1')
+      expect(state.heldThroughDrop).toBe(1)
+    })
+
+    it('excludes zero-qty positions even if they dropped >=5%', async () => {
+      const positions = [
+        posD('AAPL', 0, -20),  // sold — excluded despite big drop
+        posD('MSFT', 4, -6),   // held & down → counts
+      ]
+      const { provider } = makeProvider(positions)
+      const state = await provider.read('user-1')
+      expect(state.heldThroughDrop).toBe(1)
+    })
+
+    it('does not count positions with missing dayChange (uncached quote)', async () => {
+      const positions = [
+        pos('AAPL', 'STOCK', 5),        // no dayChange field → undefined
+        posD('MSFT', 2, undefined),     // explicit undefined → excluded
+        posD('NVDA', 1, -6),            // has dayChange → counts
+      ]
+      const { provider } = makeProvider(positions)
+      const state = await provider.read('user-1')
+      expect(state.heldThroughDrop).toBe(1) // does not crash on undefined
+    })
+
+    it('is 0 when no held position dropped enough', async () => {
+      const positions = [posD('AAPL', 5, -2), posD('MSFT', 2, 3)]
+      const { provider } = makeProvider(positions)
+      const state = await provider.read('user-1')
+      expect(state.heldThroughDrop).toBe(0)
+    })
   })
 })

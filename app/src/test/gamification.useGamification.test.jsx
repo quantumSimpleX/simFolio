@@ -33,7 +33,7 @@ vi.mock('../hooks/useAchievements', () => ({
 
 let mockUser = { id: 'u1' }
 
-import { GamificationProvider, useTrack, useReveal } from '../gamification/useGamification'
+import { GamificationProvider, useTrack, useReveal, joinDayChange } from '../gamification/useGamification'
 
 // Probe surfaces the reveal state and exposes the track/advance entry points.
 function Probe() {
@@ -114,6 +114,47 @@ describe('gamification driver (IT-B6)', () => {
     renderDriver()
     await act(async () => { screen.getByText('track').click() })
     expect(engineMock.track).not.toHaveBeenCalled()
+  })
+})
+
+// T-04 — positions carry a `dayChange` percent joined from the live quote cache
+// so the `steady` gauge has data. `dayChange` is the quote's `pct` field (e.g.
+// -6.2 for a 6.2% drop); it is present only when the quote is cached, otherwise
+// omitted (undefined), which the gauge excludes rather than counting as flat.
+describe('joinDayChange — position dayChange join', () => {
+  it('joins dayChange from the cached quote pct (batched key)', () => {
+    const qc = new QueryClient()
+    qc.setQueryData(['quotes', 'AAPL,MSFT'], [
+      { ticker: 'AAPL', pct: -6.2 },
+      { ticker: 'MSFT', pct: 1.1 },
+    ])
+    const out = joinDayChange(
+      [{ ticker: 'AAPL', total_qty: '2' }, { ticker: 'MSFT', total_qty: '1' }],
+      qc,
+    )
+    expect(out[0].dayChange).toBe(-6.2)
+    expect(out[1].dayChange).toBe(1.1)
+  })
+
+  it('omits dayChange for a position whose quote is not cached', () => {
+    const qc = new QueryClient()
+    qc.setQueryData(['quotes', 'AAPL'], [{ ticker: 'AAPL', pct: -6.2 }])
+    const out = joinDayChange([{ ticker: 'AAPL' }, { ticker: 'TSLA' }], qc)
+    expect(out[0].dayChange).toBe(-6.2)
+    expect('dayChange' in out[1]).toBe(false)
+  })
+
+  it('does not throw when no quotes are cached; returns positions unchanged', () => {
+    const qc = new QueryClient()
+    const positions = [{ ticker: 'AAPL' }]
+    expect(() => joinDayChange(positions, qc)).not.toThrow()
+    expect('dayChange' in joinDayChange(positions, qc)[0]).toBe(false)
+  })
+
+  it('returns an empty array for empty or undefined positions', () => {
+    const qc = new QueryClient()
+    expect(joinDayChange([], qc)).toEqual([])
+    expect(joinDayChange(undefined, qc)).toEqual([])
   })
 })
 

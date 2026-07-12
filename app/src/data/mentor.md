@@ -31,12 +31,15 @@ Source of truth in code:
 | `livermore` | Jesse Livermore | Momentum & Price Action Trading | Making and losing multiple fortunes in the early 1900s through price trend reading. |
 | `burry` | Michael Burry | Value & Credit Default Swaps | Correctly forecasting and betting against the 2008 U.S. subprime mortgage collapse. |
 
-Implemented in the app today: `sage`, `warren`, `munger`, `lynch`, `bogle`,
-`ray`, `cathie`. The rest are candidates — adding one requires an entry in
+All 21 personas above are implemented and available today — each has an entry in
 `heroes.js`, a persona in the `hero-chat` edge function, and an avatar in
-`HeroMessage.jsx`.
+`HeroMessage.jsx`. Users discover and pick a mentor from these on the FindMentor
+screen (`screens/heroes/FindMentor.jsx`).
 
 Rules (from the design spec):
 - Heroes are introduced only after the user's first trade; Sage guides before that.
-- Maximum council of 3 heroes, sharing one chat window.
+- MVP has a **single active mentor** at a time. Users can switch mentors via
+  FindMentor, but only one hero is engaged in the chat window at once.
+- Multi-hero council (multiple mentors sharing one chat window) is deferred to a
+  later version.
 - Hero responses are always English, always questions/observations — never directives.

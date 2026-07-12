@@ -61,9 +61,11 @@ describe('FilledRow (Q2)', () => {
 describe('HeroSidebar (Q3)', () => {
   it('renders without crashing and falls back to Sage with empty providers', () => {
     renderWithProviders(<HeroSidebar />)
-    // No heroes seeded -> council/title fall back to 'Sage'
+    // No heroes seeded -> mentor name/title fall back to 'Sage'
     expect(screen.getAllByText('Sage').length).toBeGreaterThan(0)
-    expect(screen.getByText(/council slots/)).toBeInTheDocument()
+    // Single-active-mentor copy: no stale "council slots" language remains
+    expect(screen.getByText(/Your mentor · watching your portfolio/)).toBeInTheDocument()
+    expect(screen.queryByText(/council slots/)).not.toBeInTheDocument()
   })
 })
 

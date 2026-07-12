@@ -19,6 +19,10 @@ export function createStateProvider({ getPositions, getCouncilSize }) {
       etfHeld: etfs.length,
       etfDistinct: distinct(etfs),
       cryptoHeld: crypto.length,
+      // steady badge: held positions down >=5% on the day. dayChange is joined
+      // from the live quote cache upstream (T-04); undefined (uncached) is
+      // excluded naturally since `undefined <= -5` is false.
+      heldThroughDrop: held.filter((p) => p.dayChange <= -5).length,
       councilSize: (await getCouncilSize(userId)) ?? 0,
       positionOpen: held.length > 0 ? 1 : 0,
     }

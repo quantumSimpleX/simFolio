@@ -34,7 +34,7 @@ const metrics = [
     value: 5,
   },
   { id: 'reflections', kind: 'count', match: { type: 'sell.reflected' } },
-  { id: 'heldThroughDrop', kind: 'count', match: { type: 'position.heldThroughDrop' } },
+  { id: 'mentorChosen', kind: 'count', match: { type: 'hero.unlocked' } },
   { id: 'macroQuestions', kind: 'count', match: { type: 'chat.sent', where: { macro: { eq: true } } } },
   // Gauge metrics
   { id: 'heldDistinct', kind: 'gauge', source: 'heldDistinct' },
@@ -42,6 +42,7 @@ const metrics = [
   { id: 'etfDistinct', kind: 'gauge', source: 'etfDistinct' },
   { id: 'cryptoHeld', kind: 'gauge', source: 'cryptoHeld' },
   { id: 'councilSize', kind: 'gauge', source: 'councilSize' },
+  { id: 'heldThroughDrop', kind: 'gauge', source: 'heldThroughDrop' },
   { id: 'positionOpen', kind: 'gauge', source: 'positionOpen' },
   // Duration
   {
@@ -67,7 +68,7 @@ const achievements = [
   { id: 'long_term', condition: { metric: 'maxHoldDays', op: '>=', value: 90 } },
   { id: 'steady', condition: { metric: 'heldThroughDrop', op: '>=', value: 1 } },
   { id: 'reflection', condition: { metric: 'reflections', op: '>=', value: 1 } },
-  { id: 'council', condition: { metric: 'councilSize', op: '>=', value: 2 } },
+  { id: 'mentor', condition: { metric: 'mentorChosen', op: '>=', value: 1 } },
   {
     id: 'macro',
     condition: {
@@ -208,25 +209,49 @@ describe('E2E: diversified', () => {
 })
 
 // ---------------------------------------------------------------------------
-// E2E: council unlocks at councilSize >= 2 (gauge)
+// E2E: mentor unlocks after one hero.unlocked event (was council/councilSize gauge)
 // ---------------------------------------------------------------------------
-describe('E2E: council', () => {
-  it('unlocks at councilSize = 2', async () => {
-    const { engine } = makeEngine({ councilSize: 2 })
+describe('E2E: mentor', () => {
+  it('unlocks after one hero.unlocked event', async () => {
+    const { engine } = makeEngine()
+    await engine.track(UID, ev('hero.unlocked', { heroId: 'warren' }))
     const { unlocked } = await engine.evaluate(UID)
-    expect(unlocked.map((u) => u.id)).toContain('council')
+    expect(unlocked.map((u) => u.id)).toContain('mentor')
   })
 
-  it('does NOT unlock at councilSize = 1', async () => {
-    const { engine } = makeEngine({ councilSize: 1 })
+  it('does NOT unlock before any hero.unlocked event', async () => {
+    const { engine } = makeEngine()
     const { unlocked } = await engine.evaluate(UID)
-    expect(unlocked.map((u) => u.id)).not.toContain('council')
+    expect(unlocked.map((u) => u.id)).not.toContain('mentor')
   })
 
-  it('does NOT unlock at councilSize = 0', async () => {
-    const { engine } = makeEngine({ councilSize: 0 })
+  it('does NOT unlock from councilSize gauge alone (no hero.unlocked event)', async () => {
+    const { engine } = makeEngine({ councilSize: 3 })
     const { unlocked } = await engine.evaluate(UID)
-    expect(unlocked.map((u) => u.id)).not.toContain('council')
+    expect(unlocked.map((u) => u.id)).not.toContain('mentor')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// E2E: steady unlocks from the heldThroughDrop gauge (was a position event count)
+// ---------------------------------------------------------------------------
+describe('E2E: steady', () => {
+  it('unlocks when the heldThroughDrop gauge >= 1', async () => {
+    const { engine } = makeEngine({ heldThroughDrop: 1 })
+    const { unlocked } = await engine.evaluate(UID)
+    expect(unlocked.map((u) => u.id)).toContain('steady')
+  })
+
+  it('does NOT unlock when the heldThroughDrop gauge = 0', async () => {
+    const { engine } = makeEngine({ heldThroughDrop: 0 })
+    const { unlocked } = await engine.evaluate(UID)
+    expect(unlocked.map((u) => u.id)).not.toContain('steady')
+  })
+
+  it('unlocks purely from the gauge without any track() calls', async () => {
+    const { engine } = makeEngine({ heldThroughDrop: 2 })
+    const { unlocked } = await engine.evaluate(UID)
+    expect(unlocked.map((u) => u.id)).toContain('steady')
   })
 })
 
@@ -295,14 +320,14 @@ describe('E2E: macro', () => {
     expect(unlocked.map((u) => u.id)).not.toContain('macro')
   })
 
-  it('council NOT required for macro — only councilSize>=1 is (council requires >=2)', async () => {
-    // macro needs councilSize >= 1; council badge needs >= 2
+  it('mentor NOT required for macro — macro needs only councilSize>=1 + a macro question', async () => {
+    // macro needs councilSize >= 1; mentor badge needs a hero.unlocked event (not fired here)
     const { engine } = makeEngine({ councilSize: 1 })
     await engine.track(UID, ev('chat.sent', { macro: true }))
     const { unlocked } = await engine.evaluate(UID)
     const ids = unlocked.map((u) => u.id)
     expect(ids).toContain('macro')
-    expect(ids).not.toContain('council')
+    expect(ids).not.toContain('mentor')
   })
 })
 

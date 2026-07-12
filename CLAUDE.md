@@ -33,7 +33,7 @@ npx vitest run src/test/execution.test.js   # run a single test file
 - **React 19** with JSX (no TypeScript)
 - **React Router DOM v7** for routing
 - **Vite 8** as bundler
-- **TanStack React Query v5** — all server state; query keys are `['portfolio']`, `['orders']`, `['quotes', ticker]`, `['hero-history', userId, heroId]`
+- **TanStack React Query v5** — all server state; query keys are `['portfolio']`, `['orders']`, `['quotes', ticker]`, `['hero-history', userId, heroId]`, `['conversation-history', userId]`
 - **Supabase** — Postgres DB + Auth + Edge Functions (Deno/TypeScript)
 - **Vitest + Testing Library** — 11 test files in `app/src/test/`
 
@@ -116,8 +116,7 @@ The primary product spec is `designV1/designHANDOFF.md`. Read it before implemen
 ### Hero System
 - **Sage**: neutral onboarding guide (aqua, ◇ symbol). Steps back permanently after first trade.
 - **Heroes**: AI personas (Warren Buffett, Cathie Wood, Ray Dalio, etc.) introduced AFTER the user's first trade — never before (one exception: user has zero stock ideas during onboarding).
-- Heroes 2 and 3 are introduced by Hero 1 organically — there is no "add a hero" UI button.
-- Maximum council: 3 heroes. All share one chat window.
+- MVP scope: a single active mentor. The multi-hero council (up to 3 heroes introduced organically by Hero 1, sharing one chat window) is deferred to a later version.
 
 ### Trade Flow Rules
 - Market orders placed outside market hours (Mon–Fri 9:30 AM–4:00 PM EST) are queued, executed at next open.
@@ -131,7 +130,8 @@ The primary product spec is `designV1/designHANDOFF.md`. Read it before implemen
 - Tooltip content is driven by a central `glossary.json` (see PRD Appendix A1 for structure).
 
 ### Achievement System
-- 10 badges → 1 medal → 10 medals → 1 trophy → 10 trophies = Master of Trading
+- Declarative model in `app/src/gamification/defs.js`: 15 badges (`ACHIEVEMENTS`) are the only persisted unit. Medals (`MEDALS`) and trophies (`TROPHIES`) are derived — never stored — via `computeProgression()`.
+- Medals: 4 thematic (require a full themed badge set) + 3 milestone "Explorer" tiers (any 5 / 10 / 15 badges). The single trophy, "Master of Trading" (`trophy_master`), requires every medal.
 - Badge earned moments: full-screen ink-900, no bounce animations — deliberate and earned
 
 ### Database Schema

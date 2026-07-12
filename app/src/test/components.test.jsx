@@ -114,7 +114,7 @@ describe('HeroChatPanel pieces', () => {
     const onChange = vi.fn()
     const onSend = vi.fn()
     wrap(<ChatComposer value="hi" onChange={onChange} onSend={onSend} />)
-    const input = screen.getByPlaceholderText(/Ask your council/i)
+    const input = screen.getByPlaceholderText(/Ask your mentor/i)
     expect(input.value).toBe('hi')
     fireEvent.change(input, { target: { value: 'hello' } })
     expect(onChange).toHaveBeenCalledWith('hello')
@@ -131,9 +131,9 @@ describe('HeroChatPanel pieces', () => {
     wrap(<ChatMessages heroId="warren" history={[{ role: 'user', content: 'Hi' }]} isPending />)
     expect(screen.getByText('Calling Warren Buffett…')).toBeInTheDocument()
   })
-  it('ChatMessages falls back to "your council" when the hero is unknown', () => {
+  it('ChatMessages falls back to "your mentor" when the hero is unknown', () => {
     wrap(<ChatMessages heroId="nobody" history={[]} isPending emptyText="Ask anything." />)
-    expect(screen.getByText('Calling your council…')).toBeInTheDocument()
+    expect(screen.getByText('Calling your mentor…')).toBeInTheDocument()
   })
   it('ChatMessages badges a reply with its persisted model (abbreviated)', () => {
     wrap(<ChatMessages heroId="warren" history={[{ role: 'assistant', content: 'Why?', model: 'meta-llama/llama-3.3-70b-instruct:free' }]} isPending={false} />)
@@ -146,5 +146,50 @@ describe('HeroChatPanel pieces', () => {
   it('ChatMessages shows no model badge when none is known', () => {
     wrap(<ChatMessages heroId="warren" history={[{ role: 'assistant', content: 'Why?' }]} isPending={false} />)
     expect(screen.queryByText(/Llama|GPT-OSS|Gemma|Nemotron/)).not.toBeInTheDocument()
+  })
+  it('ChatMessages attributes each assistant bubble to its own hero_id, not the selected hero', () => {
+    wrap(<ChatMessages heroId="warren" history={[
+      { role: 'assistant', content: 'Why this stock?', hero_id: 'warren' },
+      { role: 'assistant', content: 'Is it disruptive?', hero_id: 'cathie' },
+    ]} isPending={false} />)
+    expect(screen.getByText('Warren Buffett')).toBeInTheDocument()
+    expect(screen.getByText('Cathie Wood')).toBeInTheDocument()
+  })
+  it('ChatMessages inserts a "{Hero} joins" divider when the speaking hero changes', () => {
+    wrap(<ChatMessages heroId="warren" history={[
+      { role: 'assistant', content: 'Why this stock?', hero_id: 'warren' },
+      { role: 'assistant', content: 'Is it disruptive?', hero_id: 'cathie' },
+    ]} isPending={false} />)
+    expect(screen.getByText('Cathie Wood joins')).toBeInTheDocument()
+    // No divider for the first hero — there is no prior hero to change from.
+    expect(screen.queryByText('Warren Buffett joins')).not.toBeInTheDocument()
+  })
+  it('ChatMessages does not insert a divider between consecutive same-hero replies', () => {
+    wrap(<ChatMessages heroId="warren" history={[
+      { role: 'assistant', content: 'Why this stock?', hero_id: 'warren' },
+      { role: 'assistant', content: 'What is its moat?', hero_id: 'warren' },
+    ]} isPending={false} />)
+    expect(screen.queryByText(/joins/)).not.toBeInTheDocument()
+  })
+  it('ChatMessages shows a divider across an intervening user message when the hero changes', () => {
+    wrap(<ChatMessages heroId="warren" history={[
+      { role: 'assistant', content: 'Why this stock?', hero_id: 'warren' },
+      { role: 'user', content: 'Not sure' },
+      { role: 'assistant', content: 'Is it disruptive?', hero_id: 'cathie' },
+    ]} isPending={false} />)
+    expect(screen.getByText('Cathie Wood joins')).toBeInTheDocument()
+  })
+  it('ChatMessages does not divide when a user message sits between two same-hero replies', () => {
+    wrap(<ChatMessages heroId="warren" history={[
+      { role: 'assistant', content: 'Why this stock?', hero_id: 'warren' },
+      { role: 'user', content: 'Not sure' },
+      { role: 'assistant', content: 'What is its moat?', hero_id: 'warren' },
+    ]} isPending={false} />)
+    expect(screen.queryByText(/joins/)).not.toBeInTheDocument()
+  })
+  it('ChatMessages falls back to the selected heroId for legacy rows without hero_id', () => {
+    wrap(<ChatMessages heroId="cathie" history={[{ role: 'assistant', content: 'Why?' }]} isPending={false} />)
+    expect(screen.getByText('Cathie Wood')).toBeInTheDocument()
+    expect(screen.queryByText(/joins/)).not.toBeInTheDocument()
   })
 })

@@ -4,19 +4,30 @@ import { AppShell } from '../../components/AppShell';
 import { PageHeader } from '../../components/Nav';
 import { CTA, Eyebrow, LangToggle, ThemeToggle } from '../../components/Primitives';
 import { Card } from '../../components/ui/card';
-import { BadgeGlyphForIndex, MedalGlyph, TrophyGlyph } from '../../components/Badges';
+import { MedalGlyph, TrophyGlyph } from '../../components/Badges';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { QUESTION_LABELS } from '../onboarding/questionLabels';
 import { useAchievements } from '../../hooks/useAchievements';
 import { cn } from '../../lib/utils';
 
+// One glyph + name + "3 of 4" progress in the summary shelf. Earned items go gold.
+function ShelfItem({ name, earned, count, total, children }) {
+  return (
+    <div className="flex w-[62px] flex-col items-center text-center">
+      {children}
+      <div className={cn('mt-1 font-sans text-[10px] font-semibold leading-tight', earned ? 'text-gold' : 'text-ink-600')}>{name}</div>
+      <div className="font-sans text-[10px] text-ink-400">{earned ? 'Earned' : `${count} of ${total}`}</div>
+    </div>
+  );
+}
+
 export default function Profile() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const [answers, setAnswers] = useState(null);
-  const { badges, earnedCount, medalCount, trophyCount, isLoading: achLoading } = useAchievements();
-  const toNextMedal = 10 - (earnedCount % 10);
+  const { medals, trophies, earnedCount, medalCount, isLoading: achLoading } = useAchievements();
+  const trophy = trophies[0];
 
   useEffect(() => {
     let cancelled = false;
@@ -58,43 +69,21 @@ export default function Profile() {
 
       <Card className="mb-5 px-6 py-5">
         <div className="mb-4"><Eyebrow>Achievements</Eyebrow></div>
-        <div className="mb-3.5 flex items-center gap-5">
-          <div className="flex-1">
-            <div className="font-display text-[26px] font-bold leading-none tracking-[-0.02em] text-ink-900">
-              {achLoading ? '…' : `${earnedCount} badge${earnedCount !== 1 ? 's' : ''}`}
-            </div>
-            <div className="mt-1 font-sans text-[13px] text-ink-400">
-              {toNextMedal === 10 && medalCount === 0 ? '10 badges → first medal' : `${toNextMedal} more → next medal`}
-            </div>
-            <div className="mt-2.5 h-[5px] rounded-pill bg-ink-100">
-              <div className="h-full rounded-pill bg-ame-400" style={{ width: `${((earnedCount % 10) / 10) * 100}%` }}/>
-            </div>
-          </div>
-          <div className="flex items-end gap-3">
-            <div className="text-center">
-              <MedalGlyph size={32} earned={medalCount > 0}/>
-              <div className="mt-[3px] font-sans text-[10px] text-ink-400">{medalCount}</div>
-            </div>
-            <div className="text-center">
-              <TrophyGlyph size={40} earned={trophyCount > 0}/>
-              <div className="mt-[3px] font-sans text-[10px] text-ink-400">{trophyCount}</div>
-            </div>
-          </div>
+        <div className="font-display text-[26px] font-bold leading-none tracking-[-0.02em] text-ink-900">
+          {achLoading ? '…' : `${earnedCount} badge${earnedCount !== 1 ? 's' : ''}`}
         </div>
-        <div className="grid grid-cols-5 gap-2">
-          {badges.map((b, i) => (
-            <Card
-              key={b.id}
-              onClick={() => b.earned && navigate('/badge-earned', { state: { badge: b } })}
-              className={cn(
-                'flex flex-col items-center gap-1 bg-paper px-1.5 py-2.5',
-                b.earned ? 'cursor-pointer border-ink-100 opacity-100' : 'cursor-default border-ink-50 opacity-40',
-              )}
-            >
-              <BadgeGlyphForIndex index={i} size={28} earned={b.earned}/>
-              <div className={cn('text-center font-sans text-[10px] font-semibold leading-tight', b.earned ? 'text-ink-900' : 'text-ink-400')}>{b.name}</div>
-            </Card>
+        <div className="mt-1 font-sans text-[13px] text-ink-400">{medalCount} of {medals.length} medals earned</div>
+        <div className="mt-4 flex flex-wrap items-start gap-x-4 gap-y-3">
+          {medals.map((m) => (
+            <ShelfItem key={m.id} name={m.name} earned={m.earned} count={m.earnedCount} total={m.threshold}>
+              <MedalGlyph size={34} earned={m.earned} label={`${m.name} — ${m.earned ? 'earned' : `${m.earnedCount} of ${m.threshold}`}`}/>
+            </ShelfItem>
           ))}
+          {trophy && (
+            <ShelfItem name={trophy.name} earned={trophy.earned} count={trophy.earnedCount} total={trophy.threshold}>
+              <TrophyGlyph size={40} earned={trophy.earned} label={`${trophy.name} — ${trophy.earned ? 'earned' : `${trophy.earnedCount} of ${trophy.threshold}`}`}/>
+            </ShelfItem>
+          )}
         </div>
       </Card>
 

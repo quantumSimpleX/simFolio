@@ -21,6 +21,28 @@ const GamificationContext = createContext(null)
 // rather than re-fetching: getPositions returns raw positions, getCouncilSize
 // returns the current council count. These are filled by the driver each render.
 
+// joinDayChange(): attach each position's live day-change percent to `dayChange`
+// so the `steady` gauge (stateProvider) can read it. Quotes are cached in
+// batches under ['quotes', <joined tickers>], each holding an array of quote
+// objects with a `pct` (day-change %) field, so we scan every ['quotes', …]
+// cache and index by ticker. Opportunistic: a position whose quote isn't cached
+// is returned unchanged (no `dayChange`) — the gauge excludes it rather than
+// counting it as flat. Never throws on missing/partial cache.
+// eslint-disable-next-line react-refresh/only-export-components
+export function joinDayChange(positions, queryClient) {
+  if (!positions?.length) return positions ?? []
+  const pctByTicker = new Map()
+  for (const [, data] of queryClient.getQueriesData({ queryKey: ['quotes'] })) {
+    if (!Array.isArray(data)) continue
+    for (const q of data) {
+      if (q && typeof q.pct === 'number') pctByTicker.set(q.ticker, q.pct)
+    }
+  }
+  return positions.map((p) =>
+    pctByTicker.has(p.ticker) ? { ...p, dayChange: pctByTicker.get(p.ticker) } : p,
+  )
+}
+
 export function GamificationProvider({ children }) {
   const { user } = useAuth()
   const qc = useQueryClient()
@@ -41,7 +63,7 @@ export function GamificationProvider({ children }) {
   const positionsRef = useRef([])
   const councilRef = useRef(0)
   useEffect(() => {
-    positionsRef.current = positions ?? []
+    positionsRef.current = joinDayChange(positions, qc)
     councilRef.current = heroes?.length ?? 0
   })
 

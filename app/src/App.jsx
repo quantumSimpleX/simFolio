@@ -57,7 +57,7 @@ const ROUTE_TITLES = {
   '': 'Welcome', welcome: 'Welcome', 'sign-up': 'Sign Up', 'sign-in': 'Sign In',
   returning: 'Welcome Back', onboarding: 'Get Started', portfolio: 'Portfolio',
   ask: 'Ask', 'find-mentor': 'Find a Mentor', receipt: 'Trade Receipt',
-  'hero-handoff': 'Your Council', markets: 'Markets', orders: 'Orders',
+  'hero-handoff': 'Meet Your Mentor', markets: 'Markets', orders: 'Orders',
   achievements: 'Achievements', 'badge-earned': 'Badge Earned', profile: 'Profile',
 }
 
