@@ -37,10 +37,14 @@ describe('SellScreen with a position', () => {
     fireEvent.change(limitInput, { target: { value: '180' } })
     fireEvent.click(screen.getByText('EOD')) // DAY time-in-force
 
+    // Verify QtyInputBlock amount field displays limit price ($180.00) instead of market price
+    const amountInput = screen.getByLabelText('Amount in dollars')
+    expect(amountInput.value).toBe('180.00')
+
     fireEvent.click(screen.getByText(/Place limit sell/))
     await waitFor(() => expect(supabase.functions.invoke).toHaveBeenCalled())
     const [, { body }] = supabase.functions.invoke.mock.calls.at(-1)
-    expect(body).toMatchObject({ side: 'SELL', type: 'LIMIT', limit_price: 180, time_in_force: 'DAY' })
+    expect(body).toMatchObject({ side: 'SELL', type: 'LIMIT', limit_price: 180, execution_price: 180, time_in_force: 'DAY' })
   })
 
   it('market sell sends a MARKET order', async () => {

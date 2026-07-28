@@ -56,7 +56,7 @@ export default function BuyScreen() {
       side: 'BUY',
       type: orderType,
       requested_qty: qty,
-      execution_price: price,
+      execution_price: effectivePrice,
       dayChange: stock?.pct ?? 0,
       ...(orderType === 'LIMIT' && limitPrice ? { limit_price: parseFloat(limitPrice), time_in_force: tif } : {}),
     }
@@ -95,7 +95,7 @@ export default function BuyScreen() {
 
       <div>
         <div className="mb-2 font-sans text-[13px] text-ink-500">Quantity</div>
-        <QtyInputBlock qty={qty} setQty={setQty} price={price}/>
+        <QtyInputBlock qty={qty} setQty={setQty} price={effectivePrice}/>
       </div>
 
       <div>

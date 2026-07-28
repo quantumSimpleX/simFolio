@@ -57,6 +57,8 @@ export default function SellScreen() {
       side: 'SELL',
       type: orderType,
       requested_qty: qty,
+      execution_price: effectivePrice,
+      dayChange: stock?.pct ?? 0,
       ...(orderType === 'LIMIT' && limitPrice ? { limit_price: parseFloat(limitPrice), time_in_force: tif } : {}),
     }, {
       onSuccess: (result) => {
@@ -123,7 +125,7 @@ export default function SellScreen() {
 
       <div>
         <div className="mb-2 font-sans text-[13px] text-ink-500"><TermUnderline termKey="shares">Shares to sell</TermUnderline> (of {maxQty})</div>
-        <QtyInputBlock qty={qty} setQty={setQty} price={price} accent="red" max={maxQty}/>
+        <QtyInputBlock qty={qty} setQty={setQty} price={effectivePrice} accent="red" max={maxQty}/>
       </div>
 
       <div>
