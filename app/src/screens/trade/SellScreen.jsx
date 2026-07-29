@@ -29,8 +29,6 @@ export default function SellScreen() {
 
   const pos = positions.find(p => p.ticker === ticker)
   const maxQty = pos ? parseFloat(pos.total_qty) : 0
-  const price = pos?.price ?? 0
-  const costBasis = pos ? parseFloat(pos.average_cost_basis) : 0
 
   const [qty, setQty] = useState(1)
   const [orderType, setOrderType] = useState('MARKET')
@@ -40,6 +38,9 @@ export default function SellScreen() {
 
   const { data: stock, isLoading } = useStockDetail(ticker)
   const { data: candles, isLoading: candlesLoading, isError: candlesError } = useCandles(ticker, chartRange)
+
+  const price = (stock?.price && stock.price > 0) ? stock.price : (pos?.price ?? 0)
+  const costBasis = pos ? parseFloat(pos.average_cost_basis) : 0
 
   // Limit orders settle at the target price (the min you'd accept), not the live price.
   const effectivePrice = orderType === 'LIMIT' && limitPrice ? parseFloat(limitPrice) : price

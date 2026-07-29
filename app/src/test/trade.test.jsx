@@ -1,9 +1,28 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { screen, fireEvent, waitFor } from '@testing-library/react'
+import { screen, fireEvent, waitFor, render } from '@testing-library/react'
+import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { AuthProvider } from '../context/AuthContext'
+import { ThemeProvider } from '../context/ThemeContext'
+import { LanguageProvider } from '../context/LanguageContext'
 import { renderWithProviders } from './renderWithProviders'
 import { __setTableData, supabase } from './supabaseMock'
 import SellScreen from '../screens/trade/SellScreen'
 import BuyScreen from '../screens/trade/BuyScreen'
+import TradeReceipt from '../screens/trade/TradeReceipt'
+
+function renderReceipt(state) {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  return render(
+    <QueryClientProvider client={qc}>
+      <AuthProvider><ThemeProvider><LanguageProvider>
+        <MemoryRouter initialEntries={[{ pathname: '/receipt', state }]}>
+          <Routes><Route path="/receipt" element={<TradeReceipt />} /></Routes>
+        </MemoryRouter>
+      </LanguageProvider></ThemeProvider></AuthProvider>
+    </QueryClientProvider>,
+  )
+}
 
 beforeEach(() => {
   __setTableData('positions', [
@@ -45,6 +64,40 @@ describe('SellScreen with a position', () => {
     await waitFor(() => expect(supabase.functions.invoke).toHaveBeenCalled())
     const [, { body }] = supabase.functions.invoke.mock.calls.at(-1)
     expect(body).toMatchObject({ side: 'SELL', type: 'LIMIT', limit_price: 180, execution_price: 180, time_in_force: 'DAY' })
+  })
+
+  it('limit sell lets shares and price be set independently', async () => {
+    renderWithProviders(<SellScreen/>, { route: '/sell/AAPL', path: '/sell/:ticker' })
+    await waitFor(() => expect(document.body.textContent).toContain('You own 10 shares'))
+
+    fireEvent.click(screen.getByText('Limit order'))
+
+    // Set qty first, then a limit price that is unrelated to qty × market price.
+    fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '4' } })
+    const limitInput = await screen.findByPlaceholderText(/Min price/i)
+    fireEvent.change(limitInput, { target: { value: '210' } })
+    fireEvent.click(screen.getByText('GTC'))
+
+    expect(document.body.textContent).toContain('Place limit sell for 4 AAPL')
+    expect(limitInput.value).toBe('210')
+
+    fireEvent.click(screen.getByText(/Place limit sell/))
+    await waitFor(() => expect(supabase.functions.invoke).toHaveBeenCalled())
+    const [, { body }] = supabase.functions.invoke.mock.calls.at(-1)
+    expect(body).toMatchObject({ side: 'SELL', type: 'LIMIT', requested_qty: 4, limit_price: 210, execution_price: 210 })
+  })
+
+  it('receipt shows limit price for a QUEUED limit sell shaped like the real place-order response', async () => {
+    renderReceipt({
+      result: { status: 'QUEUED', order_id: 'o1', type: 'LIMIT', limit_price: '180', time_in_force: 'DAY' },
+      ticker: 'AAPL',
+      qty: 4,
+      side: 'sell',
+    })
+    expect(document.body.textContent).toContain('Limit order')
+    expect(document.body.textContent).toContain('$180.00')
+    expect(document.body.textContent).toContain('AAPL ≥ $180.00')
+    expect(document.body.textContent).not.toContain('Next market open')
   })
 
   it('market sell sends a MARKET order', async () => {

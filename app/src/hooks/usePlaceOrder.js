@@ -12,10 +12,12 @@ export function usePlaceOrder() {
     mutationFn: async (orderParams) => {
       // TODO: restore — temporarily bypassing Edge Function for UI testing
       if (!session) {
+        const isLimit = orderParams.type === 'LIMIT'
         return {
-          execution_price: orderParams.limit_price ?? 0,
+          status: isLimit ? 'QUEUED' : 'FILLED',
+          execution_price: orderParams.limit_price ?? orderParams.execution_price ?? 0,
           slippage: 0,
-          queued: false,
+          queued: isLimit,
           ...orderParams,
         }
       }

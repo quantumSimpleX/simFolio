@@ -148,6 +148,9 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       status: 'QUEUED',
       order_id: order.order_id,
+      type: orderType,
+      limit_price: order.limit_price,
+      time_in_force: order.time_in_force,
     }), { headers: { ...cors, 'Content-Type': 'application/json' } })
 
   } catch (err) {

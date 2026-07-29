@@ -21,7 +21,7 @@ export default function TradeReceipt() {
   const pnl      = state?.pnl
   const pnlPositive = state?.pnlPositive
 
-  const execPrice = result.execution_price ?? 0
+  const execPrice = result.execution_price ?? (result.limit_price != null ? parseFloat(result.limit_price) : (state?.limitPrice != null ? parseFloat(state.limitPrice) : 0))
   const marketPrice = result.market_price ?? execPrice
   const hasSlippage = !isSell && execPrice && marketPrice && Math.abs(execPrice - marketPrice) > 0.01
   const slippageAmt = hasSlippage ? Math.abs(execPrice - marketPrice) * qty : 0
@@ -57,7 +57,20 @@ export default function TradeReceipt() {
 
         <div className="rounded-card border border-ink-100 bg-white px-5 pb-3 pt-1">
           <div className="pb-1.5 pt-3"><Eyebrow>Transaction receipt</Eyebrow></div>
-          {isSell ? (
+          {isQueued ? (
+            <>
+              <ReceiptRow label="Queued" value={`${isSell ? 'Sell' : 'Buy'} ${shares(qty)} ${ticker}`}/>
+              <ReceiptRow label="Order type" value={result.type === 'LIMIT' || state?.orderType === 'LIMIT' ? 'Limit order' : 'Market order'}/>
+              {(result.limit_price != null || state?.limitPrice != null) ? (
+                <>
+                  <ReceiptRow label={<TermUnderline termKey="limit_order">Limit price</TermUnderline>} value={`$${parseFloat(result.limit_price ?? state?.limitPrice).toFixed(2)}`} mono/>
+                  <ReceiptRow label="Executes when" value={`${ticker} ${isSell ? '≥' : '≤'} $${parseFloat(result.limit_price ?? state?.limitPrice).toFixed(2)}`}/>
+                </>
+              ) : (
+                <ReceiptRow label="Executes" value="Next market open (9:30 AM EST)" bold/>
+              )}
+            </>
+          ) : isSell ? (
             <>
               <ReceiptRow label="Sold" value={`${shares(qty)} of ${ticker}`}/>
               <ReceiptRow label={<TermUnderline>Executed at</TermUnderline>} value={`$${execPrice.toFixed(2)} / share`} mono/>
@@ -72,12 +85,6 @@ export default function TradeReceipt() {
               )}
               <ReceiptRow label={<TermUnderline>Transaction fee</TermUnderline>} value={`−$${fee.toFixed(2)}`} mono/>
               <ReceiptRow label={<TermUnderline>Net to cash</TermUnderline>} value={`$${net}`} bold mono/>
-            </>
-          ) : isQueued ? (
-            <>
-              <ReceiptRow label="Queued" value={`Buy ${qty} ${ticker}`}/>
-              <ReceiptRow label="Order type" value="Market order"/>
-              <ReceiptRow label="Executes" value="Next market open (9:30 AM EST)" bold/>
             </>
           ) : (
             <>
