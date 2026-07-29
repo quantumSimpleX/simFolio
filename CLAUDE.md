@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**simFolio** is an AI-powered investing simulation platform. Users trade with virtual cash using real-time market data, guided by AI personas of legendary investors ("Heroes"). This repo contains the app source and design handoff assets.
+**simFolio** is an AI-powered investing *simulation* platform for education — **no real money is ever involved**. Users trade with virtual cash against real-time market data, guided by AI personas of legendary investors ("Heroes"), so they can learn trading mechanics without financial risk. This repo contains the app source and design handoff assets.
 
 ## Repository Structure
 
