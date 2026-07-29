@@ -39,6 +39,27 @@ serve(async (req) => {
     const body = await req.json()
     const { ticker, asset_type, side, type: orderType, requested_qty, limit_price, time_in_force } = body
 
+    if (side === 'SELL') {
+      const { data: pos } = await userClient
+        .from('positions')
+        .select('total_qty')
+        .eq('user_id', uid)
+        .eq('ticker', ticker)
+        .single()
+      const { data: openSells } = await userClient
+        .from('orders')
+        .select('requested_qty')
+        .eq('user_id', uid)
+        .eq('ticker', ticker)
+        .eq('side', 'SELL')
+        .eq('status', 'QUEUED')
+      const reserved = (openSells ?? []).reduce((sum, o) => sum + parseFloat(o.requested_qty), 0)
+      const available = (pos ? parseFloat(pos.total_qty) : 0) - reserved
+      if (requested_qty > available) {
+        throw new Error(`Insufficient shares available to sell (${available} available, ${reserved} reserved by other open orders)`)
+      }
+    }
+
     // Insert order as QUEUED. Falls back without time_in_force if the column
     // hasn't been added yet (ALTER TABLE orders ADD COLUMN time_in_force ...).
     let { data: order, error: orderErr } = await userClient

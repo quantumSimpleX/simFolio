@@ -5,6 +5,7 @@ import { GhostCTA, Eyebrow, TermUnderline, ReceiptRow } from '../../components/P
 import { AppShell } from '../../components/AppShell'
 import { useIsMobile } from '../../hooks/useBreakpoint'
 import { usePortfolio } from '../../hooks/usePortfolio'
+import { useOrders } from '../../hooks/useOrders'
 import { usePlaceOrder } from '../../hooks/usePlaceOrder'
 import { useStockDetail, useCandles } from '../../hooks/useStockDetail'
 import { ChartPanel, RangeButtons } from '../../components/Charts'
@@ -25,10 +26,17 @@ export default function SellScreen() {
   const navigate = useNavigate()
   const mobile = useIsMobile()
   const { positions } = usePortfolio()
+  const { data: orders } = useOrders()
   const { mutate: placeOrder, isPending } = usePlaceOrder()
 
   const pos = positions.find(p => p.ticker === ticker)
-  const maxQty = pos ? parseFloat(pos.total_qty) : 0
+  const ownedQty = pos ? parseFloat(pos.total_qty) : 0
+  // Shares already committed to the user's other open sell orders on this ticker
+  // aren't available to sell again until those orders fill or are cancelled.
+  const reservedQty = (orders ?? [])
+    .filter(o => o.ticker === ticker && o.side === 'SELL' && o.status === 'QUEUED')
+    .reduce((sum, o) => sum + parseFloat(o.requested_qty), 0)
+  const maxQty = Math.max(0, ownedQty - reservedQty)
 
   const [qty, setQty] = useState(1)
   const [orderType, setOrderType] = useState('MARKET')
@@ -106,7 +114,7 @@ export default function SellScreen() {
             </div>
           </div>
           <div className="text-right">
-            <div className="font-sans text-xs text-ink-400">You own {maxQty} shares</div>
+            <div className="font-sans text-xs text-ink-400">You own {ownedQty} shares</div>
             <div className={cn('mt-0.5 font-sans text-xs', pnlPositive ? 'text-aqua-600' : 'text-red')}>
               Cost: ${costBasis.toFixed(2)} · {pnlPositive?'+':'−'}${Math.abs(pos.pnl).toFixed(2)} ({pnlPositive?'+':'−'}{Math.abs(pos.pct).toFixed(1)}%)
             </div>
@@ -125,7 +133,9 @@ export default function SellScreen() {
       </div>
 
       <div>
-        <div className="mb-2 font-sans text-[13px] text-ink-500"><TermUnderline termKey="shares">Shares to sell</TermUnderline> (of {maxQty})</div>
+        <div className="mb-2 font-sans text-[13px] text-ink-500">
+          <TermUnderline termKey="shares">Shares to sell</TermUnderline> (of {maxQty} available{reservedQty > 0 ? `, ${reservedQty} reserved by open orders` : ''})
+        </div>
         <QtyInputBlock qty={qty} setQty={setQty} price={effectivePrice} accent="red" max={maxQty}/>
       </div>
 
